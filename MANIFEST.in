@@ -1,0 +1,3 @@
+include README.rst
+include versioneer.py
+include pyls/_version.py
