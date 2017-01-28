@@ -25,7 +25,7 @@ def test_symbols(workspace):
     assert len(symbols) == 4
 
     def sym(name):
-        return filter(lambda s: s['name'] == name, symbols)[0]
+        return [s for s in symbols if s['name'] == name][0]
 
     # Check we have some sane mappings to VSCode constants
     assert sym('sys')['kind'] == SymbolKind.Module

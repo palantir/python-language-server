@@ -1,7 +1,7 @@
 Python Language Server
 ======================
 
-A Python 2.7 implementation of the `Language Server Protocol`_ making use of Jedi_, pycodestyle_, Pyflakes_ and YAPF_.
+A Python 2.7 and 3.6 implementation of the `Language Server Protocol`_ making use of Jedi_, pycodestyle_, Pyflakes_ and YAPF_.
 
 Features
 --------

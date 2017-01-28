@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from base import JediProvider
+from .base import JediProvider
 from pyls.vscode import CompletionItemKind
 
 log = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def sort_text(definition):
     """
     mod = definition.description.split(":", 1)[1].strip()
 
-    if mod.startswith("__"):
+    if definition.in_builtin_module():
         # It's a builtin, put it last
         return 'z' + definition.name
 

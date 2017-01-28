@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from base import JediProvider
+from .base import JediProvider
 
 log = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ class JediDefinitionsProvider(JediProvider):
     def run(self, doc_uri, position):
         definitions = self.jedi_script(doc_uri, position).goto_definitions()
 
-        definitions = filter(lambda d: d.is_definition(), definitions)
+        definitions = [d for d in definitions if d.is_definition()]
 
         return [{
             'uri': self.workspace.get_uri_like(doc_uri, d.module_path),

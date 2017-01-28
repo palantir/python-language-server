@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from base import JediProvider
+from .base import JediProvider
 from pyls.vscode import SymbolKind
 
 log = logging.getLogger(__name__)

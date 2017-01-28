@@ -2,7 +2,7 @@
 import json
 import logging
 import re
-import SocketServer
+import socketserver
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class JSONRPCError(Exception):
         }
 
 
-class JSONRPCServer(SocketServer.StreamRequestHandler, object):
+class JSONRPCServer(socketserver.StreamRequestHandler, object):
     """ Read/Write JSON RPC messages """
 
     _msg_id = None
@@ -45,13 +45,18 @@ class JSONRPCServer(SocketServer.StreamRequestHandler, object):
         self.rfile = rfile
         self.wfile = wfile
 
+    def shutdown(self):
+        # TODO: we should handle this much better
+        self.rfile.close()
+        self.wfile.close()
+
     def handle(self):
         # VSCode wants us to keep the connection open, so let's handle messages in a loop
         while True:
             # TODO: need to time out here eventually??
             try:
                 self._handle_rpc_call()
-            except EOFError:
+            except Exception:
                 break
 
     def handle_json(self, msg):
@@ -67,7 +72,9 @@ class JSONRPCServer(SocketServer.StreamRequestHandler, object):
         log.debug("Got message: %s", msg)
 
         # Else pass the message with params as kwargs
-        return getattr(self, method)(**msg.get('params', {}))
+        # Params may be a dictionary or undefined, so force them to be a dictionary
+        params = msg.get('params', {}) or {}
+        return getattr(self, method)(**params)
 
     def call(self, method, params=None):
         """ Call a remote method, for now we ignore the response... """
@@ -101,15 +108,13 @@ class JSONRPCServer(SocketServer.StreamRequestHandler, object):
             response['error'] = e.to_rpc()
         except Exception as e:
             log.exception("Caught internal error")
-            err = JSONRPCError(JSONRPCError.INTERNAL_ERROR, str(e.message))
+            err = JSONRPCError(JSONRPCError.INTERNAL_ERROR, str(e))
             response['error'] = err.to_rpc()
 
         log.debug("Responding to msg %s with %s", self._msg_id, response)
         self._write_message(response)
 
     def _content_length(self, line):
-        if len(line) < 2 or line[-2:] != "\r\n":
-            raise ValueError("Line endings must be \\r\\n not %s")
         if line.startswith("Content-Length: "):
             _, value = line.split("Content-Length: ")
             value = value.strip()
@@ -126,8 +131,8 @@ class JSONRPCServer(SocketServer.StreamRequestHandler, object):
 
         content_length = self._content_length(line)
 
-        # Read until end of the beginning of the JSON request
-        while line and line != "\r\n":
+        # Blindly consume all header lines
+        while line and line.strip():
             line = self.rfile.readline()
 
         if not line:

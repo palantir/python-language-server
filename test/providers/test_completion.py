@@ -39,6 +39,6 @@ def test_completion_ordering(workspace):
     items = {c['label']: c['sortText'] for c in completions}
 
     # Assert that builtins come after our own functions even if alphabetically they're before
-    assert items['hello'] < items['assert']
+    assert items['hello'] < items['dict']
     # And that 'hidden' functions come after unhidden ones
     assert items['hello'] < items['_a_hello']
