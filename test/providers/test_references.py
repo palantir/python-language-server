@@ -55,15 +55,15 @@ def test_references(tmp_workspace):
     assert len(no_def_refs) == 1
 
     # Make sure our definition is correctly located
-    doc1_ref = filter(lambda u: u['uri'] == DOC1_URI, refs)[0]
+    doc1_ref = [u for u in refs if u['uri'] == DOC1_URI][0]
     assert doc1_ref['range']['start'] == {'line': 0, 'character': 6}
     assert doc1_ref['range']['end'] == {'line': 0, 'character': 11}
 
     # Make sure our import is correctly located
-    doc2_import_ref = filter(lambda u: u['uri'] != DOC1_URI, refs)[0]
+    doc2_import_ref = [u for u in refs if u['uri'] != DOC1_URI][0]
     assert doc2_import_ref['range']['start'] == {'line': 0, 'character': 18}
     assert doc2_import_ref['range']['end'] == {'line': 0, 'character': 23}
 
-    doc2_usage_ref = filter(lambda u: u['uri'] != DOC1_URI, refs)[1]
+    doc2_usage_ref = [u for u in refs if u['uri'] != DOC1_URI][1]
     assert doc2_usage_ref['range']['start'] == {'line': 2, 'character': 0}
     assert doc2_usage_ref['range']['end'] == {'line': 2, 'character': 5}

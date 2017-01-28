@@ -1,16 +1,16 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from language_server import LanguageServer
+from .language_server import LanguageServer
 
-from providers.completion import JediCompletionProvider
-from providers.definition import JediDefinitionsProvider
-from providers.format import YapfFormatter
-from providers.lint import PyCodeStyleLinter, PyflakesLinter
-from providers.hover import JediDocStringHoverProvider
-from providers.references import JediReferencesProvider
-from providers.signature import JediSignatureProvider
-from providers.symbols import JediDocumentSymbolsProvider
-from vscode import TextDocumentSyncKind
+from .providers.completion import JediCompletionProvider
+from .providers.definition import JediDefinitionsProvider
+from .providers.format import YapfFormatter
+from .providers.lint import PyCodeStyleLinter, PyflakesLinter
+from .providers.hover import JediDocStringHoverProvider
+from .providers.references import JediReferencesProvider
+from .providers.signature import JediSignatureProvider
+from .providers.symbols import JediDocumentSymbolsProvider
+from .vscode import TextDocumentSyncKind
 
 log = logging.getLogger(__name__)
 

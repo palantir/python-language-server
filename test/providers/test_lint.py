@@ -29,7 +29,7 @@ def test_pycodestyle(workspace):
 
     # One we're expecting is:
     msg = 'E402 module level import not at top of file'
-    mod_import = filter(lambda d: d['message'] == msg, diags)[0]
+    mod_import = [d for d in diags if d['message'] == msg][0]
 
     assert mod_import['code'] == 'E402'
     assert mod_import['range']['start'] == {'line': 5, 'character': 0}
@@ -60,7 +60,7 @@ def test_pycodestyle_config():
 
     # Make sure we get a warning for 'indentation contains tabs'
     diags = provider.run(doc_uri)
-    assert len(filter(lambda d: d['code'] == 'W191', diags)) > 0
+    assert len([d for d in diags if d['code'] == 'W191']) > 0
 
     content = {
         'setup.cfg': ('[pycodestyle]\nignore = W191', True),
@@ -68,14 +68,14 @@ def test_pycodestyle_config():
         'tox.ini': ('', False)
     }
 
-    for conf_file, (content, working) in content.items():
+    for conf_file, (content, working) in list(content.items()):
         # Now we'll add config file to ignore it
         with open(os.path.join(tmp, conf_file), 'w+') as f:
             f.write(content)
 
         # And make sure we don't get any warnings
         diags = provider.run(doc_uri)
-        assert len(filter(lambda d: d['code'] == 'W191', diags)) == 0 if working else 1
+        assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
 
         os.unlink(os.path.join(tmp, conf_file))
 
@@ -90,7 +90,7 @@ def test_pyflakes(workspace):
 
     # One we're expecting is:
     msg = '\'sys\' imported but unused'
-    unused_import = filter(lambda d: d['message'] == msg, diags)[0]
+    unused_import = [d for d in diags if d['message'] == msg][0]
 
     assert unused_import['range']['start'] == {'line': 0, 'character': 0}
 

@@ -1,8 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import SocketServer
-from jsonrpc import JSONRPCServer
-from workspace import Workspace
+import socketserver
+from .jsonrpc import JSONRPCServer
+from .workspace import Workspace
 
 log = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 def start_tcp_lang_server(bind_addr, port, handler_class):
     if not issubclass(handler_class, LanguageServer):
         raise ValueError("Handler class must be a subclass of LanguageServer")
-    server = SocketServer.ThreadingTCPServer((bind_addr, port), handler_class)
+    server = socketserver.ThreadingTCPServer((bind_addr, port), handler_class)
     try:
         log.info("Serving %s on (%s, %s)", handler_class.__name__, bind_addr, port)
         server.serve_forever()
@@ -65,7 +65,7 @@ class LanguageServer(JSONRPCServer):
         pass
 
     def m_shutdown(self, **kwargs):
-        self.server.shutdown()
+        self.shutdown()
 
     def m_exit(self, **kwargs):
-        self.server.shutdown()
+        self.shutdown()

@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import re
-from urlparse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 
 # TODO: this is not the best e.g. we capture numbers
 RE_START_WORD = re.compile('[A-Za-z_0-9]*$')
@@ -35,7 +35,7 @@ class Workspace(object):
         curdir = os.path.dirname(document.path)
 
         while curdir != os.path.dirname(self.root) and curdir != '/':
-            existing = filter(os.path.exists, [os.path.join(curdir, n) for n in names])
+            existing = list(filter(os.path.exists, [os.path.join(curdir, n) for n in names]))
             if existing:
                 return existing
             curdir = os.path.dirname(curdir)

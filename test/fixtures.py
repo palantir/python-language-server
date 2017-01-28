@@ -3,7 +3,7 @@ import os
 import pytest
 from pyls.python_ls import PythonLanguageServer
 from pyls.workspace import Workspace
-from StringIO import StringIO
+from io import StringIO
 
 
 @pytest.fixture

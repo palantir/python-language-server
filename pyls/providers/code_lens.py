@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from base import JediProvider
+from .base import JediProvider
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class JediReferencesProvider(JediProvider):
 
         if exclude_declaration:
             # Filter out if the usage is the actual declaration of the thing
-            usages = filter(lambda d: not d.is_definition(), usages)
+            usages = [d for d in usages if not d.is_definition()]
 
         return [{
             'uri': self.workspace.get_uri_like(doc_uri, d.module_path),

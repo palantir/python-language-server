@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from base import JediProvider
+from .base import JediProvider
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class JediDocStringHoverProvider(JediProvider):
         word = document.word_at_position(position)
 
         # Find an exact match for a completion
-        completions = filter(lambda c: c.name == word, completions)
+        completions = [c for c in completions if c.name == word]
 
         if len(completions) == 0:
             # :(

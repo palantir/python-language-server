@@ -1,9 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 import logging
 import pycodestyle
 from pyflakes import api as pyflakes_api
-from base import BaseProvider
+from .base import BaseProvider
 
 log = logging.getLogger(__name__)
 

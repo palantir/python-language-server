@@ -3,8 +3,8 @@ import argparse
 import logging
 import time
 import sys
-import language_server
-from python_ls import PythonLanguageServer
+from . import language_server
+from .python_ls import PythonLanguageServer
 
 
 def add_arguments(parser):

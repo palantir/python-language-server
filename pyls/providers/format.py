@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from base import BaseProvider
+from .base import BaseProvider
 from yapf.yapflib.yapf_api import FormatCode
 
 log = logging.getLogger(__name__)
