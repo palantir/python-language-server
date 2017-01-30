@@ -41,7 +41,7 @@ setup(
     ],
 
     dependency_links=[
-        'git+git://github.com/davidhalter/jedi.git@b779677bf9f32a90f9a31203c91c08ca034f6859#egg=jedi-0.10.0'
+        'git+git://github.com/davidhalter/jedi.git#egg=jedi-0.10.0'
     ],
 
     # List additional groups of dependencies here (e.g. development
