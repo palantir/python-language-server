@@ -28,13 +28,11 @@ def sort_text(definition):
     """ Ensure builtins appear at the bottom.
     Description is of format <type>: <module>.<item>
     """
-    mod = definition.description.split(":", 1)[1].strip()
-
     if definition.in_builtin_module():
         # It's a builtin, put it last
         return 'z' + definition.name
 
-    if '.' in mod and mod.rsplit(".", 1)[1].startswith("_"):
+    if definition.name.startswith("_"):
         # It's a 'hidden' func, put it next last
         return 'y' + definition.name
 
