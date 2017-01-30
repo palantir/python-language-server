@@ -1,0 +1,10 @@
+appdirs==1.4.0
+configparser==3.5.0
+future==0.16.0
+-e git://github.com/davidhalter/jedi.git#egg=jedi-0.10.0
+packaging==16.8
+pycodestyle==2.3.0
+pyflakes==1.5.0
+pyparsing==2.1.10
+six==1.10.0
+yapf==0.15.2
