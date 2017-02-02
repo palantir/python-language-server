@@ -1,7 +1,7 @@
 Python Language Server
 ======================
 
-.. image:: https://circleci.com/gh/palantir/python-language-server.svg?style=svg
+.. image:: https://circleci.com/gh/palantir/python-language-server.svg?style=shield
     :target: https://circleci.com/gh/palantir/python-language-server
 
 .. image:: https://img.shields.io/github/license/palantir/python-language-server.svg
