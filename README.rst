@@ -4,6 +4,9 @@ Python Language Server
 .. image:: https://circleci.com/gh/palantir/python-language-server.svg?style=svg
     :target: https://circleci.com/gh/palantir/python-language-server
 
+.. image:: https://img.shields.io/github/license/palantir/python-language-server.svg
+     :target: https://github.com/palantir/python-language-server/blob/master/LICENSE    
+
 A Python 2.7 and 3.6 implementation of the `Language Server Protocol`_ making use of Jedi_, pycodestyle_, Pyflakes_ and YAPF_.
 
 Features
