@@ -21,6 +21,10 @@ def add_arguments(parser):
         "--port", type=int, default=2087,
         help="Bind to this port"
     )
+    parser.add_argument(
+        "--loglevel", default="ERROR",
+        help="Set logging level"
+    )
 
 
 def main():
@@ -28,8 +32,8 @@ def main():
     add_arguments(parser)
     args = parser.parse_args()
 
-    # Configure logging to DEBUG and UTC
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s")
+    # Configure logging level and UTC
+    logging.basicConfig(level=args.loglevel, format="%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s")
     logging.Formatter.converter = time.gmtime
 
     if args.tcp:
