@@ -1,7 +1,6 @@
 configparser
 future
 jedi>=0.10
-json-rpc
 pycodestyle
 pyflakes
 yapf

@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import socketserver
-from .server import JSONRPCServer
+from .jsonrpc import JSONRPCServer
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
