@@ -46,7 +46,7 @@ class LanguageServer(JSONRPCServer):
     def publish_diagnostics(self, uri, diagnostics):
         log.debug("Publishing diagnostics: %s", diagnostics)
         params = {'uri': uri, 'diagnostics': diagnostics}
-        self.call(self.M_PUBLISH_DIAGNOSTICS, params)
+        self.notify(self.M_PUBLISH_DIAGNOSTICS, params)
 
     def m_initialize(self, **kwargs):
         log.debug("Language server intialized with %s", kwargs)

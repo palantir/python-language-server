@@ -51,7 +51,7 @@ def test_initialize(client_server):
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
     })
-    response = _next_message(client)
+    response = _get_response(client)
 
     assert 'capabilities' in response['result']
 
@@ -60,14 +60,14 @@ def test_file_closed(client_server):
     client, server = client_server
     client.rfile.close()
     with pytest.raises(Exception):
-        _next_message(client)
+        _get_response(client)
 
 
 def test_missing_message(client_server):
     client, server = client_server
 
     client.call('unknown_method')
-    response = _next_message(client)
+    response = _get_response(client)
     assert response['error']['code'] == -32601  # Method not implemented error
 
 
@@ -80,7 +80,7 @@ def test_linting(client_server):
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
     })
-    response = _next_message(client)
+    response = _get_response(client)
 
     assert 'capabilities' in response['result']
 
@@ -88,11 +88,17 @@ def test_linting(client_server):
     client.call('textDocument/didOpen', {
         'textDocument': {'uri': 'file:///test', 'text': 'import sys'}
     })
-    response = _next_message(client)
+    response = _get_notification(client)
 
     assert response['method'] == 'textDocument/publishDiagnostics'
     assert len(response['params']['diagnostics']) > 0
 
 
-def _next_message(client):
+def _get_notification(client):
+    request = jsonrpc.jsonrpc.JSONRPCRequest.from_json(client._read_message())
+    assert request.is_notification
+    return request.data
+
+
+def _get_response(client):
     return json.loads(client._read_message())
