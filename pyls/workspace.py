@@ -1,6 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import re
+import sys
 from urllib.parse import urlparse, urlunparse
 
 # TODO: this is not the best e.g. we capture numbers
@@ -50,6 +51,17 @@ class Workspace(object):
         parts = list(urlparse(doc_uri))
         parts[2] = path
         return urlunparse([str(p) for p in parts])
+
+    def syspath_for_document(self, document):
+        """ Construct a sensible sys path to use for the given document.
+
+        Since the workspace root may not be the root of the Python project we instead
+        append the closest parent directory containing a setup.py file.
+        """
+        files = self.find_config_files(document, ['setup.py']) or []
+        path = [os.path.dirname(setup_py) for setup_py in files]
+        path.extend(sys.path)
+        return path
 
     def _check_in_workspace(self, doc_uri):
         doc_path = urlparse(doc_uri).path

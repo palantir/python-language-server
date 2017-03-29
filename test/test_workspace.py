@@ -47,9 +47,7 @@ def test_non_root_project(pyls):
     with open(os.path.join(project_root, 'setup.py'), 'w+') as f:
         f.write('# setup.py')
 
-    test_path = os.path.join(project_root, 'test.py')
-    with open(test_path, 'w+') as f:
-        f.write('assert True')
-
-    test_doc = pyls.workspace.get_document('file://' + test_path)
+    test_uri = 'file://' + os.path.join(project_root, 'hello/test.py')
+    pyls.workspace.put_document(test_uri, 'assert True')
+    test_doc = pyls.workspace.get_document(test_uri)
     assert project_root in pyls.workspace.syspath_for_document(test_doc)
