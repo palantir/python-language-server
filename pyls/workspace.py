@@ -41,10 +41,15 @@ class Workspace(object):
             curdir = os.path.dirname(curdir)
 
     def get_uri_like(self, doc_uri, path):
-        # Little bit hacky, but what' you gonna do
+        """Replace the path in a uri. Little bit hacky!
+
+        Due to https://github.com/PythonCharmers/python-future/issues/273 we have to
+        cast all parts to the same type since jedi can return str and urlparse returns
+        unicode objects.
+        """
         parts = list(urlparse(doc_uri))
         parts[2] = path
-        return urlunparse(parts)
+        return urlunparse([str(p) for p in parts])
 
     def _check_in_workspace(self, doc_uri):
         doc_path = urlparse(doc_uri).path

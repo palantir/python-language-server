@@ -25,6 +25,7 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
         while True:
             try:
                 data = self._read_message()
+                log.debug("Got message: %s", data)
                 response = jsonrpc.JSONRPCResponseManager.handle(data, self)
                 if response is not None:
                     self._write_message(response.data)
