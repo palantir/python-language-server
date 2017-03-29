@@ -5,7 +5,7 @@ Python Language Server
     :target: https://circleci.com/gh/palantir/python-language-server
 
 .. image:: https://img.shields.io/github/license/palantir/python-language-server.svg
-     :target: https://github.com/palantir/python-language-server/blob/master/LICENSE    
+     :target: https://github.com/palantir/python-language-server/blob/master/LICENSE
 
 A Python 2.7 and 3.6 implementation of the `Language Server Protocol`_ making use of Jedi_, pycodestyle_, Pyflakes_ and YAPF_.
 
@@ -55,6 +55,34 @@ Development
 To run the test suite:
 
 ``pip install --process-dependency-links .[test] && tox``
+
+Develop against VS Code
+=======================
+
+The Python language server can be developed against a local instance of Visual Studio Code.
+
+1. Install [VSCode for Mac](http://code.visualstudio.com/docs/?dv=osx)
+2. From within VSCode View -> Command Palette, then type _shell_ and run ``install 'code' command in PATH``
+
+.. code-block:: bash
+
+    # Setup a virtual env
+    virtualenv env
+    . env/bin/activate
+
+    # Install pyls
+    pip install .
+
+    # Install the vscode-client extension
+    cd vscode-client
+    npm install .
+
+    # Run VSCode which is configured to use pyls
+    # See the bottom of vscode-client/src/extension.ts for info
+    npm run vscode -- $PWD/../
+
+Then to debug, click View -> Output and in the dropdown will be pyls.
+To refresh VSCode, press `Cmd + r`
 
 License
 -------
