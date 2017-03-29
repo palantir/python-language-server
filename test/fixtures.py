@@ -7,7 +7,7 @@ from io import StringIO
 
 
 @pytest.fixture
-def pyls():
+def pyls(tmpdir):
     """ Return an initialized python LS """
     rfile = StringIO()
     wfile = StringIO()
@@ -15,7 +15,7 @@ def pyls():
 
     ls.m_initialize(
         processId=1,
-        rootPath=os.path.dirname(__file__),
+        rootPath=str(tmpdir),
         initializationOptions={}
     )
 
