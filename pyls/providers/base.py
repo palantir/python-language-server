@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import jedi
-import sys
 
 
 class BaseProvider(object):
@@ -23,7 +22,7 @@ class JediProvider(BaseProvider):
         document = self.workspace.get_document(doc_uri)
 
         path = None
-        sys_path = list(sys.path)  # TODO Load from config
+        sys_path = self.workspace.syspath_for_document(document)
 
         # If we're local, we can add ourselves to Python path and do clevererer things
         if self.workspace.is_local():
