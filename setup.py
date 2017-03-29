@@ -34,10 +34,9 @@ setup(
     install_requires=[
         'configparser',
         'future',
-        'jedi>=0.10',
-        'json-rpc',
         'pycodestyle',
         'pyflakes',
+        'jedi>=0.10',
         'yapf'
     ],
 

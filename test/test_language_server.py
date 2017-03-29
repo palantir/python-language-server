@@ -1,12 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
-import json
-import os
 from threading import Thread
-
-import jsonrpc
+import os
 import pytest
-
-from pyls.server import JSONRPCServer
+from pyls.jsonrpc import JSONRPCServer
 from pyls.language_server import start_io_lang_server
 from pyls.python_ls import PythonLanguageServer
 
@@ -51,7 +47,7 @@ def test_initialize(client_server):
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
     })
-    response = _next_message(client)
+    response = client._read_message()
 
     assert 'capabilities' in response['result']
 
@@ -60,14 +56,14 @@ def test_file_closed(client_server):
     client, server = client_server
     client.rfile.close()
     with pytest.raises(Exception):
-        _next_message(client)
+        client._read_message()
 
 
 def test_missing_message(client_server):
     client, server = client_server
 
     client.call('unknown_method')
-    response = _next_message(client)
+    response = client._read_message()
     assert response['error']['code'] == -32601  # Method not implemented error
 
 
@@ -80,7 +76,7 @@ def test_linting(client_server):
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
     })
-    response = _next_message(client)
+    response = client._read_message()
 
     assert 'capabilities' in response['result']
 
@@ -88,11 +84,7 @@ def test_linting(client_server):
     client.call('textDocument/didOpen', {
         'textDocument': {'uri': 'file:///test', 'text': 'import sys'}
     })
-    response = _next_message(client)
+    response = client._read_message()
 
     assert response['method'] == 'textDocument/publishDiagnostics'
     assert len(response['params']['diagnostics']) > 0
-
-
-def _next_message(client):
-    return json.loads(client._read_message())
