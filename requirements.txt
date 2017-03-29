@@ -1,0 +1,6 @@
+configparser
+future
+jedi>=0.10
+pycodestyle
+pyflakes
+yapf
