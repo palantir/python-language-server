@@ -3,43 +3,13 @@ import json
 import logging
 import re
 import socketserver
+import jsonrpc
 
 log = logging.getLogger(__name__)
 
 
-class JSONRPCError(Exception):
-
-    PARSE_ERROR = -32700
-    INVALID_REQUEST = -32600
-    METHOD_NOT_FOUND = -32601
-    INVALID_PARAMS = -32602
-    INTERNAL_ERROR = -32603
-    SERVER_ERROR_START = -32099
-    SERVER_ERROR_END = -32000
-
-    def __init__(self, code, message, data=None):
-        """ Init the JSONRPCError class
-
-        :param self: the instance
-        :param code: the error code
-        :type code: integer
-        """
-        self.data = data or {}
-        self.code = code
-        self.message = message
-
-    def to_rpc(self):
-        return {
-            'code': self.code,
-            'message': self.message,
-            'data': self.data
-        }
-
-
 class JSONRPCServer(socketserver.StreamRequestHandler, object):
     """ Read/Write JSON RPC messages """
-
-    _msg_id = None
 
     def __init__(self, rfile, wfile):
         self.rfile = rfile
@@ -53,11 +23,20 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
     def handle(self):
         # VSCode wants us to keep the connection open, so let's handle messages in a loop
         while True:
-            # TODO: need to time out here eventually??
             try:
-                self._handle_rpc_call()
+                data = self._read_message()
+                log.info("Got message: %s", data)
+                response = jsonrpc.JSONRPCResponseManager.handle(data, self)
+                if response is not None:
+                    self._write_message(response.data)
             except Exception:
+                log.exception("Language server shutting down for uncaught exception")
                 break
+
+    def __getitem__(self, item):
+        # The jsonrpc dispatcher uses getitem to retrieve the RPC method implementation.
+        # We convert that to our own convention.
+        return getattr(self, "m_" + _method_to_string(item))
 
     def handle_json(self, msg):
         # Convert JSONRPC methods to ones on this class
@@ -78,41 +57,10 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
 
     def call(self, method, params=None):
         """ Call a remote method, for now we ignore the response... """
-        call = {
-            'jsonrpc': '2.0',
-            'method': method,
-            'params': params
-        }
-        self._write_message(call)
-
-    def _handle_rpc_call(self):
-        msg = self._read_message()
-
-        # Save the msg id to reply to
-        if msg.get('id') is not None:
-            self._msg_id = msg['id']
-
-        # Make sure we're running 2.0 protocol
-        assert msg['jsonrpc'] == '2.0'
-
-        # Default response
-        response = {'jsonrpc': '2.0', 'id': self._msg_id}
-
-        try:
-            reply = self.handle_json(msg)
-            if reply is None:
-                return
-            response['result'] = reply
-        except JSONRPCError as e:
-            log.error("Failed to process message with id %s: %s", self._msg_id, msg)
-            response['error'] = e.to_rpc()
-        except Exception as e:
-            log.exception("Caught internal error")
-            err = JSONRPCError(JSONRPCError.INTERNAL_ERROR, str(e))
-            response['error'] = err.to_rpc()
-
-        log.debug("Responding to msg %s with %s", self._msg_id, response)
-        self._write_message(response)
+        req = jsonrpc.jsonrpc2.JSONRPC20Request()
+        req.method = method
+        req.params = params
+        self._write_message(req.data)
 
     def _content_length(self, line):
         if line.startswith("Content-Length: "):
@@ -138,10 +86,8 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
         if not line:
             raise EOFError()
 
-        # Grab the body and handle it
-        body = self.rfile.read(content_length)
-
-        return json.loads(body)
+        # Grab the body
+        return self.rfile.read(content_length)
 
     def _write_message(self, msg):
         body = json.dumps(msg, separators=(",", ":"))
