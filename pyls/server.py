@@ -25,7 +25,6 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
         while True:
             try:
                 data = self._read_message()
-                log.debug("Got message: %s", data)
                 response = jsonrpc.JSONRPCResponseManager.handle(data, self)
                 if response is not None:
                     self._write_message(response.data)
@@ -34,14 +33,23 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
                 break
 
     def call(self, method, params=None):
-        """ Call a remote method, for now we ignore the response... """
-        req = jsonrpc.jsonrpc2.JSONRPC20Request(method=method, params=params, is_notification=True)
+        """ Call a method on the client. TODO: return the result. """
+        req = jsonrpc.jsonrpc2.JSONRPC20Request(method=method, params=params)
+        self._write_message(req.data)
+
+    def notify(self, method, params=None):
+        """ Send a notification to the client, expects no response. """
+        req = jsonrpc.jsonrpc2.JSONRPC20Request(
+            method=method, params=params, is_notification=True
+        )
         self._write_message(req.data)
 
     def __getitem__(self, item):
         # The jsonrpc dispatcher uses getitem to retrieve the RPC method implementation.
         # We convert that to our own convention.
-        return getattr(self, "m_" + _method_to_string(item))
+        if not hasattr(self, _method_to_string(item)):
+            raise KeyError("Cannot find method %s" % item)
+        return getattr(self, _method_to_string(item))
 
     def _content_length(self, line):
         if line.startswith("Content-Length: "):
@@ -87,7 +95,7 @@ _RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
 
 
 def _method_to_string(method):
-    return _camel_to_underscore(
+    return "m_" + _camel_to_underscore(
         method.replace("/", "__").replace("$", "")
     )
 
