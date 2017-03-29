@@ -1,8 +1,12 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from threading import Thread
+import json
 import os
+from threading import Thread
+
+import jsonrpc
 import pytest
-from pyls.jsonrpc import JSONRPCServer
+
+from pyls.server import JSONRPCServer
 from pyls.language_server import start_io_lang_server
 from pyls.python_ls import PythonLanguageServer
 
@@ -47,7 +51,7 @@ def test_initialize(client_server):
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
     })
-    response = client._read_message()
+    response = _get_response(client)
 
     assert 'capabilities' in response['result']
 
@@ -56,14 +60,14 @@ def test_file_closed(client_server):
     client, server = client_server
     client.rfile.close()
     with pytest.raises(Exception):
-        client._read_message()
+        _get_response(client)
 
 
 def test_missing_message(client_server):
     client, server = client_server
 
     client.call('unknown_method')
-    response = client._read_message()
+    response = _get_response(client)
     assert response['error']['code'] == -32601  # Method not implemented error
 
 
@@ -76,7 +80,7 @@ def test_linting(client_server):
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
     })
-    response = client._read_message()
+    response = _get_response(client)
 
     assert 'capabilities' in response['result']
 
@@ -84,7 +88,17 @@ def test_linting(client_server):
     client.call('textDocument/didOpen', {
         'textDocument': {'uri': 'file:///test', 'text': 'import sys'}
     })
-    response = client._read_message()
+    response = _get_notification(client)
 
     assert response['method'] == 'textDocument/publishDiagnostics'
     assert len(response['params']['diagnostics']) > 0
+
+
+def _get_notification(client):
+    request = jsonrpc.jsonrpc.JSONRPCRequest.from_json(client._read_message())
+    assert request.is_notification
+    return request.data
+
+
+def _get_response(client):
+    return json.loads(client._read_message())
