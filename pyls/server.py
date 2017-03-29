@@ -25,7 +25,7 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
         while True:
             try:
                 data = self._read_message()
-                log.info("Got message: %s", data)
+                log.debug("Got message: %s", data)
                 response = jsonrpc.JSONRPCResponseManager.handle(data, self)
                 if response is not None:
                     self._write_message(response.data)
@@ -57,9 +57,7 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
 
     def call(self, method, params=None):
         """ Call a remote method, for now we ignore the response... """
-        req = jsonrpc.jsonrpc2.JSONRPC20Request()
-        req.method = method
-        req.params = params
+        req = jsonrpc.jsonrpc2.JSONRPC20Request(method=method, params=params, is_notification=True)
         self._write_message(req.data)
 
     def _content_length(self, line):
