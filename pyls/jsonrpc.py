@@ -3,8 +3,11 @@ import json
 import logging
 import re
 import socketserver
+import threading
+from collections import deque
 
 log = logging.getLogger(__name__)
+cv = threading.Condition()
 
 
 class JSONRPCError(Exception):
@@ -44,6 +47,11 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
     def __init__(self, rfile, wfile):
         self.rfile = rfile
         self.wfile = wfile
+        self.messages = deque()
+        threading.Thread(
+            target=self._write_loop,
+            daemon=True
+        ).start()
 
     def shutdown(self):
         # TODO: we should handle this much better
@@ -144,6 +152,16 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
         return json.loads(body)
 
     def _write_message(self, msg):
+        with cv:
+            self.messages.append(msg)
+            cv.notify()
+
+    def _real_write(self):
+        with cv:
+            if not self.messages:
+                cv.wait()
+            # note: only one consumer, so messages won't be empty after awaken
+            msg = self.messages.popleft()
         body = json.dumps(msg, separators=(",", ":"))
         content_length = len(body)
         response = (
@@ -154,6 +172,9 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
         self.wfile.write(response)
         self.wfile.flush()
 
+    def _write_loop(self):
+        while True:
+            self._real_write()
 
 _RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
 _RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
