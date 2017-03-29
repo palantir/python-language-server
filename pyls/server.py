@@ -33,32 +33,15 @@ class JSONRPCServer(socketserver.StreamRequestHandler, object):
                 log.exception("Language server shutting down for uncaught exception")
                 break
 
-    def __getitem__(self, item):
-        # The jsonrpc dispatcher uses getitem to retrieve the RPC method implementation.
-        # We convert that to our own convention.
-        return getattr(self, "m_" + _method_to_string(item))
-
-    def handle_json(self, msg):
-        # Convert JSONRPC methods to ones on this class
-        # e.g. textDocument/didOpen => m_text_document__did_open
-        method = "m_" + _method_to_string(msg['method'])
-
-        # If the message is not implemented, then say so
-        if not hasattr(self, method):
-            log.warning("Missing method %s", method)
-            raise JSONRPCError(JSONRPCError.METHOD_NOT_FOUND, msg['method'] + " not implemented")
-
-        log.debug("Got message: %s", msg)
-
-        # Else pass the message with params as kwargs
-        # Params may be a dictionary or undefined, so force them to be a dictionary
-        params = msg.get('params', {}) or {}
-        return getattr(self, method)(**params)
-
     def call(self, method, params=None):
         """ Call a remote method, for now we ignore the response... """
         req = jsonrpc.jsonrpc2.JSONRPC20Request(method=method, params=params, is_notification=True)
         self._write_message(req.data)
+
+    def __getitem__(self, item):
+        # The jsonrpc dispatcher uses getitem to retrieve the RPC method implementation.
+        # We convert that to our own convention.
+        return getattr(self, "m_" + _method_to_string(item))
 
     def _content_length(self, line):
         if line.startswith("Content-Length: "):
