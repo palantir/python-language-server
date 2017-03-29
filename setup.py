@@ -36,12 +36,8 @@ setup(
         'future',
         'pycodestyle',
         'pyflakes',
-        'jedi==0.10.0',
+        'jedi>=0.10',
         'yapf'
-    ],
-
-    dependency_links=[
-        'git+git://github.com/davidhalter/jedi.git#egg=jedi-0.10.0'
     ],
 
     # List additional groups of dependencies here (e.g. development
