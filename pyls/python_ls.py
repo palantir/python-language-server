@@ -29,9 +29,6 @@ class PythonLanguageServer(LanguageServer):
     REFERENCES = JediReferencesProvider
     SIGNATURE = JediSignatureProvider
 
-    def __init__(self, *args, **kwargs):
-        super(PythonLanguageServer, self).__init__(*args, **kwargs)
-
     def capabilities(self):
         # TODO: support incremental sync instead of full
         return {

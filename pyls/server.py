@@ -2,13 +2,12 @@
 import json
 import logging
 import re
-import socketserver
 import jsonrpc
 
 log = logging.getLogger(__name__)
 
 
-class JSONRPCServer(socketserver.StreamRequestHandler, object):
+class JSONRPCServer(object):
     """ Read/Write JSON RPC messages """
 
     def __init__(self, rfile, wfile):

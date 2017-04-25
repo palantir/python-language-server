@@ -7,10 +7,29 @@ from .workspace import Workspace
 log = logging.getLogger(__name__)
 
 
+class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
+    """A wrapper class that is used to construct a custom handler class."""
+
+    def setup(self):
+        super(_StreamHandlerWrapper, self).setup()
+        self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
+
+    def handle(self):
+        self.delegate.handle()
+
+
 def start_tcp_lang_server(bind_addr, port, handler_class):
     if not issubclass(handler_class, LanguageServer):
         raise ValueError("Handler class must be a subclass of LanguageServer")
-    server = socketserver.ThreadingTCPServer((bind_addr, port), handler_class)
+
+    # Construct a custom wrapper class around the user's handler_class
+    wrapper_class = type(
+        handler_class.__name__ + "Handler",
+        (_StreamHandlerWrapper,),
+        {'DELEGATE_CLASS': handler_class}
+    )
+
+    server = socketserver.ThreadingTCPServer((bind_addr, port), wrapper_class)
     try:
         log.info("Serving %s on (%s, %s)", handler_class.__name__, bind_addr, port)
         server.serve_forever()
