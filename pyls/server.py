@@ -70,6 +70,9 @@ class JSONRPCServer(object):
 
         # Blindly consume all header lines
         while line and line.strip():
+            cl = self._content_length(line)
+            if cl:
+                content_length = cl
             line = self.rfile.readline()
 
         if not line:
