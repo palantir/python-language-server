@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import jsonrpc
+import socket
 
 log = logging.getLogger(__name__)
 
@@ -84,10 +85,17 @@ class JSONRPCServer(object):
     def _write_message(self, msg):
         body = json.dumps(msg, separators=(",", ":"))
         content_length = len(body)
+
+        if isinstance(self.wfile, socket._fileobject):
+            header = "HTTP/1.1 200 OK\r\n"
+        else:
+            header = ""
+
         response = (
+            "{}"
             "Content-Length: {}\r\n"
             "Content-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n"
-            "{}".format(content_length, body)
+            "{}".format(header, content_length, body)
         )
         self.wfile.write(response)
         self.wfile.flush()
