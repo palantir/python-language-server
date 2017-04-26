@@ -3,9 +3,18 @@ import json
 import logging
 import re
 import jsonrpc
+import sys
 import socket
 
 log = logging.getLogger(__name__)
+
+
+if sys.hexversion >= 0x3000000:
+    PYTHON3 = True
+    socket_type = socket.SocketIO
+else:
+    socket_type = socket._fileobject
+    PYTHON3 = False
 
 
 class JSONRPCServer(object):
@@ -61,8 +70,16 @@ class JSONRPCServer(object):
             except ValueError:
                 raise ValueError("Invalid Content-Length header: {}".format(value))
 
-    def _read_message(self):
+    def readline(self):
         line = self.rfile.readline()
+
+        if isinstance(line, bytes):
+            line = line.decode('utf-8')
+
+        return line
+
+    def _read_message(self):
+        line = self.readline()
 
         if not line:
             raise EOFError()
@@ -74,19 +91,24 @@ class JSONRPCServer(object):
             cl = self._content_length(line)
             if cl:
                 content_length = cl
-            line = self.rfile.readline()
+            line = self.readline()
 
         if not line:
             raise EOFError()
 
         # Grab the body
-        return self.rfile.read(content_length)
+        res = self.rfile.read(content_length)
+
+        if isinstance(res, bytes):
+            res = res.decode('utf-8')
+
+        return res
 
     def _write_message(self, msg):
         body = json.dumps(msg, separators=(",", ":"))
         content_length = len(body)
 
-        if isinstance(self.wfile, socket._fileobject):
+        if isinstance(self.wfile, socket_type):
             header = "HTTP/1.1 200 OK\r\n"
         else:
             header = ""
@@ -97,6 +119,10 @@ class JSONRPCServer(object):
             "Content-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n"
             "{}".format(header, content_length, body)
         )
+
+        if PYTHON3 and isinstance(self.wfile, socket_type):
+            response = response.encode("utf-8")
+
         self.wfile.write(response)
         self.wfile.flush()
 
