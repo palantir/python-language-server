@@ -30,8 +30,9 @@ class JSONRPCServer(object):
         self.wfile.close()
 
     def handle(self):
+        done = False
         # VSCode wants us to keep the connection open, so let's handle messages in a loop
-        while True:
+        while not done:
             try:
                 data = self._read_message()
                 log.debug("Got message: %s", data)
@@ -41,6 +42,9 @@ class JSONRPCServer(object):
             except Exception:
                 log.exception("Language server shutting down for uncaught exception")
                 break
+
+            if isinstance(self.wfile, socket_type):
+                done = True
 
     def call(self, method, params=None):
         """ Call a method on the client. TODO: return the result. """
