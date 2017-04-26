@@ -29,6 +29,7 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
         {'DELEGATE_CLASS': handler_class}
     )
 
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
     server = socketserver.ThreadingTCPServer((bind_addr, port), wrapper_class)
     try:
         log.info("Serving %s on (%s, %s)", handler_class.__name__, bind_addr, port)
