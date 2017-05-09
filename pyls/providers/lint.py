@@ -1,6 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 from configparser import RawConfigParser
 import logging
+import sys
+import os
 import pycodestyle
 from pyflakes import api as pyflakes_api
 from .base import BaseProvider
@@ -61,11 +63,9 @@ class PyCodeStyleLinter(BaseProvider):
     # Potential config files in reverse order of preference
     CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
 
-    def get_config(self, document):
+    def get_config(self, config_files):
         """ Parse the pep8/pycodestyle config options. """
         config = RawConfigParser()
-
-        config_files = self.workspace.find_config_files(document, self.CONFIG_FILES)
 
         if not self.workspace.is_local() or not config_files:
             # If we don't have a local workspace, can't do much.
@@ -88,7 +88,16 @@ class PyCodeStyleLinter(BaseProvider):
         document = self.workspace.get_document(doc_uri)
 
         # Read config from all over the place
-        conf = {k.replace("-", "_"): v for k, v in self.get_config(document)}
+        config_files = self.workspace.find_config_files(
+            document, self.CONFIG_FILES) or []
+        if sys.platform == 'win32':
+            config_files.append(os.path.expanduser(r'~\.pycodestyle'))
+        else:
+            config_files.append(os.path.join(
+                os.getenv('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
+                'pycodestyle'))
+        conf = {k.replace("-", "_"): v
+                for k, v in self.get_config(config_files)}
         log.debug("Got pycodestyle config: %s", conf)
 
         # Grab the pycodestyle parser and set the defaults based on the config we found
