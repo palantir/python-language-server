@@ -43,7 +43,7 @@ class PythonLanguageServer(LanguageServer):
             'hoverProvider': True,
             'referencesProvider': True,
             'signatureHelpProvider': {
-                'triggerCharacters': ['(']
+                'triggerCharacters': ['(', ',']
             },
             'textDocumentSync': TextDocumentSyncKind.FULL
         }
