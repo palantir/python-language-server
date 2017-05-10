@@ -22,7 +22,7 @@ class JediSignatureProvider(JediProvider):
 
         # If there are params, add those
         if len(s.params) > 0:
-            sig['params'] = [{
+            sig['parameters'] = [{
                 'label': p.name,
                 # TODO: we could do smarter things here like parsing the function docstring
                 'documentation': ""
