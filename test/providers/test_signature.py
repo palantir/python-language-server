@@ -33,4 +33,4 @@ def test_signature(workspace):
     sigs = provider.run(DOC_URI, sig_position)['signatures']
     assert len(sigs) == 1
     assert sigs[0]['label'] == 'main(param1, param2)'
-    assert sigs[0]['params'][0]['label'] == 'param1'
+    assert sigs[0]['parameters'][0]['label'] == 'param1'
