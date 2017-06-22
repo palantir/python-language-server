@@ -4,7 +4,7 @@ import pluggy
 
 from . import hookspecs, plugins, PYLS
 from .language_server import LanguageServer
-from .vscode import TextDocumentSyncKind
+from .lsp import TextDocumentSyncKind
 
 log = logging.getLogger(__name__)
 
