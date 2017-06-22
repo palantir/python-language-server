@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import json
 import logging
-import re
 import jsonrpc
 
 log = logging.getLogger(__name__)
@@ -44,13 +43,6 @@ class JSONRPCServer(object):
         )
         self._write_message(req.data)
 
-    def __getitem__(self, item):
-        # The jsonrpc dispatcher uses getitem to retrieve the RPC method implementation.
-        # We convert that to our own convention.
-        if not hasattr(self, _method_to_string(item)):
-            raise KeyError("Cannot find method %s" % item)
-        return getattr(self, _method_to_string(item))
-
     def _content_length(self, line):
         if line.startswith("Content-Length: "):
             _, value = line.split("Content-Length: ")
@@ -88,18 +80,3 @@ class JSONRPCServer(object):
         )
         self.wfile.write(response)
         self.wfile.flush()
-
-
-_RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
-_RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
-
-
-def _method_to_string(method):
-    return "m_" + _camel_to_underscore(
-        method.replace("/", "__").replace("$", "")
-    )
-
-
-def _camel_to_underscore(string):
-    s1 = _RE_FIRST_CAP.sub(r'\1_\2', string)
-    return _RE_ALL_CAP.sub(r'\1_\2', s1).lower()

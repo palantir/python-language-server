@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import pytest
-from pyls.workspace import Workspace
+from pyls import workspace
 
 DOC_URI = 'file://' + __file__
 
@@ -30,12 +30,12 @@ def test_rm_document(pyls):
 
 
 def test_bad_get_document(pyls):
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         pyls.workspace.get_document("BAD_URI")
 
 
-def test_uri_like(pyls):
-    assert pyls.workspace.get_uri_like('file:///some-path', '/my/path') == 'file:///my/path'
+def test_uri_like():
+    assert workspace.get_uri_like('file:///some-path', '/my/path') == 'file:///my/path'
 
 
 def test_non_root_project(pyls):
@@ -50,4 +50,4 @@ def test_non_root_project(pyls):
     test_uri = 'file://' + os.path.join(project_root, 'hello/test.py')
     pyls.workspace.put_document(test_uri, 'assert True')
     test_doc = pyls.workspace.get_document(test_uri)
-    assert project_root in pyls.workspace.syspath_for_document(test_doc)
+    assert project_root in pyls.workspace.syspath_for_path(test_doc.path)

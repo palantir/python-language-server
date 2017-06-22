@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyls.providers.completion import JediCompletionProvider
+from pyls.plugins.completion import pyls_completions
+from pyls.workspace import Document
 
 DOC_URI = __file__
 DOC = """import sys
@@ -14,27 +15,21 @@ def _a_hello():
 """
 
 
-def test_completion(workspace):
+def test_completion():
     # Over 'r' in sys.stdin.read()
     com_position = {'line': 1, 'character': 17}
-
-    workspace.put_document(DOC_URI, DOC)
-    provider = JediCompletionProvider(workspace)
-
-    items = provider.run(DOC_URI, com_position)['items']
+    doc = Document(DOC_URI, DOC)
+    items = pyls_completions(doc, com_position)
 
     assert len(items) > 0
     assert items[0]['label'] == 'read'
 
 
-def test_completion_ordering(workspace):
+def test_completion_ordering():
     # Over the blank line
     com_position = {'line': 8, 'character': 0}
-
-    workspace.put_document(DOC_URI, DOC)
-    provider = JediCompletionProvider(workspace)
-
-    completions = provider.run(DOC_URI, com_position)['items']
+    doc = Document(DOC_URI, DOC)
+    completions = pyls_completions(doc, com_position)
 
     items = {c['label']: c['sortText'] for c in completions}
 

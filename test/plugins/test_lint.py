@@ -2,8 +2,8 @@
 import os
 import shutil
 import tempfile
-from pyls.workspace import Workspace
-from pyls.providers.lint import PyCodeStyleLinter, PyflakesLinter
+from pyls.workspace import Document, Workspace
+from pyls.plugins import pycodestyle_lint, pyflakes_lint
 
 DOC_URI = __file__
 DOC = """import sys
@@ -20,10 +20,8 @@ DOC_SYNTAX_ERR = """def hello()
 
 
 def test_pycodestyle(workspace):
-    workspace.put_document(DOC_URI, DOC)
-    provider = PyCodeStyleLinter(workspace)
-
-    diags = provider.run(DOC_URI)
+    doc = Document(DOC_URI, DOC)
+    diags = pycodestyle_lint.pyls_lint(workspace, doc)
 
     assert all([d['source'] == 'pycodestyle' for d in diags])
 
@@ -54,12 +52,11 @@ def test_pycodestyle_config():
     tmp = tempfile.mkdtemp()
     workspace = Workspace(tmp)
     doc_uri = 'file://' + tmp + '/' + 'test.py'
-
-    provider = PyCodeStyleLinter(workspace)
     workspace.put_document(doc_uri, DOC)
+    doc = workspace.get_document(doc_uri)
 
     # Make sure we get a warning for 'indentation contains tabs'
-    diags = provider.run(doc_uri)
+    diags = pycodestyle_lint.pyls_lint(workspace, doc)
     assert len([d for d in diags if d['code'] == 'W191']) > 0
 
     content = {
@@ -74,7 +71,7 @@ def test_pycodestyle_config():
             f.write(content)
 
         # And make sure we don't get any warnings
-        diags = provider.run(doc_uri)
+        diags = pycodestyle_lint.pyls_lint(workspace, doc)
         assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
 
         os.unlink(os.path.join(tmp, conf_file))
@@ -82,11 +79,9 @@ def test_pycodestyle_config():
     shutil.rmtree(tmp)
 
 
-def test_pyflakes(workspace):
-    workspace.put_document(DOC_URI, DOC)
-    provider = PyflakesLinter(workspace)
-
-    diags = provider.run(DOC_URI)
+def test_pyflakes():
+    doc = Document(DOC_URI, DOC)
+    diags = pyflakes_lint.pyls_lint(doc)
 
     # One we're expecting is:
     msg = '\'sys\' imported but unused'
@@ -95,11 +90,9 @@ def test_pyflakes(workspace):
     assert unused_import['range']['start'] == {'line': 0, 'character': 0}
 
 
-def test_syntax_error_pyflakes(workspace):
-    workspace.put_document(DOC_URI, DOC_SYNTAX_ERR)
-    provider = PyflakesLinter(workspace)
-
-    diag = provider.run(DOC_URI)[0]
+def test_syntax_error_pyflakes():
+    doc = Document(DOC_URI, DOC_SYNTAX_ERR)
+    diag = pyflakes_lint.pyls_lint(doc)[0]
 
     assert diag['message'] == 'invalid syntax'
     assert diag['range']['start'] == {'line': 0, 'character': 12}
