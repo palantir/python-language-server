@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 from pyls.plugins.symbols import pyls_document_symbols
-from pyls.vscode import SymbolKind
+from pyls.lsp import SymbolKind
 from pyls.workspace import Document
 
 DOC_URI = __file__
