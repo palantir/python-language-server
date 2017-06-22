@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls.vscode import CompletionItemKind
+from pyls.lsp import CompletionItemKind
 from pyls import hookimpl
 
 log = logging.getLogger(__name__)
