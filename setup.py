@@ -38,7 +38,8 @@ setup(
         'json-rpc',
         'pycodestyle',
         'pyflakes',
-        'yapf'
+        'yapf',
+        'pluggy'
     ],
 
     # List additional groups of dependencies here (e.g. development

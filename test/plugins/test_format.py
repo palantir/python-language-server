@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyls.providers.format import YapfFormatter
+from pyls.plugins.format import pyls_format_document, pyls_format_range
+from pyls.workspace import Document
 
 DOC_URI = __file__
 DOC = """A = [
@@ -17,26 +18,22 @@ B = ['h',
 GOOD_DOC = """A = ['hello', 'world']\n"""
 
 
-def test_format(workspace):
-    workspace.put_document(DOC_URI, DOC)
-    provider = YapfFormatter(workspace)
-
-    res = provider.run(DOC_URI)
+def test_format():
+    doc = Document(DOC_URI, DOC)
+    res = pyls_format_document(doc)
 
     assert len(res) == 1
     assert res[0]['newText'] == "A = ['h', 'w', 'a']\n\nB = ['h', 'w']\n"
 
 
-def test_range_format(workspace):
-    workspace.put_document(DOC_URI, DOC)
-    provider = YapfFormatter(workspace)
+def test_range_format():
+    doc = Document(DOC_URI, DOC)
 
     range = {
         'start': {'line': 0, 'character': 0},
         'end': {'line': 4, 'character': 10}
     }
-
-    res = provider.run(DOC_URI, range)
+    res = pyls_format_range(doc, range)
 
     assert len(res) == 1
 
@@ -44,8 +41,6 @@ def test_range_format(workspace):
     assert res[0]['newText'] == "A = ['h', 'w', 'a']\n\nB = ['h',\n\n\n'w']\n"
 
 
-def test_no_change(workspace):
-    workspace.put_document(DOC_URI, GOOD_DOC)
-    provider = YapfFormatter(workspace)
-
-    assert len(provider.run(DOC_URI)) == 0
+def test_no_change():
+    doc = Document(DOC_URI, GOOD_DOC)
+    assert len(pyls_format_document(doc)) == 0

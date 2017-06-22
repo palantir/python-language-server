@@ -1,30 +1,24 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from .base import JediProvider
-from pyls.vscode import CompletionItemKind
+from pyls.lsp import CompletionItemKind
+from pyls import hookimpl
 
 log = logging.getLogger(__name__)
 
 
-class JediCompletionProvider(JediProvider):
-    """ Provide auto-complete suggestions """
-
-    def run(self, doc_uri, position):
-        definitions = self.jedi_script(doc_uri, position).completions()
-
-        return {
-            'isIncomplete': False,
-            'items': [{
-                'label': d.name,
-                'kind': _kind(d),
-                'detail': d.description or "",
-                'documentation': d.docstring(),
-                'sortText': sort_text(d)
-            } for d in definitions]
-        }
+@hookimpl
+def pyls_completions(document, position):
+    definitions = document.jedi_script(position).completions()
+    return [{
+        'label': d.name,
+        'kind': _kind(d),
+        'detail': d.description or "",
+        'documentation': d.docstring(),
+        'sortText': _sort_text(d)
+    } for d in definitions]
 
 
-def sort_text(definition):
+def _sort_text(definition):
     """ Ensure builtins appear at the bottom.
     Description is of format <type>: <module>.<item>
     """
