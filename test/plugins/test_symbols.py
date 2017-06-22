@@ -1,6 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyls.providers.symbols import JediDocumentSymbolsProvider
-from pyls.vscode import SymbolKind
+from pyls.plugins.symbols import pyls_document_symbols
+from pyls.lsp import SymbolKind
+from pyls.workspace import Document
 
 DOC_URI = __file__
 DOC = """import sys
@@ -15,11 +16,9 @@ def main():
 """
 
 
-def test_symbols(workspace):
-    workspace.put_document(DOC_URI, DOC)
-    provider = JediDocumentSymbolsProvider(workspace)
-
-    symbols = provider.run(DOC_URI)
+def test_symbols():
+    doc = Document(DOC_URI, DOC)
+    symbols = pyls_document_symbols(doc)
 
     # All four symbols (import sys, a, B, main)
     assert len(symbols) == 4

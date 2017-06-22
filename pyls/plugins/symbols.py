@@ -1,23 +1,19 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from .base import JediProvider
-from pyls.vscode import SymbolKind
+from pyls import hookimpl
+from pyls.lsp import SymbolKind
 
 log = logging.getLogger(__name__)
 
 
-class JediDocumentSymbolsProvider(JediProvider):
-    """ Finds all symbols in a given text document """
-
-    def run(self, doc_uri):
-        definitions = self.jedi_names(doc_uri)
-        log.info(definitions)
-
-        return [{
-            'name': d.name,
-            'kind': _kind(d),
-            'location': {'uri': doc_uri, 'range': _range(d)}
-        } for d in definitions]
+@hookimpl
+def pyls_document_symbols(document):
+    definitions = document.jedi_names()
+    return [{
+        'name': d.name,
+        'kind': _kind(d),
+        'location': {'uri': document.uri, 'range': _range(d)}
+    } for d in definitions]
 
 
 def _range(d):
