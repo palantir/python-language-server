@@ -14,47 +14,47 @@ Features
 
 Auto Completion:
 
-.. image:: resources/auto-complete.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/auto-complete.gif
 
 Code Linting with pycodestyle and pyflakes:
 
-.. image:: resources/linting.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/linting.gif
 
 Signature Help:
 
-.. image:: resources/signature-help.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/signature-help.gif
 
 Go to definition:
 
-.. image:: resources/goto-definition.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/goto-definition.gif
 
 Hover:
 
-.. image:: resources/hover.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/hover.gif
 
 Find References:
 
-.. image:: resources/references.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/references.gif
 
 Document Symbols:
 
-.. image:: resources/document-symbols.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/document-symbols.gif
 
 Document Formatting:
 
-.. image:: resources/document-format.gif
+.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/document-format.gif
 
 Installation
 ------------
 
-``pip install --process-dependency-links .``
+``pip install python-language-server``
 
 Development
 -----------
 
 To run the test suite:
 
-``pip install --process-dependency-links .[test] && tox``
+``pip install .[test] && tox``
 
 Develop against VS Code
 =======================
