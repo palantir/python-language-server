@@ -9,7 +9,6 @@ log = logging.getLogger(__name__)
 @hookimpl
 def pyls_completions(document, position):
     definitions = document.jedi_script(position).completions()
-    log.warning("Found completions for document %s, position %s: %s", document, position, definitions)
     return [{
         'label': d.name,
         'kind': _kind(d),
