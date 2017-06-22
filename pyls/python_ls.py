@@ -1,15 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from .language_server import LanguageServer
+import pluggy
 
-from .providers.completion import JediCompletionProvider
-from .providers.definition import JediDefinitionsProvider
-from .providers.format import YapfFormatter
-from .providers.lint import PyCodeStyleLinter, PyflakesLinter
-from .providers.hover import JediDocStringHoverProvider
-from .providers.references import JediReferencesProvider
-from .providers.signature import JediSignatureProvider
-from .providers.symbols import JediDocumentSymbolsProvider
+from . import hookspecs, plugins, PYLS
+from .language_server import LanguageServer
 from .vscode import TextDocumentSyncKind
 
 log = logging.getLogger(__name__)
@@ -17,17 +11,16 @@ log = logging.getLogger(__name__)
 
 class PythonLanguageServer(LanguageServer):
 
-    # Providers for different things and config chooses which one
-
-    COMPLETION = JediCompletionProvider
-    DEFINITIONS = JediDefinitionsProvider
-    DOCUMENT_FORMATTER = YapfFormatter
-    DOCUMENT_SYMBOLS = JediDocumentSymbolsProvider
-    HOVER = JediDocStringHoverProvider
-    LINTERS = [PyCodeStyleLinter, PyflakesLinter]
-    RANGE_FORMATTER = YapfFormatter
-    REFERENCES = JediReferencesProvider
-    SIGNATURE = JediSignatureProvider
+    def __init__(self, *args, **kwargs):
+        # TODO(gatesn): In the future we may need to reconstruct the pm at runtime if configs change
+        self._pm = pluggy.PluginManager(PYLS)
+        self._pm.trace.root.setwriter(log.debug)
+        self._pm.enable_tracing()
+        self._pm.add_hookspecs(hookspecs)
+        self._pm.load_setuptools_entrypoints(PYLS)
+        for plugin in plugins.CORE_PLUGINS:
+            self._pm.register(plugin)
+        super(PythonLanguageServer, self).__init__(*args, **kwargs)
 
     def capabilities(self):
         # TODO: support incremental sync instead of full
@@ -48,36 +41,44 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': TextDocumentSyncKind.FULL
         }
 
+    def _hook(self, hook, doc_uri, **kwargs):
+        return hook(workspace=self.workspace, document=self.workspace.get_document(doc_uri), **kwargs)
+
     def completions(self, doc_uri, position):
-        return self.COMPLETION(self.workspace).run(doc_uri, position)
+        completions = self._hook(self._pm.hook.pyls_completions, doc_uri, position=position)
+        return {
+            'isIncomplete': False,
+            'items': flatten(completions)
+        }
 
     def definitions(self, doc_uri, position):
-        return self.DEFINITIONS(self.workspace).run(doc_uri, position)
+        return flatten(self._hook(self._pm.hook.pyls_definitions, doc_uri, position=position))
 
     def document_symbols(self, doc_uri):
-        return self.DOCUMENT_SYMBOLS(self.workspace).run(doc_uri)
+        return flatten(self._hook(self._pm.hook.pyls_definitions, doc_uri))
 
     def format_document(self, doc_uri):
-        return self.DOCUMENT_FORMATTER(self.workspace).run(doc_uri)
+        return self._hook(self._pm.hook.pyls_definitions, doc_uri)
 
     def format_range(self, doc_uri, range):
-        return self.RANGE_FORMATTER(self.workspace).run(doc_uri, range)
+        return self._hook(self._pm.hook.pyls_definitions, doc_uri, range=range)
 
     def hover(self, doc_uri, position):
-        return self.HOVER(self.workspace).run(doc_uri, position) or {'contents': ''}
+        return self._hook(self._pm.hook.pyls_hover, doc_uri, position=position) or {'contents': ''}
 
     def lint(self, doc_uri):
-        diagnostics = []
-        for linter in self.LINTERS:
-            # TODO: combine results from all linters and dedup
-            diagnostics.extend(linter(self.workspace).run(doc_uri))
-        self.publish_diagnostics(doc_uri, diagnostics)
+        self.publish_diagnostics(doc_uri, flatten(self._hook(
+            self._pm.hook.pyls_lint, doc_uri
+        )))
 
     def references(self, doc_uri, position, exclude_declaration):
-        return self.REFERENCES(self.workspace).run(doc_uri, position, exclude_declaration)
+        return flatten(self._hook(
+            self._pm.hook.pyls_references, doc_uri, position=position,
+            exclude_declaration=exclude_declaration
+        ))
 
     def signature_help(self, doc_uri, position):
-        return self.SIGNATURE(self.workspace).run(doc_uri, position)
+        return self._hook(self._pm.hook.pyls_signature_help, doc_uri, position=position)
 
     def m_text_document__did_close(self, textDocument=None, **kwargs):
         self.workspace.rm_document(textDocument['uri'])
@@ -124,3 +125,7 @@ class PythonLanguageServer(LanguageServer):
 
     def m_workspace__did_change_watched_files(self, **kwargs):
         pass
+
+
+def flatten(list_of_lists):
+    return [item for lst in list_of_lists for item in lst]

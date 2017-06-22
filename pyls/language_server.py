@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import re
 import socketserver
 from .server import JSONRPCServer
 from .workspace import Workspace
@@ -19,8 +20,8 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
 
 
 def start_tcp_lang_server(bind_addr, port, handler_class):
-    if not issubclass(handler_class, LanguageServer):
-        raise ValueError("Handler class must be a subclass of LanguageServer")
+    if not issubclass(handler_class, JSONRPCServer):
+        raise ValueError("Handler class must be a subclass of JSONRPCServer")
 
     # Construct a custom wrapper class around the user's handler_class
     wrapper_class = type(
@@ -41,20 +42,39 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
 
 
 def start_io_lang_server(rfile, wfile, handler_class):
-    if not issubclass(handler_class, LanguageServer):
-        raise ValueError("Handler class must be a subclass of LanguageServer")
+    if not issubclass(handler_class, JSONRPCServer):
+        raise ValueError("Handler class must be a subclass of LanguagJSONRPCServereServer")
     log.info("Starting %s IO language server", handler_class.__name__)
     server = handler_class(rfile, wfile)
     server.handle()
 
 
-class LanguageServer(JSONRPCServer):
+class MethodJSONRPCServer(JSONRPCServer):
+    """JSONRPCServer that calls methods on itself with params."""
+
+    def __getitem__(self, item):
+        """The jsonrpc dispatcher uses getitem to retrieve the RPC method implementation."""
+        method_name = "m_" + _method_to_string(item)
+        if not hasattr(self, method_name):
+            raise KeyError("Cannot find method %s" % method_name)
+        func = getattr(self, method_name)
+
+        def wrapped(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except:  # pylint: disable=bare-except
+                log.exception("CAUGHT")
+                raise
+        return wrapped
+
+
+class LanguageServer(MethodJSONRPCServer):
     """ Implementation of the Microsoft VSCode Language Server Protocol
     https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
     """
 
     process_id = None
-    workspace = None
+    workspace = None  # type: Workspace
     init_opts = None
 
     M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
@@ -88,3 +108,18 @@ class LanguageServer(JSONRPCServer):
 
     def m_exit(self, **kwargs):
         self.shutdown()
+
+
+_RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
+_RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
+
+
+def _method_to_string(method):
+    return _camel_to_underscore(
+        method.replace("/", "__").replace("$", "")
+    )
+
+
+def _camel_to_underscore(string):
+    s1 = _RE_FIRST_CAP.sub(r'\1_\2', string)
+    return _RE_ALL_CAP.sub(r'\1_\2', s1).lower()
