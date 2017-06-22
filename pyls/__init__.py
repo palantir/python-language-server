@@ -11,3 +11,7 @@ PYLS = 'pyls'
 
 hookspec = pluggy.HookspecMarker(PYLS)
 hookimpl = pluggy.HookimplMarker(PYLS)
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
