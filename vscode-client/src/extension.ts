@@ -9,7 +9,7 @@ import * as net from 'net';
 import { workspace, Disposable, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, ErrorAction, ErrorHandler, CloseAction, TransportKind } from 'vscode-languageclient';
 
-function startLangServer(command: string, documentSelector: string | string[]): Disposable {
+function startLangServer(command: string, documentSelector: string[]): Disposable {
 	const serverOptions: ServerOptions = {
 		command: command,
 	};
@@ -19,7 +19,7 @@ function startLangServer(command: string, documentSelector: string | string[]): 
 	return new LanguageClient(command, serverOptions, clientOptions).start();
 }
 
-function startLangServerTCP(addr: number, documentSelector: string | string[]): Disposable {
+function startLangServerTCP(addr: number, documentSelector: string[]): Disposable {
 	const serverOptions: ServerOptions = function() {
 		return new Promise((resolve, reject) => {
 			var client = new net.Socket();

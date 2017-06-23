@@ -20,11 +20,13 @@ class PythonLanguageServer(LanguageServer):
         self._pm.load_setuptools_entrypoints(PYLS)
         for plugin in plugins.CORE_PLUGINS:
             self._pm.register(plugin)
+        log.info("Loaded plugins: %s", self._pm.get_plugins())
         super(PythonLanguageServer, self).__init__(*args, **kwargs)
 
     def capabilities(self):
         # TODO: support incremental sync instead of full
         return {
+            'codeActionProvider': True,
             'completionProvider': {
                 'resolveProvider': False,  # We know everything ahead of time
                 'triggerCharacters': ['.']
@@ -33,6 +35,9 @@ class PythonLanguageServer(LanguageServer):
             'documentRangeFormattingProvider': True,
             'documentSymbolProvider': True,
             'definitionProvider': True,
+            'executeCommandProvider': {
+                'commands': flatten(self._hook(self._pm.hook.pyls_commands))
+            },
             'hoverProvider': True,
             'referencesProvider': True,
             'signatureHelpProvider': {
@@ -41,8 +46,12 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': TextDocumentSyncKind.FULL
         }
 
-    def _hook(self, hook, doc_uri, **kwargs):
-        return hook(workspace=self.workspace, document=self.workspace.get_document(doc_uri), **kwargs)
+    def _hook(self, hook, doc_uri=None, **kwargs):
+        doc = self.workspace.get_document(doc_uri) if doc_uri else None
+        return hook(workspace=self.workspace, document=doc, **kwargs)
+
+    def code_actions(self, doc_uri, range, context):
+        return flatten(self._hook(self._pm.hook.pyls_code_actions, doc_uri, range=range, context=context))
 
     def completions(self, doc_uri, position):
         completions = self._hook(self._pm.hook.pyls_completions, doc_uri, position=position)
@@ -56,6 +65,9 @@ class PythonLanguageServer(LanguageServer):
 
     def document_symbols(self, doc_uri):
         return flatten(self._hook(self._pm.hook.pyls_definitions, doc_uri))
+
+    def execute_command(self, command, arguments):
+        return self._hook(self._pm.hook.pyls_execute_command, command=command, arguments=arguments)
 
     def format_document(self, doc_uri):
         return self._hook(self._pm.hook.pyls_definitions, doc_uri)
@@ -84,17 +96,22 @@ class PythonLanguageServer(LanguageServer):
         self.workspace.rm_document(textDocument['uri'])
 
     def m_text_document__did_open(self, textDocument=None, **kwargs):
-        self.workspace.put_document(textDocument['uri'], textDocument['text'])
+        self.workspace.put_document(textDocument['uri'], textDocument['text'], version=textDocument.get('version'))
         self.lint(textDocument['uri'])
 
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **kwargs):
         # Since we're using a FULL document sync, there is only one change containing the whole file
         # TODO: debounce, or should this be someone else's responsibility? Probably
-        self.workspace.put_document(textDocument['uri'], contentChanges[0]['text'])
+        self.workspace.put_document(
+            textDocument['uri'], contentChanges[0]['text'], version=textDocument.get('version')
+        )
         self.lint(textDocument['uri'])
 
     def m_text_document__did_save(self, textDocument=None, **kwargs):
         self.lint(textDocument['uri'])
+
+    def m_text_document__code_action(self, textDocument=None, range=None, context=None, **kwargs):
+        return self.code_actions(textDocument['uri'], range, context)
 
     def m_text_document__completion(self, textDocument=None, position=None, **kwargs):
         return self.completions(textDocument['uri'], position)
@@ -125,6 +142,9 @@ class PythonLanguageServer(LanguageServer):
 
     def m_workspace__did_change_watched_files(self, **kwargs):
         pass
+
+    def m_workspace__execute_command(self, command=None, arguments=None):
+        return self.execute_command(command, arguments)
 
 
 def flatten(list_of_lists):
