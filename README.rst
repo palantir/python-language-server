@@ -14,35 +14,35 @@ Features
 
 Auto Completion:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/auto-complete.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/auto-complete.gif
 
 Code Linting with pycodestyle and pyflakes:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/linting.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/linting.gif
 
 Signature Help:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/signature-help.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/signature-help.gif
 
 Go to definition:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/goto-definition.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/goto-definition.gif
 
 Hover:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/hover.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/hover.gif
 
 Find References:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/references.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/references.gif
 
 Document Symbols:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/document-symbols.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/document-symbols.gif
 
 Document Formatting:
 
-.. image:: https://github.com/palantir/python-language-server/blob/develop/resources/document-format.gif
+.. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/document-format.gif
 
 Installation
 ------------
