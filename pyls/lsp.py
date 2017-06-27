@@ -26,6 +26,13 @@ class CompletionItemKind(object):
     Reference = 18
 
 
+class MessageType(object):
+    Error = 1
+    Warning = 2
+    Info = 3
+    Log = 4
+
+
 class SymbolKind(object):
     File = 1
     Module = 2

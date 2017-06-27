@@ -7,6 +7,8 @@ from urllib.parse import urlparse, urlunparse
 
 import jedi
 
+from pyls.lsp import MessageType
+
 log = logging.getLogger(__name__)
 
 # TODO: this is not the best e.g. we capture numbers
@@ -16,7 +18,9 @@ RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 class Workspace(object):
 
+    M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
     M_APPLY_EDIT = 'workspace/applyEdit'
+    M_SHOW_MESSAGE = 'window/showMessage'
 
     def __init__(self, root, lang_server=None):
         self._url_parsed = urlparse(root)
@@ -28,12 +32,12 @@ class Workspace(object):
         return (self._url_parsed.scheme == '' or self._url_parsed.scheme == 'file') and os.path.exists(self.root)
 
     def get_document(self, doc_uri):
-        return self._docs[str(doc_uri)]
+        return self._docs[doc_uri]
 
     def put_document(self, doc_uri, content, version=None):
         path = urlparse(doc_uri).path
         self._check_in_workspace(path)
-        self._docs[str(doc_uri)] = Document(
+        self._docs[doc_uri] = Document(
             doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
 
@@ -41,7 +45,16 @@ class Workspace(object):
         self._docs.pop(doc_uri)
 
     def apply_edit(self, edit):
-        self._lang_server.call(self.M_APPLY_EDIT, {'edit': edit})
+        # Note that lang_server.call currently doesn't return anything
+        return self._lang_server.call(self.M_APPLY_EDIT, {'edit': edit})
+
+    def publish_diagnostics(self, doc_uri, diagnostics):
+        params = {'uri': doc_uri, 'diagnostics': diagnostics}
+        self._lang_server.notify(self.M_PUBLISH_DIAGNOSTICS, params)
+
+    def show_message(self, message, msg_type=MessageType.Info):
+        params = {'type': msg_type, 'message': message}
+        self._lang_server.notify(self.M_SHOW_MESSAGE, params)
 
     def syspath_for_path(self, path):
         """Construct a sensible sys path to use for the given file path.
@@ -79,13 +92,9 @@ class Document(object):
         self.version = version
         self.path = urlparse(uri).path
         self.filename = os.path.basename(self.path)
-        self.source = source
-
-        if self.source is None:
-            with open(self.path, 'r') as f:
-                self.source = f.read()
 
         self._local = local
+        self._source = source
         self._sys_path = sys_path or sys.path
 
     def __str__(self):
@@ -94,6 +103,13 @@ class Document(object):
     @property
     def lines(self):
         return self.source.splitlines(True)
+
+    @property
+    def source(self):
+        if not self._source:
+            with open(self.path, 'r') as f:
+                return f.read()
+        return self._source
 
     def word_at_position(self, position):
         """ Get the word under the cursor returning the start and end positions """

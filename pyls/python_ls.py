@@ -27,6 +27,9 @@ class PythonLanguageServer(LanguageServer):
         # TODO: support incremental sync instead of full
         return {
             'codeActionProvider': True,
+            'codeLensProvider': {
+                'resolveProvider': False,  # We may need to make this configurable
+            },
             'completionProvider': {
                 'resolveProvider': False,  # We know everything ahead of time
                 'triggerCharacters': ['.']
@@ -46,12 +49,18 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': TextDocumentSyncKind.FULL
         }
 
+    def initialize(self):
+        self._hook(self._pm.hook.pyls_initialize)
+
     def _hook(self, hook, doc_uri=None, **kwargs):
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
         return hook(workspace=self.workspace, document=doc, **kwargs)
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook(self._pm.hook.pyls_code_actions, doc_uri, range=range, context=context))
+
+    def code_lens(self, doc_uri):
+        return flatten(self._hook(self._pm.hook.pyls_code_lens, doc_uri))
 
     def completions(self, doc_uri, position):
         completions = self._hook(self._pm.hook.pyls_completions, doc_uri, position=position)
@@ -73,13 +82,13 @@ class PythonLanguageServer(LanguageServer):
         return self._hook(self._pm.hook.pyls_definitions, doc_uri)
 
     def format_range(self, doc_uri, range):
-        return self._hook(self._pm.hook.pyls_definitions, doc_uri, range=range)
+        return self._hook(self._pm.hook.pyls_format_range, doc_uri, range=range)
 
     def hover(self, doc_uri, position):
         return self._hook(self._pm.hook.pyls_hover, doc_uri, position=position) or {'contents': ''}
 
     def lint(self, doc_uri):
-        self.publish_diagnostics(doc_uri, flatten(self._hook(
+        self.workspace.publish_diagnostics(doc_uri, flatten(self._hook(
             self._pm.hook.pyls_lint, doc_uri
         )))
 
@@ -112,6 +121,9 @@ class PythonLanguageServer(LanguageServer):
 
     def m_text_document__code_action(self, textDocument=None, range=None, context=None, **kwargs):
         return self.code_actions(textDocument['uri'], range, context)
+
+    def m_text_document__code_lens(self, textDocument=None, **kwargs):
+        return self.code_lens(textDocument['uri'])
 
     def m_text_document__completion(self, textDocument=None, position=None, **kwargs):
         return self.completions(textDocument['uri'], position)
