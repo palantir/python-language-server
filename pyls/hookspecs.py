@@ -9,6 +9,11 @@ def pyls_code_actions(workspace, document, range, context):
 
 
 @hookspec
+def pyls_code_lens(workspace, document):
+    pass
+
+
+@hookspec
 def pyls_commands(workspace):
     """The list of command strings supported by the server.
 
@@ -24,6 +29,11 @@ def pyls_completions(workspace, document, position):
 
 @hookspec
 def pyls_definitions(workspace, document, position):
+    pass
+
+
+@hookspec
+def pyls_document_did_save(workspace, document):
     pass
 
 
@@ -49,6 +59,11 @@ def pyls_format_range(workspace, document, range):
 
 @hookspec(firstresult=True)
 def pyls_hover(workspace, document, position):
+    pass
+
+
+@hookspec
+def pyls_initialize(workspace):
     pass
 
 

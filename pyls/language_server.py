@@ -77,21 +77,19 @@ class LanguageServer(MethodJSONRPCServer):
     workspace = None  # type: Workspace
     init_opts = None
 
-    M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
-
     def capabilities(self):
         return {}
 
-    def publish_diagnostics(self, uri, diagnostics):
-        log.debug("Publishing diagnostics: %s", diagnostics)
-        params = {'uri': uri, 'diagnostics': diagnostics}
-        self.notify(self.M_PUBLISH_DIAGNOSTICS, params)
+    def initialize(self):
+        pass
 
     def m_initialize(self, **kwargs):
         log.debug("Language server intialized with %s", kwargs)
         self.process_id = kwargs.get('processId')
         self.workspace = Workspace(kwargs.get('rootPath'), lang_server=self)
         self.init_opts = kwargs.get('initializationOptions')
+
+        self.initialize()
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
