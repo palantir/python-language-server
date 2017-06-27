@@ -28,12 +28,12 @@ def client_server():
     scr, scw = os.pipe()
 
     server = Thread(target=start_io_lang_server, args=(
-        os.fdopen(csr), os.fdopen(scw, 'w'), PythonLanguageServer
+        os.fdopen(csr, 'rb'), os.fdopen(scw, 'wb'), PythonLanguageServer
     ))
     server.daemon = True
     server.start()
 
-    client = JSONRPCClient(os.fdopen(scr), os.fdopen(csw, 'w'))
+    client = JSONRPCClient(os.fdopen(scr, 'rb'), os.fdopen(csw, 'wb'))
 
     yield client, server
 
