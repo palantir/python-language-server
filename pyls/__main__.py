@@ -72,7 +72,8 @@ def _binary_stdio():
         # binary data that read from it becomes corrupted on \r\n
         if sys.platform == "win32":
             # set sys.stdin to binary mode
-            import os, msvcrt
+            import os
+            import msvcrt
             msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
             msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
         stdin, stdout = sys.stdin, sys.stdout
