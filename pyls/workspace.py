@@ -16,10 +16,13 @@ RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 class Workspace(object):
 
-    def __init__(self, root):
+    M_APPLY_EDIT = 'workspace/applyEdit'
+
+    def __init__(self, root, lang_server=None):
         self._url_parsed = urlparse(root)
         self.root = self._url_parsed.path
         self._docs = {}
+        self._lang_server = lang_server
 
     def is_local(self):
         return (self._url_parsed.scheme == '' or self._url_parsed.scheme == 'file') and os.path.exists(self.root)
@@ -27,15 +30,18 @@ class Workspace(object):
     def get_document(self, doc_uri):
         return self._docs[str(doc_uri)]
 
-    def put_document(self, doc_uri, content):
+    def put_document(self, doc_uri, content, version=None):
         path = urlparse(doc_uri).path
         self._check_in_workspace(path)
         self._docs[str(doc_uri)] = Document(
-            doc_uri, content, sys_path=self.syspath_for_path(path)
+            doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
 
     def rm_document(self, doc_uri):
         self._docs.pop(doc_uri)
+
+    def apply_edit(self, edit):
+        self._lang_server.call(self.M_APPLY_EDIT, {'edit': edit})
 
     def syspath_for_path(self, path):
         """Construct a sensible sys path to use for the given file path.
@@ -68,8 +74,9 @@ class Workspace(object):
 
 class Document(object):
 
-    def __init__(self, uri, source=None, local=True, sys_path=None):
+    def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
         self.uri = uri
+        self.version = version
         self.path = urlparse(uri).path
         self.filename = os.path.basename(self.path)
         self.source = source
@@ -103,8 +110,11 @@ class Document(object):
 
         return m_start[0] + m_end[-1]
 
-    def jedi_names(self):
-        return jedi.api.names(source=self.source)
+    def jedi_names(self, all_scopes=False, definitions=True, references=False):
+        return jedi.api.names(
+            source=self.source, path=self.path, all_scopes=all_scopes,
+            definitions=definitions, references=references
+        )
 
     def jedi_script(self, position=None):
         kwargs = {

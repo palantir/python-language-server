@@ -90,7 +90,7 @@ class LanguageServer(MethodJSONRPCServer):
     def m_initialize(self, **kwargs):
         log.debug("Language server intialized with %s", kwargs)
         self.process_id = kwargs.get('processId')
-        self.workspace = Workspace(kwargs.get('rootPath'))
+        self.workspace = Workspace(kwargs.get('rootPath'), lang_server=self)
         self.init_opts = kwargs.get('initializationOptions')
 
         # Get our capabilities

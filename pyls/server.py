@@ -1,6 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import json
 import logging
+import uuid
+
 import jsonrpc
 
 log = logging.getLogger(__name__)
@@ -33,11 +35,14 @@ class JSONRPCServer(object):
 
     def call(self, method, params=None):
         """ Call a method on the client. TODO: return the result. """
+        log.debug("Sending request %s: %s", method, params)
         req = jsonrpc.jsonrpc2.JSONRPC20Request(method=method, params=params)
+        req._id = str(uuid.uuid4())
         self._write_message(req.data)
 
     def notify(self, method, params=None):
         """ Send a notification to the client, expects no response. """
+        log.debug("Sending notification %s: %s", method, params)
         req = jsonrpc.jsonrpc2.JSONRPC20Request(
             method=method, params=params, is_notification=True
         )
