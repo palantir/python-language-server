@@ -53,4 +53,28 @@ def main():
     if args.tcp:
         language_server.start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
     else:
-        language_server.start_io_lang_server(sys.stdin, sys.stdout, PythonLanguageServer)
+        stdin, stdout = _binary_stdio()
+        language_server.start_io_lang_server(stdin, stdout, PythonLanguageServer)
+
+
+def _binary_stdio():
+    """Construct binary stdio streams (not text mode).
+
+    This seems to be different for Window/Unix Python2/3, so going by:
+        https://stackoverflow.com/questions/2850893/reading-binary-data-from-stdin
+    """
+    PY3K = sys.version_info >= (3, 0)
+
+    if PY3K:
+        stdin, stdout = sys.stdin.buffer, sys.stdout.buffer
+    else:
+        # Python 2 on Windows opens sys.stdin in text mode, and
+        # binary data that read from it becomes corrupted on \r\n
+        if sys.platform == "win32":
+            # set sys.stdin to binary mode
+            import os, msvcrt
+            msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+            msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+        stdin, stdout = sys.stdin, sys.stdout
+
+    return stdin, stdout
