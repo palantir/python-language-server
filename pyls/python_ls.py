@@ -1,43 +1,12 @@
-# Copyright 2017 Palantir Technologies, Inc.
 import logging
-import pluggy
+import os
 
-from . import hookspecs, plugins, PYLS
+from . import config, hookspecs, plugins, PYLS
 from .language_server import LanguageServer
 from .lsp import TextDocumentSyncKind
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
-
-
-class Config(object):
-
-    def __init__(self, root_path, init_opts):
-        self._root_path = root_path
-        self._init_opts = init_opts
-
-        self._pm = pluggy.PluginManager(PYLS)
-        self._pm.trace.root.setwriter(log.debug)
-        self._pm.enable_tracing()
-        self._pm.add_hookspecs(hookspecs)
-        self._pm.load_setuptools_entrypoints(PYLS)
-
-        for plugin in plugins.CORE_PLUGINS:
-            self._pm.register(plugin)
-
-        log.info("Loaded plugins: %s", self._pm.get_plugins())
-
-    @property
-    def plugin_manager(self):
-        return self._pm
-
-    @property
-    def init_opts(self):
-        return self._init_opts
-
-    @property
-    def root_path(self):
-        return self._root_path
 
 
 class PythonLanguageServer(LanguageServer):
@@ -74,7 +43,7 @@ class PythonLanguageServer(LanguageServer):
 
     def initialize(self, root_path, init_opts, _process_id):
         self.workspace = Workspace(root_path, lang_server=self)
-        self.config = Config(root_path, init_opts)
+        self.config = config.Config(root_path, init_opts)
         # Store a reference to the plugin manager's hook relay to keep things neat
         self._hooks = self.config.plugin_manager.hook
 

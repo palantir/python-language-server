@@ -63,7 +63,7 @@ class Workspace(object):
         Since the workspace root may not be the root of the Python project we instead
         append the closest parent directory containing a setup.py file.
         """
-        files = config.find_parents(path, ['setup.py'], self.root) or []
+        files = config.find_parents(self.root, path, ['setup.py']) or []
         path = [os.path.dirname(setup_py) for setup_py in files]
         path.extend(sys.path)
         return path

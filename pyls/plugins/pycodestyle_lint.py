@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import pycodestyle
-from pyls import config, hookimpl
+from pyls import config as pyls_config, hookimpl
 
 log = logging.getLogger(__name__)
 
@@ -10,11 +10,11 @@ CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
 
 
 @hookimpl
-def pyls_lint(workspace, document):
+def pyls_lint(config, workspace, document):
     # Read config from all over the place
-    config_files = config.find_parents(document.path, CONFIG_FILES, workspace.root)
-    pycodestyle_conf = config.build_config(config_files, 'pycodestyle')
-    pep8_conf = config.build_config(config_files, 'pep8')
+    config_files = config.find_parents(document.path, CONFIG_FILES)
+    pycodestyle_conf = pyls_config.build_config('pycodestyle', config_files)
+    pep8_conf = pyls_config.build_config('pep8', config_files)
 
     conf_to_use = pycodestyle_conf if pycodestyle_conf else pep8_conf
 
