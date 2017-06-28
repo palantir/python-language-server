@@ -33,6 +33,11 @@ def pyls_definitions(config, workspace, document, position):
 
 
 @hookspec
+def pyls_document_did_open(config, workspace, document):
+    pass
+
+
+@hookspec
 def pyls_document_did_save(config, workspace, document):
     pass
 

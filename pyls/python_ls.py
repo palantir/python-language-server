@@ -70,7 +70,7 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook(self._hooks.pyls_definitions, doc_uri, position=position))
 
     def document_symbols(self, doc_uri):
-        return flatten(self._hook(self._hooks.pyls_definitions, doc_uri))
+        return flatten(self._hook(self._hooks.pyls_document_symbols, doc_uri))
 
     def execute_command(self, command, arguments):
         return self._hook(self._hooks.pyls_execute_command, command=command, arguments=arguments)
@@ -103,6 +103,7 @@ class PythonLanguageServer(LanguageServer):
 
     def m_text_document__did_open(self, textDocument=None, **_kwargs):
         self.workspace.put_document(textDocument['uri'], textDocument['text'], version=textDocument.get('version'))
+        self._hook(self._hooks.pyls_document_did_open, textDocument['uri'])
         self.lint(textDocument['uri'])
 
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **_kwargs):
