@@ -18,7 +18,7 @@ def pyls_lint(config, workspace, document):
 
     conf_to_use = pycodestyle_conf if pycodestyle_conf else pep8_conf
 
-    conf = {k.replace("-", "_"): v for k, v in conf_to_use}
+    conf = {k.replace("-", "_"): v for k, v in conf_to_use.items()}
     log.debug("Got pycodestyle config: %s", conf)
 
     # Grab the pycodestyle parser and set the defaults based on the config we found
