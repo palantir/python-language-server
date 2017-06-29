@@ -49,8 +49,8 @@ class JSONRPCServer(object):
         self._write_message(req.data)
 
     def _content_length(self, line):
-        if line.startswith("Content-Length: "):
-            _, value = line.split("Content-Length: ")
+        if line.startswith(b'Content-Length: '):
+            _, value = line.split(b'Content-Length: ')
             value = value.strip()
             try:
                 return int(value)
@@ -83,5 +83,5 @@ class JSONRPCServer(object):
             "Content-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n"
             "{}".format(content_length, body)
         )
-        self.wfile.write(response)
+        self.wfile.write(response.encode('utf-8'))
         self.wfile.flush()

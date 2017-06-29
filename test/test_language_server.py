@@ -28,12 +28,12 @@ def client_server():
     scr, scw = os.pipe()
 
     server = Thread(target=start_io_lang_server, args=(
-        os.fdopen(csr), os.fdopen(scw, 'w'), PythonLanguageServer
+        os.fdopen(csr, 'rb'), os.fdopen(scw, 'wb'), PythonLanguageServer
     ))
     server.daemon = True
     server.start()
 
-    client = JSONRPCClient(os.fdopen(scr), os.fdopen(csw, 'w'))
+    client = JSONRPCClient(os.fdopen(scr, 'rb'), os.fdopen(csw, 'wb'))
 
     yield client, server
 
@@ -95,10 +95,10 @@ def test_linting(client_server):
 
 
 def _get_notification(client):
-    request = jsonrpc.jsonrpc.JSONRPCRequest.from_json(client._read_message())
+    request = jsonrpc.jsonrpc.JSONRPCRequest.from_json(client._read_message().decode('utf-8'))
     assert request.is_notification
     return request.data
 
 
 def _get_response(client):
-    return json.loads(client._read_message())
+    return json.loads(client._read_message().decode('utf-8'))
