@@ -48,7 +48,7 @@ def main():
     elif args.log_file:
         logging.basicConfig(filename=args.log_file, level=logging.WARNING, format=LOG_FORMAT)
     else:
-        logging.basicConfig(level=logging.WARNING, format=LOG_FORMAT)
+        logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
     if args.tcp:
         language_server.start_tcp_lang_server(args.host, args.port, PythonLanguageServer)

@@ -51,3 +51,38 @@ def test_non_root_project(pyls):
     pyls.workspace.put_document(test_uri, 'assert True')
     test_doc = pyls.workspace.get_document(test_uri)
     assert project_root in pyls.workspace.syspath_for_path(test_doc.path)
+
+
+def test_document_line_edit():
+    doc = workspace.Document('file:///uri', u'itshelloworld')
+    doc.apply_change({
+        'text': u'goodbye',
+        'range': {
+            'start': {
+                'line': 0,
+                'character': 3
+            },
+            'end': {
+                'line': 0,
+                'character': 8
+            }
+        }
+    })
+    assert doc.source == u'itsgoodbyeworld'
+
+
+def test_document_multiline_edit():
+    old = [
+        "def hello(a, b):\n",
+        "    print a\n",
+        "    print b\n"
+    ]
+    doc = workspace.Document('file:///uri', u''.join(old))
+    doc.apply_change({'text': u'print a, b', 'range': {
+        'start': {'line': 1, 'character': 4},
+        'end': {'line': 2, 'character': 11}
+    }})
+    assert doc.lines == [
+        "def hello(a, b):\n",
+        "    print a, b\n"
+    ]

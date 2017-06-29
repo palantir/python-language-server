@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import io
 import logging
 import os
 import re
@@ -43,6 +44,10 @@ class Workspace(object):
 
     def rm_document(self, doc_uri):
         self._docs.pop(doc_uri)
+
+    def update_document(self, doc_uri, change, version=None):
+        self._docs[doc_uri].apply_change(change)
+        self._docs[doc_uri].version = version
 
     def apply_edit(self, edit):
         # Note that lang_server.call currently doesn't return anything
@@ -98,8 +103,45 @@ class Document(object):
                 return f.read()
         return self._source
 
+    def apply_change(self, change):
+        """Apply a change to the document."""
+        text = change['text']
+        change_range = change.get('range')
+
+        if not change_range:
+            # The whole file has changed
+            self._source = text
+            return
+
+        start_line = change_range['start']['line']
+        start_col = change_range['start']['character']
+        end_line = change_range['end']['line']
+        end_col = change_range['end']['character']
+
+        new = io.StringIO()
+        # Iterate over the existing document until we hit the edit range,
+        # at which point we write the new text, then loop until we hit
+        # the end of the range and continue writing.
+        for i, line in enumerate(self.lines):
+            if i < start_line:
+                new.write(line)
+                continue
+
+            if i > end_line:
+                new.write(line)
+                continue
+
+            if i == start_line:
+                new.write(line[:start_col])
+                new.write(text)
+
+            if i == end_line:
+                new.write(line[end_col:])
+
+        self._source = new.getvalue()
+
     def word_at_position(self, position):
-        """ Get the word under the cursor returning the start and end positions """
+        """Get the word under the cursor returning the start and end positions."""
         line = self.lines[position['line']]
         i = position['character']
         # Split word in two
