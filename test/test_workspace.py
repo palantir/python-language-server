@@ -58,14 +58,8 @@ def test_document_line_edit():
     doc.apply_change({
         'text': u'goodbye',
         'range': {
-            'start': {
-                'line': 0,
-                'character': 3
-            },
-            'end': {
-                'line': 0,
-                'character': 8
-            }
+            'start': {'line': 0, 'character': 3},
+            'end': {'line': 0, 'character': 8}
         }
     })
     assert doc.source == u'itsgoodbyeworld'
