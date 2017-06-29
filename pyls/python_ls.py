@@ -36,7 +36,7 @@ class PythonLanguageServer(LanguageServer):
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',']
             },
-            'textDocumentSync': lsp.TextDocumentSyncKind.FULL
+            'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL
         }
 
     def initialize(self, root_path, init_opts, _process_id):
@@ -111,11 +111,12 @@ class PythonLanguageServer(LanguageServer):
         self.lint(textDocument['uri'])
 
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **_kwargs):
-        # Since we're using a FULL document sync, there is only one change containing the whole file
-        # TODO: debounce, or should this be someone else's responsibility? Probably
-        self.workspace.put_document(
-            textDocument['uri'], contentChanges[0]['text'], version=textDocument.get('version')
-        )
+        for change in contentChanges:
+            self.workspace.update_document(
+                textDocument['uri'],
+                change,
+                version=textDocument.get('version')
+            )
         self.lint(textDocument['uri'])
 
     def m_text_document__did_save(self, textDocument=None, **_kwargs):
