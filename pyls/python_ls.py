@@ -1,9 +1,7 @@
 import logging
-import os
 
-from . import config, hookspecs, plugins, PYLS
+from . import config, lsp, plugins
 from .language_server import LanguageServer
-from .lsp import TextDocumentSyncKind
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
@@ -38,12 +36,18 @@ class PythonLanguageServer(LanguageServer):
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',']
             },
-            'textDocumentSync': TextDocumentSyncKind.FULL
+            'textDocumentSync': lsp.TextDocumentSyncKind.FULL
         }
 
     def initialize(self, root_path, init_opts, _process_id):
         self.workspace = Workspace(root_path, lang_server=self)
         self.config = config.Config(root_path, init_opts)
+
+        # Register the base set of plugins
+        # TODO(gatesn): Make these configurable in init_opts
+        for plugin in plugins.CORE_PLUGINS:
+            self.config.plugin_manager.register(plugin)
+
         # Store a reference to the plugin manager's hook relay to keep things neat
         self._hooks = self.config.plugin_manager.hook
 

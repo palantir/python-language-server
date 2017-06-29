@@ -4,7 +4,7 @@ import logging
 import os
 import pluggy
 
-from . import hookspecs, plugins, PYLS
+from . import hookspecs, PYLS
 
 log = logging.getLogger(__name__)
 
@@ -20,11 +20,6 @@ class Config(object):
         self._pm.enable_tracing()
         self._pm.add_hookspecs(hookspecs)
         self._pm.load_setuptools_entrypoints(PYLS)
-
-        for plugin in plugins.CORE_PLUGINS:
-            self._pm.register(plugin)
-
-        log.info("Loaded plugins: %s", self._pm.get_plugins())
 
     @property
     def plugin_manager(self):

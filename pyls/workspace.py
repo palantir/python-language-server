@@ -7,8 +7,7 @@ from urllib.parse import urlparse, urlunparse
 
 import jedi
 
-from pyls import config
-from pyls.lsp import MessageType
+from . import config, lsp
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ class Workspace(object):
         params = {'uri': doc_uri, 'diagnostics': diagnostics}
         self._lang_server.notify(self.M_PUBLISH_DIAGNOSTICS, params)
 
-    def show_message(self, message, msg_type=MessageType.Info):
+    def show_message(self, message, msg_type=lsp.MessageType.Info):
         params = {'type': msg_type, 'message': message}
         self._lang_server.notify(self.M_SHOW_MESSAGE, params)
 

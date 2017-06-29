@@ -2,6 +2,7 @@
 import os
 import shutil
 import tempfile
+from pyls.config import Config
 from pyls.workspace import Document, Workspace
 from pyls.plugins import pycodestyle_lint, pyflakes_lint
 
@@ -19,9 +20,9 @@ DOC_SYNTAX_ERR = """def hello()
 """
 
 
-def test_pycodestyle(workspace):
+def test_pycodestyle(config, workspace):
     doc = Document(DOC_URI, DOC)
-    diags = pycodestyle_lint.pyls_lint(workspace, doc)
+    diags = pycodestyle_lint.pyls_lint(config, workspace, doc)
 
     assert all([d['source'] == 'pycodestyle' for d in diags])
 
@@ -54,10 +55,11 @@ def test_pycodestyle_config():
     doc_uri = 'file://' + tmp + '/' + 'test.py'
     workspace.put_document(doc_uri, DOC)
     doc = workspace.get_document(doc_uri)
+    config = Config(workspace.root, {})
 
     # Make sure we get a warning for 'indentation contains tabs'
-    diags = pycodestyle_lint.pyls_lint(workspace, doc)
-    assert len([d for d in diags if d['code'] == 'W191']) > 0
+    diags = pycodestyle_lint.pyls_lint(config, workspace, doc)
+    assert [d for d in diags if d['code'] == 'W191']
 
     content = {
         'setup.cfg': ('[pycodestyle]\nignore = W191', True),
@@ -71,7 +73,7 @@ def test_pycodestyle_config():
             f.write(content)
 
         # And make sure we don't get any warnings
-        diags = pycodestyle_lint.pyls_lint(workspace, doc)
+        diags = pycodestyle_lint.pyls_lint(config, workspace, doc)
         assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
 
         os.unlink(os.path.join(tmp, conf_file))
