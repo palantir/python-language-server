@@ -37,7 +37,6 @@ class Workspace(object):
 
     def put_document(self, doc_uri, content, version=None):
         path = urlparse(doc_uri).path
-        self._check_in_workspace(path)
         self._docs[doc_uri] = Document(
             doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
@@ -72,9 +71,8 @@ class Workspace(object):
         path.extend(sys.path)
         return path
 
-    def _check_in_workspace(self, path):
-        if not os.path.commonprefix((self.root, path)):
-            raise ValueError("Document %s not in workspace %s" % (path, self.root))
+    def is_in_workspace(self, path):
+        return os.path.commonprefix((self.root, path))
 
 
 class Document(object):
@@ -94,11 +92,13 @@ class Document(object):
 
     @property
     def lines(self):
-        return self.source.splitlines(True)
+        # An empty document is much nicer to deal with assuming it has a single
+        # line with no characters and no final newline.
+        return self.source.splitlines(True) or [u'']
 
     @property
     def source(self):
-        if not self._source:
+        if self._source is None:
             with open(self.path, 'r') as f:
                 return f.read()
         return self._source
