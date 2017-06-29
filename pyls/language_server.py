@@ -3,13 +3,14 @@ import logging
 import re
 import socketserver
 from .server import JSONRPCServer
-from .workspace import Workspace
 
 log = logging.getLogger(__name__)
 
 
 class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
     """A wrapper class that is used to construct a custom handler class."""
+
+    delegate = None
 
     def setup(self):
         super(_StreamHandlerWrapper, self).setup()
@@ -74,22 +75,22 @@ class LanguageServer(MethodJSONRPCServer):
     """
 
     process_id = None
-    workspace = None  # type: Workspace
+    root_path = None
     init_opts = None
 
     def capabilities(self):
         return {}
 
-    def initialize(self):
+    def initialize(self, root_path, init_opts, process_id):
         pass
 
     def m_initialize(self, **kwargs):
         log.debug("Language server intialized with %s", kwargs)
-        self.process_id = kwargs.get('processId')
-        self.workspace = Workspace(kwargs.get('rootPath'), lang_server=self)
+        self.root_path = kwargs.get('rootPath')
         self.init_opts = kwargs.get('initializationOptions')
+        self.process_id = kwargs.get('processId')
 
-        self.initialize()
+        self.initialize(self.root_path, self.init_opts, self.process_id)
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
@@ -101,10 +102,10 @@ class LanguageServer(MethodJSONRPCServer):
         # This tends to happen when cancelling a hover request
         pass
 
-    def m_shutdown(self, **kwargs):
+    def m_shutdown(self, **_kwargs):
         self.shutdown()
 
-    def m_exit(self, **kwargs):
+    def m_exit(self, **_kwargs):
         self.shutdown()
 
 

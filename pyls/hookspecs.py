@@ -4,17 +4,17 @@ from pyls import hookspec
 
 
 @hookspec
-def pyls_code_actions(workspace, document, range, context):
+def pyls_code_actions(config, workspace, document, range, context):
     pass
 
 
 @hookspec
-def pyls_code_lens(workspace, document):
+def pyls_code_lens(config, workspace, document):
     pass
 
 
 @hookspec
-def pyls_commands(workspace):
+def pyls_commands(config, workspace):
     """The list of command strings supported by the server.
 
     Returns:
@@ -23,60 +23,65 @@ def pyls_commands(workspace):
 
 
 @hookspec
-def pyls_completions(workspace, document, position):
+def pyls_completions(config, workspace, document, position):
     pass
 
 
 @hookspec
-def pyls_definitions(workspace, document, position):
+def pyls_definitions(config, workspace, document, position):
     pass
 
 
 @hookspec
-def pyls_document_did_save(workspace, document):
+def pyls_document_did_open(config, workspace, document):
     pass
 
 
 @hookspec
-def pyls_document_symbols(workspace, document):
+def pyls_document_did_save(config, workspace, document):
+    pass
+
+
+@hookspec
+def pyls_document_symbols(config, workspace, document):
     pass
 
 
 @hookspec(firstresult=True)
-def pyls_execute_command(workspace, command, arguments):
+def pyls_execute_command(config, workspace, command, arguments):
     pass
 
 
 @hookspec(firstresult=True)
-def pyls_format_document(workspace, document):
+def pyls_format_document(config, workspace, document):
     pass
 
 
 @hookspec(firstresult=True)
-def pyls_format_range(workspace, document, range):
+def pyls_format_range(config, workspace, document, range):
     pass
 
 
 @hookspec(firstresult=True)
-def pyls_hover(workspace, document, position):
+def pyls_hover(config, workspace, document, position):
     pass
 
 
 @hookspec
-def pyls_initialize(workspace):
+def pyls_initialize(config, workspace):
     pass
 
 
 @hookspec
-def pyls_lint(workspace, document):
+def pyls_lint(config, workspace, document):
     pass
 
 
 @hookspec
-def pyls_references(workspace, document, position, exclude_declaration):
+def pyls_references(config, workspace, document, position, exclude_declaration):
     pass
 
 
 @hookspec(firstresult=True)
-def pyls_signature_help(workspace, document, position):
+def pyls_signature_help(config, workspace, document, position):
     pass

@@ -7,7 +7,7 @@ from urllib.parse import urlparse, urlunparse
 
 import jedi
 
-from pyls.lsp import MessageType
+from . import config, lsp
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class Workspace(object):
         params = {'uri': doc_uri, 'diagnostics': diagnostics}
         self._lang_server.notify(self.M_PUBLISH_DIAGNOSTICS, params)
 
-    def show_message(self, message, msg_type=MessageType.Info):
+    def show_message(self, message, msg_type=lsp.MessageType.Info):
         params = {'type': msg_type, 'message': message}
         self._lang_server.notify(self.M_SHOW_MESSAGE, params)
 
@@ -62,23 +62,10 @@ class Workspace(object):
         Since the workspace root may not be the root of the Python project we instead
         append the closest parent directory containing a setup.py file.
         """
-        files = self.find_parent_files(path, ['setup.py']) or []
+        files = config.find_parents(self.root, path, ['setup.py']) or []
         path = [os.path.dirname(setup_py) for setup_py in files]
         path.extend(sys.path)
         return path
-
-    def find_parent_files(self, path, names):
-        """Find files matching the given names relative to the given
-        document looking in parent directories until one is found """
-        self._check_in_workspace(path)
-        curdir = os.path.dirname(path)
-
-        while curdir != os.path.dirname(self.root) and curdir != '/':
-            existing = list(
-                filter(os.path.exists, [os.path.join(curdir, n) for n in names]))
-            if existing:
-                return existing
-            curdir = os.path.dirname(curdir)
 
     def _check_in_workspace(self, path):
         if not os.path.commonprefix((self.root, path)):

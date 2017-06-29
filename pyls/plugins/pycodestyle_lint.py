@@ -1,8 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from configparser import RawConfigParser
 import logging
 import pycodestyle
-from pyls import hookimpl
+from pyls import config as pyls_config, hookimpl
 
 log = logging.getLogger(__name__)
 
@@ -11,9 +10,15 @@ CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
 
 
 @hookimpl
-def pyls_lint(workspace, document):
+def pyls_lint(config, workspace, document):
     # Read config from all over the place
-    conf = {k.replace("-", "_"): v for k, v in _get_config(workspace, document)}
+    config_files = config.find_parents(document.path, CONFIG_FILES)
+    pycodestyle_conf = pyls_config.build_config('pycodestyle', config_files)
+    pep8_conf = pyls_config.build_config('pep8', config_files)
+
+    conf_to_use = pycodestyle_conf if pycodestyle_conf else pep8_conf
+
+    conf = {k.replace("-", "_"): v for k, v in conf_to_use.items()}
     log.debug("Got pycodestyle config: %s", conf)
 
     # Grab the pycodestyle parser and set the defaults based on the config we found
@@ -29,28 +34,6 @@ def pyls_lint(workspace, document):
     c.check_all()
     diagnostics = c.report.diagnostics
     return diagnostics
-
-
-def _get_config(workspace, document):
-    """ Parse the pep8/pycodestyle config options. """
-    config = RawConfigParser()
-    config_files = workspace.find_parent_files(document.path, CONFIG_FILES)
-
-    if not config_files:
-        # If no config files match, we can't do much
-        return []
-
-    # Find out which section header is used, pep8 or pycodestyle
-    files_read = config.read(config_files)
-    log.debug("Using pycodestyle config from %s", files_read)
-
-    if config.has_section('pycodestyle'):
-        return config.items('pycodestyle')
-    if config.has_section('pep8'):
-        log.warning("The 'pep8' section is deprecated, use 'pycodestyle' instead")
-        return config.items('pep8')
-
-    return []
 
 
 class PyCodeStyleDiagnosticReport(pycodestyle.BaseReport):
