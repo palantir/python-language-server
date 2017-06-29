@@ -170,7 +170,6 @@ class Document(object):
         if position:
             kwargs['line'] = position['line'] + 1
             kwargs['column'] = position['character']
-        log.info("SOURCE: %s", self.source)
         return jedi.Script(**kwargs)
 
 
