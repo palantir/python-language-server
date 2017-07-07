@@ -80,7 +80,7 @@ class PythonLanguageServer(LanguageServer):
         return self._hook(self._hooks.pyls_execute_command, command=command, arguments=arguments)
 
     def format_document(self, doc_uri):
-        return self._hook(self._hooks.pyls_definitions, doc_uri)
+        return self._hook(self._hooks.pyls_format_document, doc_uri)
 
     def format_range(self, doc_uri, range):
         return self._hook(self._hooks.pyls_format_range, doc_uri, range=range)
