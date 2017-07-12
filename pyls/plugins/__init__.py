@@ -2,11 +2,11 @@
 from . import (
     completion, definition, format,
     hover, pyflakes_lint, pycodestyle_lint,
-    references, symbols
+    references, symbols, mypy_lint
 )
 
 
 CORE_PLUGINS = [
     completion, definition, format, hover, pyflakes_lint, pycodestyle_lint,
-    references, symbols
+    references, symbols, mypy_lint
 ]
