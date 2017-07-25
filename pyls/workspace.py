@@ -4,7 +4,7 @@ import logging
 import os
 import re
 import sys
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, unquote
 
 import jedi
 
@@ -25,7 +25,7 @@ class Workspace(object):
 
     def __init__(self, root, lang_server=None):
         self._url_parsed = urlparse(root)
-        self.root = self._url_parsed.path
+        self.root = unquote(self._url_parsed.path)
         self._docs = {}
         self._lang_server = lang_server
 
@@ -80,7 +80,7 @@ class Document(object):
     def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
         self.uri = uri
         self.version = version
-        self.path = urlparse(uri).path
+        self.path = unquote(urlparse(uri).path)
         self.filename = os.path.basename(self.path)
 
         self._local = local
