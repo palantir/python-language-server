@@ -36,7 +36,7 @@ class Workspace(object):
         return self._docs[doc_uri]
 
     def put_document(self, doc_uri, content, version=None):
-        path = urlparse(doc_uri).path
+        path = unquote(urlparse(doc_uri).path)
         self._docs[doc_uri] = Document(
             doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
