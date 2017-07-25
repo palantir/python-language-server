@@ -2,6 +2,7 @@
 import os
 import pytest
 from pyls import workspace
+from pyls.workspace import Workspace
 
 DOC_URI = 'file://' + __file__
 
@@ -51,3 +52,13 @@ def test_non_root_project(pyls):
     pyls.workspace.put_document(test_uri, 'assert True')
     test_doc = pyls.workspace.get_document(test_uri)
     assert project_root in pyls.workspace.syspath_for_path(test_doc.path)
+
+
+def test_urlencoded_paths():
+    root_uri = "file:///Encoded%20Space/"
+    file_uri = root_uri + "test.py"
+    ws = Workspace(root_uri)
+    assert ws.root == "/Encoded Space/"
+    ws.put_document(file_uri, "")
+    doc = ws.get_document(file_uri)
+    assert doc.path == '/Encoded Space/test.py'
