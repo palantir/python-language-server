@@ -5,3 +5,4 @@ json-rpc
 pycodestyle
 pyflakes
 yapf
+mypy

@@ -39,6 +39,7 @@ setup(
         'pycodestyle',
         'pyflakes',
         'yapf',
+        'mypy',
         'pluggy'
     ],
 
