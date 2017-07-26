@@ -24,8 +24,8 @@ class Workspace(object):
     M_SHOW_MESSAGE = 'window/showMessage'
 
     def __init__(self, root, lang_server=None):
-        self._url_parsed = urlparse(unquote(root))
-        self.root = self._url_parsed.path
+        self._url_parsed = urlparse(root)
+        self.root = unquote(self._url_parsed.path)
         self._docs = {}
         self._lang_server = lang_server
 
