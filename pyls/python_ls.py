@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import urlparse, unquote
 
 from . import config, lsp, plugins
 from .language_server import LanguageServer
@@ -39,8 +40,10 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL
         }
 
-    def initialize(self, root_path, init_opts, _process_id):
-        self.workspace = Workspace(root_path, lang_server=self)
+    def initialize(self, root_uri, init_opts, _process_id):
+        self.workspace = Workspace(root_uri, lang_server=self)
+
+        root_path = unquote(urlparse(root_uri).path)
         self.config = config.Config(root_path, init_opts)
 
         # Register the base set of plugins
