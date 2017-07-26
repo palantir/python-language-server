@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 RE_START_WORD = re.compile('[A-Za-z_0-9]*$')
 RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
+
 class Workspace(object):
 
     M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
