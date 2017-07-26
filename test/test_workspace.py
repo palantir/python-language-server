@@ -54,10 +54,12 @@ def test_non_root_project(pyls):
 
 
 def test_urlencoded_paths():
-    root_uri = "file:///Encoded%20Space/"
+    root_uri = "file:///Encoded%20%3FSpace/"
     file_uri = root_uri + "test.py"
+
     ws = workspace.Workspace(root_uri)
-    assert ws.root == "/Encoded Space/"
+    assert ws.root == "/Encoded ?Space/"
+
     ws.put_document(file_uri, "")
     doc = ws.get_document(file_uri)
-    assert doc.path == '/Encoded Space/test.py'
+    assert doc.path == '/Encoded ?Space/test.py'
