@@ -89,10 +89,10 @@ class LanguageServer(MethodJSONRPCServer):
     def m_initialize(self, **kwargs):
         log.debug("Language server intialized with %s", kwargs)
         if 'rootUri' in kwargs:
-            self.root_uri = kwargs.get('rootUri')
+            self.root_uri = kwargs['rootUri']
         elif 'rootPath' in kwargs:
-            root_path = kwargs.get('rootPath')
-            self.root_uri = urljoin(u'file:', pathname2url(root_path))
+            root_path = kwargs['rootPath']
+            self.root_uri = urljoin(u'file://', pathname2url(root_path))
         else:
             self.root_uri = ''
         self.init_opts = kwargs.get('initializationOptions')
