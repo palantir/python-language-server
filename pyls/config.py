@@ -3,6 +3,7 @@ from configparser import RawConfigParser
 import logging
 import os
 import pluggy
+from urllib.parse import urlparse, unquote
 
 from . import hookspecs, PYLS
 
@@ -11,8 +12,8 @@ log = logging.getLogger(__name__)
 
 class Config(object):
 
-    def __init__(self, root_path, init_opts):
-        self._root_path = root_path
+    def __init__(self, root_uri, init_opts):
+        self._root_path = unquote(urlparse(root_uri).path)
         self._init_opts = init_opts
 
         self._pm = pluggy.PluginManager(PYLS)

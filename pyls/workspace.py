@@ -23,8 +23,8 @@ class Workspace(object):
     M_APPLY_EDIT = 'workspace/applyEdit'
     M_SHOW_MESSAGE = 'window/showMessage'
 
-    def __init__(self, root, lang_server=None):
-        self._url_parsed = urlparse(root)
+    def __init__(self, root_uri, lang_server=None):
+        self._url_parsed = urlparse(root_uri)
         self.root = unquote(self._url_parsed.path)
         self._docs = {}
         self._lang_server = lang_server

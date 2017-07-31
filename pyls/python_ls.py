@@ -1,6 +1,4 @@
 import logging
-from urllib.parse import urlparse, unquote
-
 from . import config, lsp, plugins
 from .language_server import LanguageServer
 from .workspace import Workspace
@@ -42,9 +40,7 @@ class PythonLanguageServer(LanguageServer):
 
     def initialize(self, root_uri, init_opts, _process_id):
         self.workspace = Workspace(root_uri, lang_server=self)
-
-        root_path = unquote(urlparse(root_uri).path)
-        self.config = config.Config(root_path, init_opts)
+        self.config = config.Config(root_uri, init_opts)
 
         # Register the base set of plugins
         # TODO(gatesn): Make these configurable in init_opts

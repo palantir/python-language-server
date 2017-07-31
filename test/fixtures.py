@@ -37,4 +37,4 @@ def workspace():
 @pytest.fixture
 def config(workspace):
     """Return a config object."""
-    return Config(workspace.root, {})
+    return Config(path2uri(os.path.dirname(__file__)), {})
