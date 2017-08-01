@@ -1,5 +1,4 @@
 import logging
-
 from . import config, lsp, plugins
 from .language_server import LanguageServer
 from .workspace import Workspace
@@ -39,9 +38,9 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL
         }
 
-    def initialize(self, root_path, init_opts, _process_id):
-        self.workspace = Workspace(root_path, lang_server=self)
-        self.config = config.Config(root_path, init_opts)
+    def initialize(self, root_uri, init_opts, _process_id):
+        self.workspace = Workspace(root_uri, lang_server=self)
+        self.config = config.Config(root_uri, init_opts)
 
         # Register the base set of plugins
         # TODO(gatesn): Make these configurable in init_opts

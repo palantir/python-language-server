@@ -3,6 +3,8 @@ import logging
 import re
 import socketserver
 from .server import JSONRPCServer
+from urllib.parse import urljoin
+from urllib.request import pathname2url
 
 log = logging.getLogger(__name__)
 
@@ -75,22 +77,28 @@ class LanguageServer(MethodJSONRPCServer):
     """
 
     process_id = None
-    root_path = None
+    root_uri = None
     init_opts = None
 
     def capabilities(self):
         return {}
 
-    def initialize(self, root_path, init_opts, process_id):
+    def initialize(self, root_uri, init_opts, process_id):
         pass
 
     def m_initialize(self, **kwargs):
         log.debug("Language server intialized with %s", kwargs)
-        self.root_path = kwargs.get('rootPath')
+        if 'rootUri' in kwargs:
+            self.root_uri = kwargs['rootUri']
+        elif 'rootPath' in kwargs:
+            root_path = kwargs['rootPath']
+            self.root_uri = urljoin(u'file://', pathname2url(root_path))
+        else:
+            self.root_uri = ''
         self.init_opts = kwargs.get('initializationOptions')
         self.process_id = kwargs.get('processId')
 
-        self.initialize(self.root_path, self.init_opts, self.process_id)
+        self.initialize(self.root_uri, self.init_opts, self.process_id)
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
