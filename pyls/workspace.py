@@ -181,7 +181,7 @@ def get_uri_like(doc_uri, path):
     unicode objects.
     """
     parts = list(urlparse(doc_uri))
-    if path[0] != '/':  # fix path for windows
+    if path[0] != '/' and ':' in path:  # fix path for windows
         drivespec, path = path.split(':', 1)
         path = '/' + drivespec + ':' + quote(path.replace('\\', '/'))
     else:
