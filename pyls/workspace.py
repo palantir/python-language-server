@@ -4,7 +4,7 @@ import logging
 import os
 import re
 import sys
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, unquote
 
 import jedi
 
@@ -23,9 +23,9 @@ class Workspace(object):
     M_APPLY_EDIT = 'workspace/applyEdit'
     M_SHOW_MESSAGE = 'window/showMessage'
 
-    def __init__(self, root, lang_server=None):
-        self._url_parsed = urlparse(root)
-        self.root = self._url_parsed.path
+    def __init__(self, root_uri, lang_server=None):
+        self._url_parsed = urlparse(root_uri)
+        self.root = unquote(self._url_parsed.path)
         self._docs = {}
         self._lang_server = lang_server
 
@@ -36,7 +36,7 @@ class Workspace(object):
         return self._docs[doc_uri]
 
     def put_document(self, doc_uri, content, version=None):
-        path = urlparse(doc_uri).path
+        path = unquote(urlparse(doc_uri).path)
         self._docs[doc_uri] = Document(
             doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
@@ -80,7 +80,7 @@ class Document(object):
     def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
         self.uri = uri
         self.version = version
-        self.path = urlparse(uri).path
+        self.path = unquote(urlparse(uri).path)
         self.filename = os.path.basename(self.path)
 
         self._local = local
