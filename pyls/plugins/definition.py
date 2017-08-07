@@ -12,8 +12,9 @@ def pyls_definitions(document, position):
         d for d in definitions
         if d.is_definition() and d.line is not None and d.column is not None
     ]
+
     return [{
-        'uri': workspace.get_uri_like(document.uri, d.module_path),
+        'uri': workspace.get_uri_like(document.uri, d.module_path) if d.module_path else document.uri,
         'range': {
             'start': {'line': d.line - 1, 'character': d.column},
             'end': {'line': d.line - 1, 'character': d.column + len(d.name)}

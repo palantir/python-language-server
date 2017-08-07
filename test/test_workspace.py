@@ -36,6 +36,10 @@ def test_bad_get_document(pyls):
 
 def test_uri_like():
     assert workspace.get_uri_like('file:///some-path', '/my/path') == 'file:///my/path'
+    win_doc_uri = r'file:///D:/hello%20world.py'
+    win_doc_path = r'D:\hello world.py'
+    win_uri = workspace.get_uri_like(win_doc_uri, win_doc_path)
+    assert win_uri == win_doc_uri
 
 
 def test_non_root_project(pyls):

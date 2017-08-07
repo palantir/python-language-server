@@ -4,7 +4,7 @@ import logging
 import os
 import re
 import sys
-from urllib.parse import urlparse, urlunparse, unquote
+from urllib.parse import urlparse, urlunparse, quote, unquote
 
 import jedi
 
@@ -181,5 +181,10 @@ def get_uri_like(doc_uri, path):
     unicode objects.
     """
     parts = list(urlparse(doc_uri))
+    if path[0] != '/' and ':' in path:  # fix path for windows
+        drivespec, path = path.split(':', 1)
+        path = '/' + drivespec + ':' + quote(path.replace('\\', '/'))
+    else:
+        path = quote(path)
     parts[2] = path
     return urlunparse([str(p) for p in parts])
