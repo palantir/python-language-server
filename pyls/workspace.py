@@ -72,7 +72,7 @@ class Workspace(object):
         return path
 
     def is_in_workspace(self, path):
-        return os.path.commonprefix((self.root, path))
+        return not self.root or os.path.commonprefix((self.root, path))
 
 
 class Document(object):
