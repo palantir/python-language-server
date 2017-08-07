@@ -68,8 +68,12 @@ def find_parents(root, path, names):
     Note:
         The path MUST be within the root.
     """
+    if not root:
+        return []
     if not os.path.commonprefix((root, path)):
-        raise ValueError("Path %s not in %s" % (path, root))
+        log.warning("Path %s not in %s", path, root)
+        return []
+
     curdir = os.path.dirname(path)
 
     while curdir != os.path.dirname(root) and curdir != '/':
