@@ -1,4 +1,3 @@
-# Copyright 2017 Palantir Technologies, Inc.
 from pyls.workspace import Document
 from pyls_mypy import plugin
 

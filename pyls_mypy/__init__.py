@@ -1,4 +1,3 @@
-# Copyright 2017 Palantir Technologies, Inc.
 from future.standard_library import install_aliases
 from ._version import get_versions
 
