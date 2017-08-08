@@ -3,18 +3,6 @@ from pyls.workspace import Document
 from pyls_mypy import plugin
 
 DOC_URI = __file__
-DOC = """import sys
-
-def hello():
-\tpass
-
-import json
-"""
-
-DOC_SYNTAX_ERR = """def hello()
-    pass
-"""
-
 DOC_TYPE_ERR = """{}.append(3)
 """
 
