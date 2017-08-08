@@ -2,7 +2,7 @@
 from setuptools import find_packages, setup
 import versioneer
 
-# README = open('README.rst', 'r').read()
+README = open('README.rst', 'r').read()
 
 
 setup(
@@ -16,7 +16,7 @@ setup(
 
     description='Mypy linter for the Python Language Server for the Language Server Protocol',
 
-    # long_description=README,
+    long_description=README,
 
     # The project's main homepage.
     url='https://github.com/tomv564/pyls-mypy',
