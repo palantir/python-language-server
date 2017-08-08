@@ -3,15 +3,15 @@ import re
 from mypy import api as mypy_api
 from pyls import hookimpl
 
-line_pattern = r"(.*):(\d+):(\d+): (\w+): (.*)"
+line_pattern = r"([^:]+):(?:(\d+):)?(?:(\d+):)? (\w+): (.*)"
 
 
 def parse_line(line):
     result = re.match(line_pattern, line)
     if result:
         _, lineno, offset, severity, msg = result.groups()
-        lineno = int(lineno)
-        offset = int(offset)
+        lineno = int(lineno or 1)
+        offset = int(offset or 0)
         errno = 2
         if severity == 'error':
             errno = 1
