@@ -9,6 +9,13 @@ Python Language Server
 
 A Python 2.7 and 3.4+ implementation of the `Language Server Protocol`_ making use of Jedi_, pycodestyle_, Pyflakes_ and YAPF_.
 
+Plugins
+-------
+
+Installing these plugins will add extra functionality to the language server:
+
+* Mypy type checking (requires Python 3) - https://github.com/tomv564/pyls-mypy
+
 Features
 --------
 
