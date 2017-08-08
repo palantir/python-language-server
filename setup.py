@@ -43,7 +43,6 @@ setup(
     # for example:
     # $ pip install -e .[test]
     extras_require={
-        ':python_version >= "3.2"': ['mypy'],
         'test': ['tox', 'versioneer', 'pytest', 'pytest-cov', 'coverage'],
     },
 
