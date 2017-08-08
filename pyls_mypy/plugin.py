@@ -31,7 +31,7 @@ def pyls_lint(document):
                 # There may be a better solution, but mypy does not provide end
                 'end': {'line': lineno - 1, 'character': offset + 1}
             },
-            'message': msg,
+            'message': msg.strip(),
             'severity': errno
         })
 

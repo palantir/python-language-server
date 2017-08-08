@@ -11,6 +11,6 @@ def test_plugin():
 
     assert len(diags) == 1
     diag = diags[0]
-    assert diag['message'] == ' Dict[<nothing>, <nothing>] has no attribute "append"'
+    assert diag['message'] == 'Dict[<nothing>, <nothing>] has no attribute "append"'
     assert diag['range']['start'] == {'line': 0, 'character': 0}
     assert diag['range']['end'] == {'line': 0, 'character': 1}
