@@ -26,6 +26,13 @@ class CompletionItemKind(object):
     Reference = 18
 
 
+class DiagnosticSeverity(object):
+    Error = 1
+    Warning = 2
+    Information = 3
+    Hint = 4
+
+
 class MessageType(object):
     Error = 1
     Warning = 2

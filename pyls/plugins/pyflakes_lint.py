@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 from pyflakes import api as pyflakes_api
-from pyls import hookimpl
+from pyls import hookimpl, lsp
 
 
 @hookimpl
@@ -39,5 +39,6 @@ class PyflakesDiagnosticReport(object):
         self.diagnostics.append({
             'source': 'pyflakes',
             'range': range,
-            'message': message.message % message.message_args
+            'message': message.message % message.message_args,
+            'severity': lsp.DiagnosticSeverity.Warning
         })
