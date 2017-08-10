@@ -7,9 +7,9 @@ from pyls import hookimpl, lsp
 log = logging.getLogger(__name__)
 
 SOURCE = 'importmagic'
-ADD_IMPORT_COMMAND = 'importmagic/addimport'
+ADD_IMPORT_COMMAND = 'importmagic.addimport'
 MAX_COMMANDS = 4
-UNRES_RE = re.compile("Unresolved import '(?P<unresolved>[\w.]+)'")
+UNRES_RE = re.compile(r"Unresolved import '(?P<unresolved>[\w.]+)'")
 
 _index_cache = {}
 
@@ -77,17 +77,49 @@ def pyls_code_actions(workspace, document, context):
                 # These tend to be terrible
                 continue
 
+            # Generate the patch we would need to apply
+            imports = importmagic.Imports(index, document.source)
+            if variable:
+                imports.add_import_from(module, variable)
+            else:
+                imports.add_import(module)
+            start_line, end_line, text = imports.get_update()
+
             actions.append({
                 'title': _command_title(variable, module),
                 'command': ADD_IMPORT_COMMAND,
-                'arguments': {
-                    'unresolved': unres,
-                    'module': module,
-                    'variable': variable,
-                    'score': score
-                }
+                'arguments': [{
+                    'uri': document.uri,
+                    'version': document.version,
+                    'startLine': start_line,
+                    'endLine': end_line,
+                    'newText': text
+                }]
             })
     return actions
+
+
+@hookimpl
+def pyls_execute_command(workspace, command, arguments):
+    if command != ADD_IMPORT_COMMAND:
+        return
+
+    args = arguments[0]
+
+    edit = {'documentChanges': [{
+        'textDocument': {
+            'uri': args['uri'],
+            'version': args['version']
+        },
+        'edits': [{
+            'range': {
+                'start': {'line': args['startLine'], 'character': 0},
+                'end': {'line': args['endLine'], 'character': 0},
+            },
+            'newText': args['newText']
+        }]
+    }]}
+    workspace.apply_edit(edit)
 
 
 def _command_title(variable, module):
