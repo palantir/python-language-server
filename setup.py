@@ -34,6 +34,7 @@ setup(
     install_requires=[
         'configparser',
         'future',
+        'importmagic',
         'jedi>=0.10',
         'json-rpc',
         'pycodestyle',
