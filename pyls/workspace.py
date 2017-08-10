@@ -92,9 +92,7 @@ class Document(object):
 
     @property
     def lines(self):
-        # An empty document is much nicer to deal with assuming it has a single
-        # line with no characters and no final newline.
-        return self.source.splitlines(True) or [u'']
+        return self.source.splitlines(True)
 
     @property
     def source(self):
@@ -118,7 +116,13 @@ class Document(object):
         end_line = change_range['end']['line']
         end_col = change_range['end']['character']
 
+        # Check for an edit occuring at the very end of the file
+        if start_line == len(self.lines):
+            self._source = self.source + text
+            return
+
         new = io.StringIO()
+
         # Iterate over the existing document until we hit the edit range,
         # at which point we write the new text, then loop until we hit
         # the end of the range and continue writing.
