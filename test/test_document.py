@@ -77,3 +77,20 @@ def test_document_multiline_edit():
         "def hello(a, b):\n",
         "    print a, b\n"
     ]
+
+
+def test_document_end_of_file_edit():
+    old = [
+        "print 'a'\n",
+        "print 'b'\n"
+    ]
+    doc = Document('file:///uri', u''.join(old))
+    doc.apply_change({'text': u'o', 'range': {
+        'start': {'line': 2, 'character': 0},
+        'end': {'line': 2, 'character': 0}
+    }})
+    assert doc.lines == [
+        "print 'a'\n",
+        "print 'b'\n",
+        "o",
+    ]
