@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls import hookimpl, workspace
-
+from pyls import hookimpl
+from pyls.uri import path_to_uri
 log = logging.getLogger(__name__)
 
 
@@ -14,7 +14,7 @@ def pyls_definitions(document, position):
     ]
 
     return [{
-        'uri': workspace.get_uri_like(document.uri, d.module_path) if d.module_path else document.uri,
+        'uri': path_to_uri(document.uri, d.module_path) if d.module_path else document.uri,
         'range': {
             'start': {'line': d.line - 1, 'character': d.column},
             'end': {'line': d.line - 1, 'character': d.column + len(d.name)}
