@@ -35,8 +35,7 @@ class Config(object):
         return self._root_uri
 
     def find_parents(self, path, names):
-        root_path = uri2path(self._root_uri)
-        return find_parents(root_path, path, names)
+        return find_parents(uri2path(self._root_uri), path, names)
 
 
 def build_config(key, config_files):
@@ -74,10 +73,17 @@ def find_parents(root, path, names):
         log.warning("Path %s not in %s", path, root)
         return []
 
-    curdir = os.path.dirname(path)
+    # strip filename from path if path is a file
+    curdir = os.path.dirname(path) if os.path.isfile(path) else path
+    prevdir = ''
+    stopdir = os.path.dirname(root)
 
-    while curdir != os.path.dirname(root) and curdir != '/':
-        existing = list(filter(os.path.exists, [os.path.join(curdir, n) for n in names]))
+    while curdir not in (prevdir, stopdir):
+        existing = list(filter(
+            os.path.exists, (os.path.join(curdir, n) for n in names)))
         if existing:
             return existing
+        prevdir = curdir
         curdir = os.path.dirname(curdir)
+
+    return []
