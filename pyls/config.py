@@ -5,7 +5,7 @@ import os
 import pluggy
 
 from . import hookspecs, PYLS
-from .uri import uri_to_path
+from .uri import uri2path
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class Config(object):
         return self._root_uri
 
     def find_parents(self, path, names):
-        root_path = uri_to_path(self._root_uri)
+        root_path = uri2path(self._root_uri)
         return find_parents(root_path, path, names)
 
 

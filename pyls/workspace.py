@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import jedi
 
 from . import config, lsp
-from .uri import uri_to_path
+from .uri import uri2path
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class Workspace(object):
 
     def __init__(self, root_uri, lang_server=None):
         self._url_parsed = urlparse(root_uri)
-        self.root = uri_to_path(root_uri)
+        self.root = uri2path(root_uri)
         self._docs = {}
         self._lang_server = lang_server
 
@@ -37,7 +37,7 @@ class Workspace(object):
         return self._docs[doc_uri]
 
     def put_document(self, doc_uri, content, version=None):
-        path = uri_to_path(doc_uri)
+        path = uri2path(doc_uri)
         self._docs[doc_uri] = Document(
             doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
@@ -81,7 +81,7 @@ class Document(object):
     def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
         self.uri = uri
         self.version = version
-        self.path = uri_to_path(uri)
+        self.path = uri2path(uri)
         self.filename = os.path.basename(self.path)
 
         self._local = local
