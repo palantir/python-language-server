@@ -1,0 +1,16 @@
+environment:
+  matrix:
+    - TOXENV: py27
+    - TOXENV: py34
+    - TOXENV: lint
+
+matrix:
+  fast_finish: true
+
+install:
+  - C:\Python27\python -m pip install --pre -U tox
+
+build: false  # Not a C# project
+
+test_script:
+  - C:\Python27\scripts\tox
