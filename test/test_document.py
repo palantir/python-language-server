@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import os
 import pytest
 from pyls import uris
 from pyls.workspace import Document
@@ -18,7 +19,7 @@ def doc():
 
 def test_document_props(doc):
     assert doc.uri == DOC_URI
-    assert doc.path == __file__
+    assert os.path.normpath(doc.path) == os.path.normpath(__file__)
     assert doc.source == DOC
 
 
