@@ -52,7 +52,7 @@ def test_pycodestyle_config():
     """
     # Create a workspace in tmp
     tmp = tempfile.mkdtemp()
-    workspace = Workspace(tmp)
+    workspace = Workspace(uris.from_fs_path(tmp))
     doc_uri = uris.from_fs_path(os.path.join(tmp, 'test.py'))
     workspace.put_document(doc_uri, DOC)
     doc = workspace.get_document(doc_uri)

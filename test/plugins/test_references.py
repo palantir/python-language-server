@@ -24,7 +24,7 @@ Test1()
 @pytest.fixture
 def tmp_workspace():
     tmp = tempfile.mkdtemp()
-    workspace = Workspace(tmp)
+    workspace = Workspace(uris.from_fs_path(tmp))
 
     def create_file(name, content):
         fn = os.path.join(tmp, name)
@@ -53,9 +53,6 @@ def test_references(tmp_workspace):
     # Briefly check excluding the definitions (also excludes imports, only counts uses)
     no_def_refs = pyls_references(doc1, position, exclude_declaration=True)
     assert len(no_def_refs) == 1
-
-    print no_def_refs
-    print DOC1_URI
 
     # Make sure our definition is correctly located
     doc1_ref = [u for u in refs if u['uri'] == DOC1_URI][0]
