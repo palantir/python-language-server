@@ -4,11 +4,12 @@ import logging
 import os
 import re
 import sys
-from urllib.parse import urlparse, urlunparse, quote, unquote
+from urllib.parse import urlparse
 
 import jedi
 
 from . import config, lsp
+from .uri import uri2path
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class Workspace(object):
 
     def __init__(self, root_uri, lang_server=None):
         self._url_parsed = urlparse(root_uri)
-        self.root = unquote(self._url_parsed.path)
+        self.root = uri2path(root_uri)
         self._docs = {}
         self._lang_server = lang_server
 
@@ -36,7 +37,7 @@ class Workspace(object):
         return self._docs[doc_uri]
 
     def put_document(self, doc_uri, content, version=None):
-        path = unquote(urlparse(doc_uri).path)
+        path = uri2path(doc_uri)
         self._docs[doc_uri] = Document(
             doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
@@ -80,7 +81,7 @@ class Document(object):
     def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
         self.uri = uri
         self.version = version
-        self.path = unquote(urlparse(uri).path)
+        self.path = uri2path(uri)
         self.filename = os.path.basename(self.path)
 
         self._local = local
@@ -175,20 +176,3 @@ class Document(object):
             kwargs['line'] = position['line'] + 1
             kwargs['column'] = position['character']
         return jedi.Script(**kwargs)
-
-
-def get_uri_like(doc_uri, path):
-    """Replace the path in a uri. Little bit hacky!
-
-    Due to https://github.com/PythonCharmers/python-future/issues/273 we have to
-    cast all parts to the same type since jedi can return str and urlparse returns
-    unicode objects.
-    """
-    parts = list(urlparse(doc_uri))
-    if path[0] != '/' and ':' in path:  # fix path for windows
-        drivespec, path = path.split(':', 1)
-        path = '/' + drivespec + ':' + quote(path.replace('\\', '/'))
-    else:
-        path = quote(path)
-    parts[2] = path
-    return urlunparse([str(p) for p in parts])

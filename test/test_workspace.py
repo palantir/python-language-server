@@ -1,9 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import pytest
-from pyls import workspace
+import pyls
 
-DOC_URI = 'file://' + __file__
+DOC_URI = pyls.uri.path2uri(__file__)
 
 
 def test_local(pyls):
@@ -35,11 +35,15 @@ def test_bad_get_document(pyls):
 
 
 def test_uri_like():
-    assert workspace.get_uri_like('file:///some-path', '/my/path') == 'file:///my/path'
+    assert pyls.uri.path2uri(r'/my/path') == 'file:///my/path'
+
     win_doc_uri = r'file:///D:/hello%20world.py'
     win_doc_path = r'D:\hello world.py'
-    win_uri = workspace.get_uri_like(win_doc_uri, win_doc_path)
-    assert win_uri == win_doc_uri
+    assert pyls.uri.path2uri(win_doc_path) == win_doc_uri
+
+    win_doc_uri = r'file://SERVER/share/hello%20world.py'
+    win_doc_path = r'\\SERVER\share\hello world.py'
+    assert pyls.uri.path2uri(win_doc_path) == win_doc_uri
 
 
 def test_non_root_project(pyls):
@@ -61,7 +65,7 @@ def test_urlencoded_paths():
     root_uri = "file:///Encoded%20%3FSpace/"
     file_uri = root_uri + "test.py"
 
-    ws = workspace.Workspace(root_uri)
+    ws = pyls.workspace.Workspace(root_uri)
     assert ws.root == "/Encoded ?Space/"
 
     ws.put_document(file_uri, "")
