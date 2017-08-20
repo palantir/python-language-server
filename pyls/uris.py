@@ -14,7 +14,7 @@ def urlparse(uri):
     """Parse and decode the parts of a URI."""
     scheme, netloc, path, params, query, fragment = parse.urlparse(uri)
     return (
-        scheme,
+        parse.unquote(scheme),
         parse.unquote(netloc),
         parse.unquote(path),
         parse.unquote(params),

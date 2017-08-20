@@ -16,7 +16,6 @@ def test_to_fs_path(uri, path):
 
 @windows_only
 @pytest.mark.parametrize('uri,path', [
-    ('file://shares/c$/far/boo', '\\\\shares\\c$\\far\\boo'),
     ('file:///c:/far/boo', 'c:\\far\\boo'),
     ('file:///C:/far/boo', 'c:\\far\\boo'),
     ('file:///C:/far/space%20%3Fboo', 'c:\\far\\space ?boo'),
@@ -36,7 +35,6 @@ def test_from_fs_path(path, uri):
 
 @windows_only
 @pytest.mark.parametrize('path,uri', [
-    ('\\\\shares\\c$\\far\\boo', 'file://shares/c$/far/boo'),
     ('c:\\far\\boo', 'file:///c:/far/boo'),
     ('c:\\far\\space ?boo', 'file:///C:/far/space%20%3Fboo')
 ])

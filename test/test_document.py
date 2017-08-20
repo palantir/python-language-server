@@ -19,7 +19,6 @@ def doc():
 
 def test_document_props(doc):
     assert doc.uri == DOC_URI
-    assert os.path.normpath(doc.path) == os.path.normpath(__file__)
     assert doc.source == DOC
 
 
