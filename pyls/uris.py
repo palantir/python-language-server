@@ -4,7 +4,7 @@
 https://github.com/Microsoft/vscode-uri/blob/e59cab84f5df6265aed18ae5f43552d3eef13bb9/lib/index.ts
 """
 import re
-from urllib.parse import urlparse
+from urllib import parse
 from pyls import IS_WIN
 
 RE_DRIVE_LETTER_PATH = re.compile(r'^\/[a-zA-z]:')
@@ -18,7 +18,7 @@ def fs_path(uri):
     invalid characters and semantics. Will *not* look at the scheme of this URI.
     """
     # scheme://netloc/path;parameters?query#fragment
-    scheme, netloc, path, _params, _query, _fragment = urlparse(uri)
+    scheme, netloc, path, _params, _query, _fragment = _parse(uri)
 
     if netloc and path and scheme == 'file':
         # unc path: file://shares/c$/far/boo
@@ -36,3 +36,16 @@ def fs_path(uri):
         value = value.replace('/', '\\')
 
     return value
+
+
+def _parse(uri):
+    """Parse and decode the parts of a URI."""
+    scheme, netloc, path, params, query, fragment = parse.urlparse(uri)
+    return (
+        scheme,
+        parse.unquote(netloc),
+        parse.unquote(path),
+        parse.unquote(params),
+        parse.unquote(query),
+        parse.unquote(fragment)
+    )
