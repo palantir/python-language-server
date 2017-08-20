@@ -3,9 +3,8 @@ from configparser import RawConfigParser
 import logging
 import os
 import pluggy
-from urllib.parse import urlparse, unquote
 
-from . import hookspecs, PYLS
+from . import hookspecs, uris, PYLS
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class Config(object):
         return self._root_uri
 
     def find_parents(self, path, names):
-        root_path = unquote(urlparse(self._root_uri).path)
+        root_path = uris.to_fs_path(self._root_uri)
         return find_parents(root_path, path, names)
 
 

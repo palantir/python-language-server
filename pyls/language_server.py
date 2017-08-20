@@ -2,9 +2,8 @@
 import logging
 import re
 import socketserver
+from . import uris
 from .server import JSONRPCServer
-from urllib.parse import urljoin
-from urllib.request import pathname2url
 
 log = logging.getLogger(__name__)
 
@@ -92,7 +91,7 @@ class LanguageServer(MethodJSONRPCServer):
             self.root_uri = kwargs['rootUri']
         elif 'rootPath' in kwargs:
             root_path = kwargs['rootPath']
-            self.root_uri = urljoin(u'file://', pathname2url(root_path))
+            self.root_uri = uris.from_fs_path(root_path)
         else:
             self.root_uri = ''
         self.init_opts = kwargs.get('initializationOptions')

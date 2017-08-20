@@ -2,11 +2,12 @@
 import os
 import shutil
 import tempfile
+from pyls import uris
 from pyls.config import Config
 from pyls.workspace import Document, Workspace
 from pyls.plugins import pycodestyle_lint, pyflakes_lint
 
-DOC_URI = __file__
+DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
 
 def hello():
@@ -52,10 +53,10 @@ def test_pycodestyle_config():
     # Create a workspace in tmp
     tmp = tempfile.mkdtemp()
     workspace = Workspace(tmp)
-    doc_uri = 'file://' + tmp + '/' + 'test.py'
+    doc_uri = uris.from_fs_path(os.path.join(tmp, 'test.py'))
     workspace.put_document(doc_uri, DOC)
     doc = workspace.get_document(doc_uri)
-    config = Config(workspace.root, {})
+    config = Config(workspace.root_uri, {})
 
     # Make sure we get a warning for 'indentation contains tabs'
     diags = pycodestyle_lint.pyls_lint(config, workspace, doc)
