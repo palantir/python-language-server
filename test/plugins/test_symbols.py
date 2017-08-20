@@ -1,9 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
 from pyls.workspace import Document
 
-DOC_URI = __file__
+DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
 
 a = 'hello'

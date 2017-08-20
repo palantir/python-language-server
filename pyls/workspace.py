@@ -4,11 +4,10 @@ import logging
 import os
 import re
 import sys
-from urllib.parse import urlparse, urlunparse, quote, unquote
 
 import jedi
 
-from . import config, lsp
+from . import config, lsp, uris
 
 log = logging.getLogger(__name__)
 
@@ -24,19 +23,28 @@ class Workspace(object):
     M_SHOW_MESSAGE = 'window/showMessage'
 
     def __init__(self, root_uri, lang_server=None):
-        self._url_parsed = urlparse(root_uri)
-        self.root = unquote(self._url_parsed.path)
+        self._root_uri = root_uri
+        self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
+        self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
         self._lang_server = lang_server
 
+    @property
+    def root_path(self):
+        return self._root_path
+
+    @property
+    def root_uri(self):
+        return self._root_uri
+
     def is_local(self):
-        return (self._url_parsed.scheme == '' or self._url_parsed.scheme == 'file') and os.path.exists(self.root)
+        return (self._root_uri_scheme == '' or self._root_uri_scheme == 'file') and os.path.exists(self._root_path)
 
     def get_document(self, doc_uri):
         return self._docs[doc_uri]
 
     def put_document(self, doc_uri, content, version=None):
-        path = unquote(urlparse(doc_uri).path)
+        path = uris.to_fs_path(doc_uri)
         self._docs[doc_uri] = Document(
             doc_uri, content, sys_path=self.syspath_for_path(path), version=version
         )
@@ -66,13 +74,13 @@ class Workspace(object):
         Since the workspace root may not be the root of the Python project we instead
         append the closest parent directory containing a setup.py file.
         """
-        files = config.find_parents(self.root, path, ['setup.py']) or []
+        files = config.find_parents(self._root_path, path, ['setup.py']) or []
         path = [os.path.dirname(setup_py) for setup_py in files]
         path.extend(sys.path)
         return path
 
     def is_in_workspace(self, path):
-        return not self.root or os.path.commonprefix((self.root, path))
+        return not self._root_path or os.path.commonprefix((self._root_path, path))
 
 
 class Document(object):
@@ -80,7 +88,7 @@ class Document(object):
     def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
         self.uri = uri
         self.version = version
-        self.path = unquote(urlparse(uri).path)
+        self.path = uris.to_fs_path(uri)
         self.filename = os.path.basename(self.path)
 
         self._local = local
@@ -175,20 +183,3 @@ class Document(object):
             kwargs['line'] = position['line'] + 1
             kwargs['column'] = position['character']
         return jedi.Script(**kwargs)
-
-
-def get_uri_like(doc_uri, path):
-    """Replace the path in a uri. Little bit hacky!
-
-    Due to https://github.com/PythonCharmers/python-future/issues/273 we have to
-    cast all parts to the same type since jedi can return str and urlparse returns
-    unicode objects.
-    """
-    parts = list(urlparse(doc_uri))
-    if path[0] != '/' and ':' in path:  # fix path for windows
-        drivespec, path = path.split(':', 1)
-        path = '/' + drivespec + ':' + quote(path.replace('\\', '/'))
-    else:
-        path = quote(path)
-    parts[2] = path
-    return urlunparse([str(p) for p in parts])

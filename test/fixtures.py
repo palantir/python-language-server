@@ -1,16 +1,13 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import pytest
+from pyls import uris
 from pyls.config import Config
 from pyls.python_ls import PythonLanguageServer
 from pyls.workspace import Workspace
 from io import StringIO
 from urllib.parse import urljoin
-from urllib.request import pathname2url
 
-
-def path2uri(path):
-    return urljoin(u"file://", pathname2url(path))
 
 @pytest.fixture
 def pyls(tmpdir):
@@ -21,7 +18,7 @@ def pyls(tmpdir):
 
     ls.m_initialize(
         processId=1,
-        rootUri=path2uri(str(tmpdir)),
+        rootUri=uris.from_fs_path(str(tmpdir)),
         initializationOptions={}
     )
 
@@ -31,10 +28,10 @@ def pyls(tmpdir):
 @pytest.fixture
 def workspace():
     """Return a workspace."""
-    return Workspace(path2uri(os.path.dirname(__file__)))
+    return Workspace(uris.from_fs_path(os.path.dirname(__file__)))
 
 
 @pytest.fixture
 def config(workspace):
     """Return a config object."""
-    return Config(path2uri(os.path.dirname(__file__)), {})
+    return Config(workspace.root_uri, {})
