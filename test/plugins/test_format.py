@@ -1,8 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from pyls import uris
 from pyls.plugins.format import pyls_format_document, pyls_format_range
 from pyls.workspace import Document
 
-DOC_URI = __file__
+DOC_URI = uris.from_fs_path(__file__)
 DOC = """A = [
     'h',   'w',
 

@@ -1,8 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from pyls import uris
 from pyls.plugins.signature import pyls_signature_help
 from pyls.workspace import Document
 
-DOC_URI = __file__
+DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
 
 def main(param1, param2):

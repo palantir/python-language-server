@@ -1,8 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import os
 import pytest
+from pyls import uris
 from pyls.workspace import Document
 
-DOC_URI = "file://" + __file__
+DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
 
 def main():
@@ -17,7 +19,6 @@ def doc():
 
 def test_document_props(doc):
     assert doc.uri == DOC_URI
-    assert doc.path == __file__
     assert doc.source == DOC
 
 
