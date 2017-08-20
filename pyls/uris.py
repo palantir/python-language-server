@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 from pyls import IS_WIN
 
 RE_DRIVE_LETTER_PATH = re.compile(r'^\/[a-zA-z]:')
-RE_SLASH = re.compile(r'\/')
 
 
 def fs_path(uri):
@@ -34,6 +33,6 @@ def fs_path(uri):
         value = path
 
     if IS_WIN:
-        value = RE_SLASH.sub('\\', value)
+        value = value.replace('/', '\\')
 
     return value
