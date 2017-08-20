@@ -1,9 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import pytest
 from pyls import uris
-from test import windows_only
+from test import unix_only, windows_only
 
 
+@unix_only
 @pytest.mark.parametrize('uri,path', [
     ('file:///foo/bar#frag', '/foo/bar'),
     ('file:/foo/bar#frag', '/foo/bar'),
