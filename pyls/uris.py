@@ -122,4 +122,8 @@ def _normalize_win_path(path):
     if not path.startswith('/'):
         path = '/' + path
 
+    # Normalize drive paths to lower case
+    if RE_DRIVE_LETTER_PATH.match(path):
+        path = path[0] + path[1].lower() + path[2:]
+
     return path, netloc

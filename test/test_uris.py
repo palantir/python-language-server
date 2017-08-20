@@ -36,7 +36,7 @@ def test_from_fs_path(path, uri):
 @windows_only
 @pytest.mark.parametrize('path,uri', [
     ('c:\\far\\boo', 'file:///c:/far/boo'),
-    ('c:\\far\\space ?boo', 'file:///C:/far/space%20%3Fboo')
+    ('C:\\far\\space ?boo', 'file:///c:/far/space%20%3Fboo')
 ])
 def test_win_from_fs_path(path, uri):
     assert uris.from_fs_path(path) == uri
