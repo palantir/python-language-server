@@ -16,4 +16,4 @@ test_script:
   - C:\Python27\scripts\tox
 
 cache:
-  - %APPDATA%\pip\Cache
+  - '%APPDATA%\pip\Cache'
