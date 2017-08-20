@@ -21,9 +21,9 @@ DOC_SYNTAX_ERR = """def hello()
 """
 
 
-def test_pycodestyle(config, workspace):
+def test_pycodestyle(config):
     doc = Document(DOC_URI, DOC)
-    diags = pycodestyle_lint.pyls_lint(config, workspace, doc)
+    diags = pycodestyle_lint.pyls_lint(config, doc)
 
     assert all([d['source'] == 'pycodestyle' for d in diags])
 
@@ -59,7 +59,7 @@ def test_pycodestyle_config():
     config = Config(workspace.root_uri, {})
 
     # Make sure we get a warning for 'indentation contains tabs'
-    diags = pycodestyle_lint.pyls_lint(config, workspace, doc)
+    diags = pycodestyle_lint.pyls_lint(config, doc)
     assert [d for d in diags if d['code'] == 'W191']
 
     content = {
@@ -74,7 +74,7 @@ def test_pycodestyle_config():
             f.write(content)
 
         # And make sure we don't get any warnings
-        diags = pycodestyle_lint.pyls_lint(config, workspace, doc)
+        diags = pycodestyle_lint.pyls_lint(config, doc)
         assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
 
         os.unlink(os.path.join(tmp, conf_file))
