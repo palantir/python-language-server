@@ -44,7 +44,7 @@ def test_win_from_fs_path(path, uri):
 
 @pytest.mark.parametrize('uri,kwargs,new_uri', [
     ('file:///foo/bar', {'path': '/baz/boo'}, 'file:///baz/boo'),
-    ('file:///D:/hello%20world.py', {'path': 'D:/hello universe.py'}, 'file:///D:/hello%20universe.py')
+    ('file:///D:/hello%20world.py', {'path': 'D:/hello universe.py'}, 'file:///d:/hello%20universe.py')
 ])
 def test_uri_with(uri, kwargs, new_uri):
     assert uris.uri_with(uri, **kwargs) == new_uri

@@ -54,6 +54,9 @@ def test_references(tmp_workspace):
     no_def_refs = pyls_references(doc1, position, exclude_declaration=True)
     assert len(no_def_refs) == 1
 
+    print no_def_refs
+    print DOC1_URI
+
     # Make sure our definition is correctly located
     doc1_ref = [u for u in refs if u['uri'] == DOC1_URI][0]
     assert doc1_ref['range']['start'] == {'line': 0, 'character': 6}
