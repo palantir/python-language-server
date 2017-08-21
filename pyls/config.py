@@ -60,8 +60,8 @@ def find_parents(root, path, names):
     """Find files matching the given names relative to the given path.
 
     Args:
-        path (str): The path to start searching up from
-        names (List[str]): The file/directory names to look for
+        path (str): The file path to start searching up from.
+        names (List[str]): The file/directory names to look for.
         root (str): The directory at which to stop recursing upwards.
 
     Note:
@@ -69,14 +69,23 @@ def find_parents(root, path, names):
     """
     if not root:
         return []
+
     if not os.path.commonprefix((root, path)):
         log.warning("Path %s not in %s", path, root)
         return []
 
-    curdir = os.path.dirname(path)
+    # Split the relative by directory, generate all the parent directories, then check each of them.
+    # This avoids running a loop that has different base-cases for unix/windows
+    # e.g. /a/b and /a/b/c/d/e.py -> ['/a/b', 'c', 'd']
+    dirs = [root] + os.path.relpath(os.path.dirname(path), root).split(os.path.sep)
 
-    while curdir != os.path.dirname(root) and curdir != '/':
-        existing = list(filter(os.path.exists, [os.path.join(curdir, n) for n in names]))
+    # Search each of /a/b/c, /a/b, /a
+    while dirs:
+        search_dir = os.path.join(*dirs)
+        existing = list(filter(os.path.exists, [os.path.join(search_dir, n) for n in names]))
         if existing:
             return existing
-        curdir = os.path.dirname(curdir)
+        dirs.pop()
+
+    # Otherwise nothing
+    return []
