@@ -1,4 +1,3 @@
-# Copyright 2017 Mikael Knutsson
 import re
 from mypy import api as mypy_api
 from pyls import hookimpl
@@ -29,11 +28,9 @@ def parse_line(line):
 
 @hookimpl
 def pyls_lint(document):
-    args = ('--ignore-missing-imports',
-            '--incremental',
+    args = ('--incremental',
             '--show-column-numbers',
             '--command', document.source)
-
     report, errors, _ = mypy_api.run(args)
 
     diagnostics = []
