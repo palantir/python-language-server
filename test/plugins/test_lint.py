@@ -2,7 +2,7 @@
 import os
 from pyls import lsp, uris
 from pyls.config import Config
-from pyls.workspace import Document, Workspace
+from pyls.workspace import Document
 from pyls.plugins import pycodestyle_lint, pyflakes_lint
 
 DOC_URI = uris.from_fs_path(__file__)
