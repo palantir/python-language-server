@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from . import config, lsp, plugins, _utils
+from . import config, lsp, _utils
 from .language_server import LanguageServer
 from .workspace import Workspace
 
@@ -11,12 +11,18 @@ LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 class PythonLanguageServer(LanguageServer):
 
-    _hooks = None
     workspace = None
     config = None
 
+    @property
+    def _hooks(self):
+        return self.config.plugin_manager.hook
+
+    def _hook(self, hook, doc_uri=None, **kwargs):
+        doc = self.workspace.get_document(doc_uri) if doc_uri else None
+        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+
     def capabilities(self):
-        # TODO: support incremental sync instead of full
         return {
             'codeActionProvider': True,
             'codeLensProvider': {
@@ -44,20 +50,7 @@ class PythonLanguageServer(LanguageServer):
     def initialize(self, root_uri, init_opts, _process_id):
         self.workspace = Workspace(root_uri, lang_server=self)
         self.config = config.Config(root_uri, init_opts)
-
-        # Register the base set of plugins
-        # TODO(gatesn): Make these configurable in init_opts
-        for plugin in plugins.CORE_PLUGINS:
-            self.config.plugin_manager.register(plugin)
-
-        # Store a reference to the plugin manager's hook relay to keep things neat
-        self._hooks = self.config.plugin_manager.hook
-
         self._hook(self._hooks.pyls_initialize)
-
-    def _hook(self, hook, doc_uri=None, **kwargs):
-        doc = self.workspace.get_document(doc_uri) if doc_uri else None
-        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook(self._hooks.pyls_code_actions, doc_uri, range=range, context=context))

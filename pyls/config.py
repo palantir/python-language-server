@@ -20,6 +20,8 @@ class Config(object):
         self._pm.enable_tracing()
         self._pm.add_hookspecs(hookspecs)
         self._pm.load_setuptools_entrypoints(PYLS)
+        for name, plugin in self._pm.list_name_plugin():
+            log.info("Loaded pyls plugin %s from %s", name, plugin)
 
     @property
     def plugin_manager(self):
