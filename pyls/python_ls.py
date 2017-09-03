@@ -82,9 +82,7 @@ class PythonLanguageServer(LanguageServer):
 
     @_utils.debounce(LINT_DEBOUNCE_S)
     def lint(self, doc_uri):
-        self.workspace.publish_diagnostics(doc_uri, flatten(self._hook(
-            'pyls_lint', doc_uri
-        )))
+        self.workspace.publish_diagnostics(doc_uri, flatten(self._hook('pyls_lint', doc_uri)))
 
     def references(self, doc_uri, position, exclude_declaration):
         return flatten(self._hook(
