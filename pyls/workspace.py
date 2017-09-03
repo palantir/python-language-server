@@ -79,9 +79,6 @@ class Workspace(object):
         path.extend(sys.path)
         return path
 
-    def is_in_workspace(self, path):
-        return not self._root_path or os.path.commonprefix((self._root_path, path))
-
 
 class Document(object):
 

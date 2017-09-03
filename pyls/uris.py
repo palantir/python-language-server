@@ -7,7 +7,7 @@ import re
 from urllib import parse
 from pyls import IS_WIN
 
-RE_DRIVE_LETTER_PATH = re.compile(r'^\/[a-zA-z]:')
+RE_DRIVE_LETTER_PATH = re.compile(r'^\/[a-zA-Z]:')
 
 
 def urlparse(uri):
@@ -55,7 +55,7 @@ def to_fs_path(uri):
 
     if netloc and path and scheme == 'file':
         # unc path: file://shares/c$/far/boo
-        value = "//{netloc}{path}".format(netloc=netloc, path=path)
+        value = "//{}{}".format(netloc, path)
 
     elif RE_DRIVE_LETTER_PATH.match(path):
         # windows drive letter: file:///C:/far/boo
