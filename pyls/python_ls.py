@@ -14,10 +14,6 @@ class PythonLanguageServer(LanguageServer):
     workspace = None
     config = None
 
-    @property
-    def _hooks(self):
-        return self.config.plugin_manager.hook
-
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
         hook = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
@@ -158,7 +154,7 @@ class PythonLanguageServer(LanguageServer):
             self.lint(doc_uri)
 
     def m_workspace__did_change_watched_files(self, **_kwargs):
-        # Externally changed files may result in different errors
+        # Externally changed files may result in changed diagnostics
         for doc_uri in self.workspace.documents:
             self.lint(doc_uri)
 
