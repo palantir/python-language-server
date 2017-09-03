@@ -15,6 +15,9 @@ class Config(object):
         self._root_uri = root_uri
         self._init_opts = init_opts
 
+        self._disabled_plugins = []
+        self._settings = {}
+
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
         self._pm.enable_tracing()
@@ -22,6 +25,10 @@ class Config(object):
         self._pm.load_setuptools_entrypoints(PYLS)
         for name, plugin in self._pm.list_name_plugin():
             log.info("Loaded pyls plugin %s from %s", name, plugin)
+
+    @property
+    def disabled_plugins(self):
+        return self._disabled_plugins
 
     @property
     def plugin_manager(self):
@@ -38,6 +45,18 @@ class Config(object):
     def find_parents(self, path, names):
         root_path = uris.to_fs_path(self._root_uri)
         return find_parents(root_path, path, names)
+
+    def update(self, settings):
+        # TODO(gatesn): Should we recursively update the dictionary? Or just replace?
+        self._settings = settings
+        log.info("Updated settings to %s", self._settings)
+
+        # All plugins default to enabled
+        self._disabled_plugins = [
+            plugin for name, plugin in self.plugin_manager.list_name_plugin()
+            if not self._settings.get('plugins', {}).get(name, {}).get('enabled', True)
+        ]
+        log.info("Disabled plugins: %s", self._disabled_plugins)
 
 
 def build_config(key, config_files):

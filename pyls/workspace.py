@@ -30,6 +30,10 @@ class Workspace(object):
         self._lang_server = lang_server
 
     @property
+    def documents(self):
+        return self._docs
+
+    @property
     def root_path(self):
         return self._root_path
 
