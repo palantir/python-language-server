@@ -9,16 +9,12 @@ import * as net from 'net';
 import { workspace, Disposable, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, ErrorAction, ErrorHandler, CloseAction, TransportKind } from 'vscode-languageclient';
 
-function startLangServer(command: string, args: string[], documentSelector: string[]): Disposable {
+function startLangServer(command: string, documentSelector: string[]): Disposable {
 	const serverOptions: ServerOptions = {
-        command,
-        args,
+		command: command,
 	};
 	const clientOptions: LanguageClientOptions = {
 		documentSelector: documentSelector,
-        synchronize: {
-            configurationSection: "pyls"
-        }
 	}
 	return new LanguageClient(command, serverOptions, clientOptions).start();
 }
@@ -43,7 +39,7 @@ function startLangServerTCP(addr: number, documentSelector: string[]): Disposabl
 }
 
 export function activate(context: ExtensionContext) {
-    context.subscriptions.push(startLangServer("pyls", ["-v"], ["python"]));
+    context.subscriptions.push(startLangServer("pyls", ["python"]));
     // For TCP
     // context.subscriptions.push(startLangServerTCP(2087, ["python"]));
 }

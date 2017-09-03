@@ -15,18 +15,6 @@
     "activationEvents": [
         "*"
     ],
-    "contributes": {
-        "configuration": {
-            "title": "Python Language Server Configuration",
-            "type": "object",
-            "properties": {
-                "pyls.plugins": {
-                    "type": "object",
-                    "description": "Configuration for pyls plugins. Configuration key is the pluggy plugin name."
-                }
-            }
-        }
-    },
     "main": "./out/extension",
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
