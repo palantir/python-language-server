@@ -57,5 +57,16 @@ setup(
         'console_scripts': [
             'pyls = pyls.__main__:main',
         ],
+        'pyls': [
+            'jedi_completion = pyls.plugins.completion',
+            'jedi_definition = pyls.plugins.definition',
+            'jedi_hover = pyls.plugins.hover',
+            'jedi_references = pyls.plugins.references',
+            'jedi_signature_help = pyls.plugins.signature',
+            'jedi_symbols = pyls.plugins.symbols',
+            'yapf = pyls.plugins.format',
+            'pycodestyle = pyls.plugins.pycodestyle'
+            'pyflakes = pyls.plugins.pyflakes_lint'
+        ]
     },
 )
