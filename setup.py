@@ -65,7 +65,7 @@ setup(
             'jedi_signature_help = pyls.plugins.signature',
             'jedi_symbols = pyls.plugins.symbols',
             'yapf = pyls.plugins.format',
-            'pycodestyle = pyls.plugins.pycodestyle',
+            'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
         ]
     },
