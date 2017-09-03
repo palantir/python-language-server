@@ -1,10 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-import shutil
-import tempfile
-from pyls import uris
+from pyls import lsp, uris
 from pyls.config import Config
-from pyls.workspace import Document, Workspace
+from pyls.workspace import Document
 from pyls.plugins import pycodestyle_lint, pyflakes_lint
 
 DOC_URI = uris.from_fs_path(__file__)
@@ -28,14 +26,16 @@ def test_pycodestyle(config):
     assert all([d['source'] == 'pycodestyle' for d in diags])
 
     # One we're expecting is:
-    msg = 'E402 module level import not at top of file'
+    msg = 'W191 indentation contains tabs'
     mod_import = [d for d in diags if d['message'] == msg][0]
 
-    assert mod_import['code'] == 'E402'
-    assert mod_import['range']['start'] == {'line': 5, 'character': 0}
+    assert mod_import['code'] == 'W191'
+    assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
+    assert mod_import['range']['start'] == {'line': 3, 'character': 0}
+    assert mod_import['range']['end'] == {'line': 3, 'character': 6}
 
 
-def test_pycodestyle_config():
+def test_pycodestyle_config(workspace):
     """ Test that we load config files properly.
 
     Config files are loaded in the following order:
@@ -50,10 +50,7 @@ def test_pycodestyle_config():
     If any section called 'pycodestyle' exists that will be solely used
     and any config in a 'pep8' section will be ignored
     """
-    # Create a workspace in tmp
-    tmp = tempfile.mkdtemp()
-    workspace = Workspace(uris.from_fs_path(tmp))
-    doc_uri = uris.from_fs_path(os.path.join(tmp, 'test.py'))
+    doc_uri = uris.from_fs_path(os.path.join(workspace.root_path, 'test.py'))
     workspace.put_document(doc_uri, DOC)
     doc = workspace.get_document(doc_uri)
     config = Config(workspace.root_uri, {})
@@ -70,16 +67,14 @@ def test_pycodestyle_config():
 
     for conf_file, (content, working) in list(content.items()):
         # Now we'll add config file to ignore it
-        with open(os.path.join(tmp, conf_file), 'w+') as f:
+        with open(os.path.join(workspace.root_path, conf_file), 'w+') as f:
             f.write(content)
 
         # And make sure we don't get any warnings
         diags = pycodestyle_lint.pyls_lint(config, doc)
         assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
 
-        os.unlink(os.path.join(tmp, conf_file))
-
-    shutil.rmtree(tmp)
+        os.unlink(os.path.join(workspace.root_path, conf_file))
 
 
 def test_pyflakes():
