@@ -1,9 +1,12 @@
+# Copyright 2017 Palantir Technologies, Inc.
 import logging
-from . import config, lsp, plugins
+from . import config, lsp, plugins, _utils
 from .language_server import LanguageServer
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
+
+LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
 class PythonLanguageServer(LanguageServer):
@@ -87,6 +90,7 @@ class PythonLanguageServer(LanguageServer):
     def hover(self, doc_uri, position):
         return self._hook(self._hooks.pyls_hover, doc_uri, position=position) or {'contents': ''}
 
+    @_utils.debounce(LINT_DEBOUNCE_S)
     def lint(self, doc_uri):
         self.workspace.publish_diagnostics(doc_uri, flatten(self._hook(
             self._hooks.pyls_lint, doc_uri

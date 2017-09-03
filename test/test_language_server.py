@@ -85,7 +85,7 @@ def test_linting(client_server):
     assert 'capabilities' in response['result']
 
     # didOpen
-    client.call('textDocument/didOpen', {
+    client.notify('textDocument/didOpen', {
         'textDocument': {'uri': 'file:///test', 'text': 'import sys'}
     })
     response = _get_notification(client)
