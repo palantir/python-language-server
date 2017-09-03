@@ -1,10 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import pytest
-import shutil
-import tempfile
 from pyls import uris
-from pyls.workspace import Document, Workspace
+from pyls.workspace import Document
 from pyls.plugins.references import pyls_references
 
 
@@ -22,12 +20,9 @@ Test1()
 
 
 @pytest.fixture
-def tmp_workspace():
-    tmp = tempfile.mkdtemp()
-    workspace = Workspace(uris.from_fs_path(tmp))
-
+def tmp_workspace(workspace):
     def create_file(name, content):
-        fn = os.path.join(tmp, name)
+        fn = os.path.join(workspace.root_path, name)
         with open(fn, 'w') as f:
             f.write(content)
         workspace.put_document(uris.from_fs_path(fn), content)
@@ -35,8 +30,7 @@ def tmp_workspace():
     create_file(DOC1_NAME, DOC1)
     create_file(DOC2_NAME, DOC2)
 
-    yield workspace
-    shutil.rmtree(tmp)
+    return workspace
 
 
 def test_references(tmp_workspace):
