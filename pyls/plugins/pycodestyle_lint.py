@@ -13,6 +13,8 @@ CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
 def pyls_lint(config, document):
     # Read config from all over the place
     config_files = config.find_parents(document.path, CONFIG_FILES)
+    if pycodestyle.USER_CONFIG:
+        config_files.append(pycodestyle.USER_CONFIG)
     pycodestyle_conf = pyls_config.build_config('pycodestyle', config_files)
     pep8_conf = pyls_config.build_config('pep8', config_files)
 
