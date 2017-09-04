@@ -1,18 +1,23 @@
 # Copyright 2017 Palantir Technologies, Inc.
-import logging
-from pylama import config
-from pylama.main import check_path, parse_options
 from pyls import hookimpl, lsp
-
-log = logging.getLogger(__name__)
-
-
-# Pylama sets up a stdout stream handler... which is bizarre
-config.LOGGER.removeHandler(config.STREAM)
 
 
 @hookimpl
 def pyls_lint(document):
+    """PyLama does a couple of odd things:
+        * Sets up a log handler to write to stdout
+        * Patches PyFlakes (and other linters?) to change message strings etc.
+
+    So we lazily import pylama only if it used, in which case you probably don't care
+    that other linters may stop working.
+    """
+    from pylama import config
+    from pylama.main import check_path, parse_options
+
+    # Pylama sets up a stdout stream handler... which is bizarre
+    if config.STREAM in config.LOGGER.handlers:
+        config.LOGGER.removeHandler(config.STREAM)
+
     options = parse_options([document.path])
     errors = check_path(options, code=document.source)
     return [{
