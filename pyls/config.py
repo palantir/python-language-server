@@ -15,13 +15,24 @@ class Config(object):
         self._root_uri = root_uri
         self._init_opts = init_opts
 
+        self._disabled_plugins = []
+        self._settings = {}
+
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
         self._pm.enable_tracing()
         self._pm.add_hookspecs(hookspecs)
         self._pm.load_setuptools_entrypoints(PYLS)
+
         for name, plugin in self._pm.list_name_plugin():
             log.info("Loaded pyls plugin %s from %s", name, plugin)
+
+        for plugin_conf in self._pm.hook.pyls_settings(config=self):
+            self.update(plugin_conf)
+
+    @property
+    def disabled_plugins(self):
+        return self._disabled_plugins
 
     @property
     def plugin_manager(self):
@@ -38,6 +49,18 @@ class Config(object):
     def find_parents(self, path, names):
         root_path = uris.to_fs_path(self._root_uri)
         return find_parents(root_path, path, names)
+
+    def update(self, settings):
+        """Recursively merge the given settings into the current settings."""
+        self._settings = _merge_dicts(self._settings, settings)
+        log.info("Updated settings to %s", self._settings)
+
+        # All plugins default to enabled
+        self._disabled_plugins = [
+            plugin for name, plugin in self.plugin_manager.list_name_plugin()
+            if not self._settings.get('plugins', {}).get(name, {}).get('enabled', True)
+        ]
+        log.info("Disabled plugins: %s", self._disabled_plugins)
 
 
 def build_config(key, config_files):
@@ -91,3 +114,19 @@ def find_parents(root, path, names):
 
     # Otherwise nothing
     return []
+
+
+def _merge_dicts(dict_a, dict_b):
+    """Recursively merge dictionary b into dictionary a."""
+    def _merge_dicts_(a, b):
+        for key in set(a.keys()).union(b.keys()):
+            if key in a and key in b:
+                if isinstance(a[key], dict) and isinstance(b[key], dict):
+                    yield (key, dict(_merge_dicts_(a[key], b[key])))
+                else:
+                    yield (key, b[key])
+            elif key in a:
+                yield (key, a[key])
+            else:
+                yield (key, b[key])
+    return dict(_merge_dicts_(dict_a, dict_b))
