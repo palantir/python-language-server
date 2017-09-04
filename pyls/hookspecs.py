@@ -78,6 +78,11 @@ def pyls_lint(config, workspace, document):
 
 
 @hookspec
+def pyls_plugin_config(config):
+    pass
+
+
+@hookspec
 def pyls_references(config, workspace, document, position, exclude_declaration):
     pass
 

@@ -23,8 +23,12 @@ class Config(object):
         self._pm.enable_tracing()
         self._pm.add_hookspecs(hookspecs)
         self._pm.load_setuptools_entrypoints(PYLS)
+
         for name, plugin in self._pm.list_name_plugin():
             log.info("Loaded pyls plugin %s from %s", name, plugin)
+
+        for plugin_conf in self._pm.hook.pyls_plugin_config(config=self):
+            self.update(plugin_conf)
 
     @property
     def disabled_plugins(self):
@@ -47,8 +51,8 @@ class Config(object):
         return find_parents(root_path, path, names)
 
     def update(self, settings):
-        # TODO(gatesn): Should we recursively update the dictionary? Or just replace?
-        self._settings = settings
+        """Recursively merge the given settings into the current settings."""
+        self._settings = _merge_dicts(self._settings, settings)
         log.info("Updated settings to %s", self._settings)
 
         # All plugins default to enabled
@@ -110,3 +114,19 @@ def find_parents(root, path, names):
 
     # Otherwise nothing
     return []
+
+
+def _merge_dicts(dict_a, dict_b):
+    """Recursively merge dictionary b into dictionary a."""
+    def _merge_dicts_(a, b):
+        for key in set(a.keys()).union(b.keys()):
+            if key in a and key in b:
+                if isinstance(a[key], dict) and isinstance(b[key], dict):
+                    yield (key, dict(_merge_dicts_(a[key], b[key])))
+                else:
+                    yield (key, b[key])
+            elif key in a:
+                yield (key, a[key])
+            else:
+                yield (key, b[key])
+    return dict(_merge_dicts_(dict_a, dict_b))
