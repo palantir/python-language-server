@@ -14,11 +14,17 @@ class JSONRPCServer(object):
     def __init__(self, rfile, wfile):
         self.rfile = rfile
         self.wfile = wfile
+        self._shutdown = False
 
-    def shutdown(self):
-        # TODO: we should handle this much better
+    def exit(self):
+        # Exit causes a complete exit of the server
         self.rfile.close()
         self.wfile.close()
+
+    def shutdown(self):
+        # Shutdown signals the server to stop, but not exit
+        self._shutdown = True
+        log.debug("Server shut down, awaiting exit notification")
 
     def handle(self):
         # VSCode wants us to keep the connection open, so let's handle messages in a loop
@@ -26,11 +32,18 @@ class JSONRPCServer(object):
             try:
                 data = self._read_message()
                 log.debug("Got message: %s", data)
+
+                if self._shutdown:
+                    # Handle only the exit notification when we're shut down
+                    jsonrpc.JSONRPCResponseManager.handle(data, {'exit': self.exit})
+                    break
+
                 response = jsonrpc.JSONRPCResponseManager.handle(data, self)
+
                 if response is not None:
                     self._write_message(response.data)
             except Exception:
-                log.exception("Language server shutting down for uncaught exception")
+                log.exception("Language server exiting due to uncaught exception")
                 break
 
     def call(self, method, params=None):

@@ -37,7 +37,7 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
         log.info("Serving %s on (%s, %s)", handler_class.__name__, bind_addr, port)
         server.serve_forever()
     except KeyboardInterrupt:
-        server.shutdown()
+        server.exit()
     finally:
         log.info("Shutting down")
         server.server_close()
@@ -113,7 +113,7 @@ class LanguageServer(MethodJSONRPCServer):
         self.shutdown()
 
     def m_exit(self, **_kwargs):
-        self.shutdown()
+        self.exit()
 
 
 _RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
