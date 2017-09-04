@@ -47,6 +47,7 @@ setup(
     # for example:
     # $ pip install -e .[test]
     extras_require={
+        'pylama': ['pylama'],
         'test': ['tox', 'versioneer', 'pytest', 'pytest-cov', 'coverage'],
     },
 
