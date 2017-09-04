@@ -27,7 +27,7 @@ class Config(object):
         for name, plugin in self._pm.list_name_plugin():
             log.info("Loaded pyls plugin %s from %s", name, plugin)
 
-        for plugin_conf in self._pm.hook.pyls_plugin_config(config=self):
+        for plugin_conf in self._pm.hook.pyls_settings(config=self):
             self.update(plugin_conf)
 
     @property

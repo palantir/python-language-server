@@ -10,15 +10,6 @@ CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
 
 
 @hookimpl
-def pyls_plugin_config(config):
-    return {'plugins': {
-        'pycodestyle': {
-            'enabled': False
-        }
-    }}
-
-
-@hookimpl
 def pyls_lint(config, document):
     # Read config from all over the place
     config_files = config.find_parents(document.path, CONFIG_FILES)
