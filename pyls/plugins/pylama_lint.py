@@ -4,17 +4,9 @@ from pyls import hookimpl, lsp
 
 @hookimpl
 def pyls_settings():
-    # If pylama is installed, turn it on and disable the plugins it replaces
-    try:
-        import pylama
-        assert pylama
-        return {'plugins': {
-            'pylama': {'enabled': True},
-            'pycodestyle': {'enabled': False},
-            'pyflakes': {'enabled': False},
-        }}
-    except ImportError:
-        return {'plugins': {'pylama': {'enabled': False}}}
+    # Pylama is currently disabled by default, we should enable based on whether it
+    # is installed, but waiting on https://github.com/klen/pylama/issues/110
+    return {'plugins': {'pylama': {'enabled': False}}}
 
 
 @hookimpl
