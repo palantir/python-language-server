@@ -38,6 +38,7 @@ class PythonLanguageServer(LanguageServer):
             },
             'hoverProvider': True,
             'referencesProvider': True,
+            'renameProvider': True,
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',']
             },
@@ -90,6 +91,9 @@ class PythonLanguageServer(LanguageServer):
             exclude_declaration=exclude_declaration
         ))
 
+    def rename(self, doc_uri, position, new_name):
+        return self._hook('pyls_rename', doc_uri, position=position, new_name=new_name)
+
     def signature_help(self, doc_uri, position):
         return self._hook('pyls_signature_help', doc_uri, position=position)
 
@@ -134,6 +138,9 @@ class PythonLanguageServer(LanguageServer):
     def m_text_document__formatting(self, textDocument=None, options=None, **_kwargs):
         # For now we're ignoring formatting options.
         return self.format_document(textDocument['uri'])
+
+    def m_text_document__rename(self, textDocument=None, position=None, newName=None, **_kwargs):
+        return self.rename(textDocument['uri'], position, newName)
 
     def m_text_document__range_formatting(self, textDocument=None, range=None, options=None, **_kwargs):
         # Again, we'll ignore formatting options for now.

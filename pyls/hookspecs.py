@@ -82,6 +82,11 @@ def pyls_references(config, workspace, document, position, exclude_declaration):
     pass
 
 
+@hookspec(firstresult=True)
+def pyls_rename(config, workspace, document, position, new_name):
+    pass
+
+
 @hookspec
 def pyls_settings(config):
     pass

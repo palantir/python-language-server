@@ -16,6 +16,11 @@
         "*"
     ],
     "contributes": {
+        "commands": [{
+            "command": "pyls.rope.organizeImports",
+            "title": "Python: Organize Imports",
+            "description": "Organize the Python import statements"
+        }],
         "configuration": {
             "title": "Python Language Server Configuration",
             "type": "object",

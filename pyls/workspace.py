@@ -6,6 +6,8 @@ import re
 import sys
 
 import jedi
+from rope.base import libutils
+from rope.base.project import Project
 
 from . import config, lsp, uris
 
@@ -29,6 +31,9 @@ class Workspace(object):
         self._docs = {}
         self._lang_server = lang_server
 
+        # Whilst incubating, keep private
+        self._rope = Project(self._root_path)
+
     @property
     def documents(self):
         return self._docs
@@ -50,7 +55,7 @@ class Workspace(object):
     def put_document(self, doc_uri, content, version=None):
         path = uris.to_fs_path(doc_uri)
         self._docs[doc_uri] = Document(
-            doc_uri, content, sys_path=self.syspath_for_path(path), version=version
+            doc_uri, content, sys_path=self.syspath_for_path(path), version=version, rope=self._rope
         )
 
     def rm_document(self, doc_uri):
@@ -86,7 +91,7 @@ class Workspace(object):
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
+    def __init__(self, uri, source=None, version=None, local=True, sys_path=None, rope=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -95,9 +100,14 @@ class Document(object):
         self._local = local
         self._source = source
         self._sys_path = sys_path or sys.path
+        self._rope_project = rope
 
     def __str__(self):
         return str(self.uri)
+
+    @property
+    def _rope(self):
+        return libutils.path_to_resource(self._rope_project, self.path)
 
     @property
     def lines(self):
@@ -152,6 +162,11 @@ class Document(object):
                 new.write(line[end_col:])
 
         self._source = new.getvalue()
+
+    def offset_at_position(self, position):
+        """Return the byte-offset pointed at by the given position."""
+        print ''.join(self.lines[:position['line']])
+        return position['character'] + len(''.join(self.lines[:position['line']]))
 
     def word_at_position(self, position):
         """Get the word under the cursor returning the start and end positions."""

@@ -36,10 +36,11 @@ setup(
         'future',
         'jedi>=0.10',
         'json-rpc',
+        'pluggy',
         'pycodestyle',
         'pyflakes',
+        'rope',
         'yapf',
-        'pluggy'
     ],
 
     # List additional groups of dependencies here (e.g. development
@@ -67,6 +68,7 @@ setup(
             'yapf = pyls.plugins.format',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'rope_imports = pyls.plugins.rope_imports',
         ]
     },
 )
