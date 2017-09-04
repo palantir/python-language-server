@@ -38,6 +38,7 @@ setup(
         'json-rpc',
         'pycodestyle',
         'pyflakes',
+        'pylama',
         'yapf',
         'pluggy'
     ],
@@ -67,6 +68,7 @@ setup(
             'yapf = pyls.plugins.format',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'pylama = pyls.plugins.pylama_lint',
         ]
     },
 )

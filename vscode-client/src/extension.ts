@@ -11,8 +11,7 @@ import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, E
 
 function startLangServer(command: string, args: string[], documentSelector: string[]): Disposable {
 	const serverOptions: ServerOptions = {
-        command,
-        args,
+		command, args
 	};
 	const clientOptions: LanguageClientOptions = {
 		documentSelector: documentSelector,
