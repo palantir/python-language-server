@@ -4,8 +4,17 @@ from pyls import hookimpl, lsp
 
 @hookimpl
 def pyls_settings():
-    # Disable pylama by default
-    return {'plugins': {'pylama': {'enabled': False}}}
+    # If pylama is installed, turn it on and disable the plugins it replaces
+    try:
+        import pylama
+        assert pylama
+        return {'plugins': {
+            'pylama': {'enabled': True},
+            'pycodestyle': {'enabled': False},
+            'pyflakes': {'enabled': False},
+        }}
+    except ImportError:
+        return {'plugins': {'pylama': {'enabled': False}}}
 
 
 @hookimpl
