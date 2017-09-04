@@ -38,7 +38,6 @@ setup(
         'json-rpc',
         'pycodestyle',
         'pyflakes',
-        'pylama',
         'yapf',
         'pluggy'
     ],
