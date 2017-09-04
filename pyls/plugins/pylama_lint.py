@@ -3,6 +3,12 @@ from pyls import hookimpl, lsp
 
 
 @hookimpl
+def pyls_settings():
+    # Disable pylama by default
+    return {'plugins': {'pylama': {'enabled': False}}}
+
+
+@hookimpl
 def pyls_lint(document):
     """PyLama does a couple of odd things:
         * Sets up a log handler to write to stdout
