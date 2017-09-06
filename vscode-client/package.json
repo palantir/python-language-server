@@ -56,6 +56,10 @@
                     "type": "boolean",
                     "description": "Enable or disable the plugin."
                 },
+                "pyls.plugins.pydocstyle.enabled": {
+                    "type": "boolean",
+                    "description": "Enable or disable the plugin."
+                },
                 "pyls.plugins.pyflakes.enabled": {
                     "type": "boolean",
                     "description": "Enable or disable the plugin."
