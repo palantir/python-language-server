@@ -80,6 +80,11 @@ class Workspace(object):
         """
         files = config.find_parents(self._root_path, path, ['setup.py']) or []
         path = [os.path.dirname(setup_py) for setup_py in files]
+
+        # Check to see if we're in a virtualenv
+        if 'VIRTUAL_ENV' in os.environ:
+            path.extend(jedi.evaluate.sys_path.get_venv_path(os.environ['VIRTUAL_ENV']))
+
         path.extend(sys.path)
         return path
 
