@@ -46,9 +46,16 @@ class Config(object):
     def root_uri(self):
         return self._root_uri
 
+    @property
+    def settings(self):
+        return self._settings
+
     def find_parents(self, path, names):
         root_path = uris.to_fs_path(self._root_uri)
         return find_parents(root_path, path, names)
+
+    def plugin_settings(self, plugin):
+        return self.settings.get('plugins', {}).get(plugin, {})
 
     def update(self, settings):
         """Recursively merge the given settings into the current settings."""
