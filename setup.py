@@ -47,6 +47,7 @@ setup(
     # for example:
     # $ pip install -e .[test]
     extras_require={
+        'pylama': ['pylama'],
         'test': ['tox', 'versioneer', 'pytest', 'pytest-cov', 'coverage'],
     },
 
@@ -67,6 +68,7 @@ setup(
             'yapf = pyls.plugins.format',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'pylama = pyls.plugins.pylama_lint',
         ]
     },
 )
