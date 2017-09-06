@@ -22,46 +22,62 @@
             "properties": {
                 "pyls.plugins.jedi_completion.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.jedi_definition.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.jedi_hover.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.jedi_references.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.jedi_signature_help.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.jedi_symbols.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.mccabe.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.mccabe.threshold": {
                     "type": "number",
+                    "default": 15,
                     "description": "The minimum threshold that triggers warnings about cyclomatic complexity."
                 },
                 "pyls.plugins.pycodestyle.enabled": {
                     "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.pydocstyle.enabled": {
+                    "type": "boolean",
+                    "default": false,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.pyflakes.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.yapf.enabled": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable or disable the plugin."
                 }
             }

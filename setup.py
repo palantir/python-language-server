@@ -38,6 +38,7 @@ setup(
         'json-rpc',
         'mccabe',
         'pycodestyle',
+        'pydocstyle',
         'pyflakes',
         'yapf',
         'pluggy'
@@ -67,6 +68,7 @@ setup(
             'jedi_symbols = pyls.plugins.symbols',
             'mccabe = pyls.plugins.mccabe_lint',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
+            'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
             'yapf = pyls.plugins.format',
         ]
