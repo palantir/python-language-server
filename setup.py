@@ -36,6 +36,7 @@ setup(
         'future',
         'jedi>=0.10',
         'json-rpc',
+        'mccabe',
         'pycodestyle',
         'pyflakes',
         'yapf',
@@ -64,9 +65,10 @@ setup(
             'jedi_references = pyls.plugins.references',
             'jedi_signature_help = pyls.plugins.signature',
             'jedi_symbols = pyls.plugins.symbols',
-            'yapf = pyls.plugins.format',
+            'mccabe = pyls.plugins.mccabe_lint',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'yapf = pyls.plugins.format',
         ]
     },
 )
