@@ -3,7 +3,7 @@ import os
 from pyls import lsp, uris
 from pyls.config import Config
 from pyls.workspace import Document
-from pyls.plugins import pycodestyle_lint, pyflakes_lint
+from pyls.plugins import pycodestyle_lint, pydocstyle_lint, pyflakes_lint
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
@@ -75,6 +75,19 @@ def test_pycodestyle_config(workspace):
         assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
 
         os.unlink(os.path.join(workspace.root_path, conf_file))
+
+
+def test_pydocstyle():
+    doc = Document(DOC_URI, DOC)
+    diags = pydocstyle_lint.pyls_lint(doc)
+
+    assert all([d['source'] == 'pydocstyle' for d in diags])
+
+    # One we're expecting is:
+    msg = 'D100: Missing docstring in public module'
+    unused_import = [d for d in diags if d['message'] == msg][0]
+
+    assert unused_import['range']['start'] == {'line': 0, 'character': 0}
 
 
 def test_pyflakes():

@@ -37,6 +37,7 @@ setup(
         'jedi>=0.10',
         'json-rpc',
         'pycodestyle',
+        'pydocstyle',
         'pyflakes',
         'yapf',
         'pluggy'
@@ -66,6 +67,7 @@ setup(
             'jedi_symbols = pyls.plugins.symbols',
             'yapf = pyls.plugins.format',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
+            'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
         ]
     },
