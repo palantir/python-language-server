@@ -83,9 +83,10 @@ class Workspace(object):
 
         # Check to see if we're in a virtualenv
         if 'VIRTUAL_ENV' in os.environ:
+            log.info("Using virtualenv %s", os.environ['VIRTUAL_ENV'])
             path.extend(jedi.evaluate.sys_path.get_venv_path(os.environ['VIRTUAL_ENV']))
-
-        path.extend(sys.path)
+        else:
+            path.extend(sys.path)
         return path
 
 
