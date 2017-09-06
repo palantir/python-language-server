@@ -11,6 +11,12 @@ pydocstyle_logger.setLevel(logging.INFO)
 
 
 @hookimpl
+def pyls_settings():
+    # Default pydocstyle to disabled
+    return {'plugins': {'pydocstyle': {'enabled': False}}}
+
+
+@hookimpl
 def pyls_lint(document):
     conf = pydocstyle.config.ConfigurationParser()
     conf.parse()
