@@ -147,7 +147,7 @@ class PythonLanguageServer(LanguageServer):
         return self.signature_help(textDocument['uri'], position)
 
     def m_workspace__did_change_configuration(self, settings=None):
-        self.config.update((settings or {}).get('pyls'))
+        self.config.update((settings or {}).get('pyls', {}))
         for doc_uri in self.workspace.documents:
             self.lint(doc_uri)
 
