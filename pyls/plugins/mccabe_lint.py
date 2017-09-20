@@ -14,7 +14,12 @@ DEFAULT_THRESHOLD = 15
 def pyls_lint(config, document):
     threshold = config.plugin_settings('mccabe').get(THRESHOLD, DEFAULT_THRESHOLD)
 
-    tree = compile(document.source, document.path, "exec", ast.PyCF_ONLY_AST)
+    try:
+        tree = compile(document.source, document.path, "exec", ast.PyCF_ONLY_AST)
+    except SyntaxError:
+        # We'll let the other linters point this one out
+        return
+
     visitor = mccabe.PathGraphingAstVisitor()
     visitor.preorder(tree, visitor)
 
