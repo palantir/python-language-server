@@ -17,9 +17,9 @@ def main():
 """
 
 
-def test_symbols():
+def test_symbols(config):
     doc = Document(DOC_URI, DOC)
-    symbols = pyls_document_symbols(doc)
+    symbols = pyls_document_symbols(config, doc)
 
     # All four symbols (import sys, a, B, main)
     assert len(symbols) == 4

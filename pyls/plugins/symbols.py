@@ -7,8 +7,9 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_document_symbols(document):
-    definitions = document.jedi_names()
+def pyls_document_symbols(config, document):
+    all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', False)
+    definitions = document.jedi_names(all_scopes=all_scopes)
     return [{
         'name': d.name,
         'kind': _kind(d),
