@@ -20,6 +20,7 @@ def main():
 
 def test_symbols(config):
     doc = Document(DOC_URI, DOC)
+    config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
     symbols = pyls_document_symbols(config, doc)
 
     # All four symbols (import sys, a, B, main)
@@ -40,7 +41,6 @@ def test_symbols(config):
 
 def test_symbols_alls_scopes(config):
     doc = Document(DOC_URI, DOC)
-    config.update({'plugins': {'jedi_symbols': {'all_scopes': True}}})
     symbols = pyls_document_symbols(config, doc)
 
     # All five symbols (import sys, a, B, __init__, main)

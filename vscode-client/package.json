@@ -52,7 +52,7 @@
                 },
                 "pyls.plugins.jedi_symbols.all_scopes": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "If True lists the names of all scopes instead of only the module namespace."
                 },
                 "pyls.plugins.mccabe.enabled": {
