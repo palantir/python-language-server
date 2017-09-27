@@ -50,6 +50,11 @@
                     "default": true,
                     "description": "Enable or disable the plugin."
                 },
+                "pyls.plugins.jedi_symbols.all_scopes": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "If True lists the names of all scopes instead of only the module namespace."
+                },
                 "pyls.plugins.mccabe.enabled": {
                     "type": "boolean",
                     "default": true,
