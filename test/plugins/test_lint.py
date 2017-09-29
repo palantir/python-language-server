@@ -96,6 +96,12 @@ def test_pycodestyle_config(workspace):
 
         os.unlink(os.path.join(workspace.root_path, conf_file))
 
+    # Make sure we can ignore via the PYLS config as well
+    config.update({'plugins': {'pycodestyle': {'ignore': ['W191']}}})
+    # And make sure we don't get any warnings
+    diags = pycodestyle_lint.pyls_lint(config, doc)
+    assert not [d for d in diags if d['code'] == 'W191']
+
 
 def test_pydocstyle():
     doc = Document(DOC_URI, DOC)
