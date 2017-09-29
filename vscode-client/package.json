@@ -72,6 +72,7 @@
                 },
                 "pyls.plugins.pycodestyle.exclude": {
                     "type": "array",
+                    "default": null,
                     "items": {
                         "type": "string"
                     },
@@ -80,6 +81,7 @@
                 },
                 "pyls.plugins.pycodestyle.filename": {
                     "type": "array",
+                    "default": null,
                     "items": {
                         "type": "string"
                     },
@@ -88,6 +90,7 @@
                 },
                 "pyls.plugins.pycodestyle.select": {
                     "type": "array",
+                    "default": null,
                     "items": {
                         "type": "string"
                     },
@@ -96,6 +99,7 @@
                 },
                 "pyls.plugins.pycodestyle.ignore": {
                     "type": "array",
+                    "default": null,
                     "items": {
                         "type": "string"
                     },
@@ -104,10 +108,12 @@
                 },
                 "pyls.plugins.pycodestyle.hangClosing": {
                     "type": "boolean",
+                    "default": null,
                     "description": "Hang closing bracket instead of matching indentation of opening bracket's line."
                 },
                 "pyls.plugins.pycodestyle.maxLineLength": {
                     "type": "number",
+                    "default": null,
                     "description": "Set maximum allowed line length."
                 },
                 "pyls.plugins.pydocstyle.enabled": {
