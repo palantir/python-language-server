@@ -25,8 +25,25 @@ def pyls_lint(config, document):
 
     # Grab the pycodestyle parser and set the defaults based on the config we found
     parser = pycodestyle.get_parser()
-    parser.set_defaults(**conf)
-    opts, _args = parser.parse_args([])
+    par.ser.set_defaults(**conf)
+
+    # Override with any options set in the language server config
+    args = []
+    ls_conf = config.plugin_settings('pycodestyle')
+    if 'exclude' in ls_conf:
+        args.extend(['--exclude', ','.join(ls_conf['exclude'])])
+    if 'filename' in ls_conf:
+        args.extend(['--filename', ','.join(ls_conf['filename'])])
+    if 'select' in ls_conf:
+        args.extend(['--select', ','.join(ls_conf['select'])])
+    if 'ignore' in ls_conf:
+        args.extend(['--ignore', ','.join(ls_conf['ignore'])])
+    if 'maxLineLength' in ls_conf:
+        args.extend(['--max-line-length', str(ls_conf['maxLineLength'])])
+    if ls_conf.get('hangClosing'):
+        args.extend(['--hang-closing'])
+
+    opts, _args = parser.parse_args(args)
     styleguide = pycodestyle.StyleGuide(vars(opts))
 
     c = pycodestyle.Checker(

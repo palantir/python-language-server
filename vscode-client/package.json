@@ -70,6 +70,46 @@
                     "default": true,
                     "description": "Enable or disable the plugin."
                 },
+                "pyls.plugins.pycodestyle.exclude": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Exclude files or directories which match these patterns."
+                },
+                "pyls.plugins.pycodestyle.filename": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "When parsing directories, only check filenames matching these patterns."
+                },
+                "pyls.plugins.pycodestyle.select": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Select errors and warnings"
+                },
+                "pyls.plugins.pycodestyle.ignore": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Ignore errors and warnings"
+                },
+                "pyls.plugins.pycodestyle.hangClosing": {
+                    "type": "boolean",
+                    "description": "Hang closing bracket instead of matching indentation of opening bracket's line."
+                },
+                "pyls.plugins.pycodestyle.maxLineLength": {
+                    "type": "number",
+                    "description": "Set maximum allowed line length."
+                },
                 "pyls.plugins.pydocstyle.enabled": {
                     "type": "boolean",
                     "default": false,
