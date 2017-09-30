@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import os
 import sys
 
 from rope.base import libutils
@@ -20,11 +21,13 @@ def pyls_rename(workspace, document, position, new_name):
 
     log.debug("Executing rename of %s to %s", document.word_at_position(position), new_name)
     changeset = rename.get_changes(new_name, in_hierarchy=True, docs=True)
-    log.debug("Finished renamei: %s", changeset.changes)
+    log.debug("Finished rename: %s", changeset.changes)
     return {
         'documentChanges': [{
             'textDocument': {
-                'uri': uris.uri_with(document.uri, path=change.resource.path),
+                'uri': uris.uri_with(
+                    document.uri, path=os.path.join(workspace.root_path, change.resource.path)
+                ),
             },
             'edits': [{
                 'range': {

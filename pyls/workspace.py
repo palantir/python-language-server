@@ -32,7 +32,13 @@ class Workspace(object):
         self._lang_server = lang_server
 
         # Whilst incubating, keep private
-        self._rope = Project(self._root_path)
+        self.__rope = Project(self._root_path)
+
+    @property
+    def _rope(self):
+        # TODO: we could keep track of dirty files and validate only those
+        self.__rope.validate()
+        return self.__rope
 
     @property
     def documents(self):
@@ -165,7 +171,6 @@ class Document(object):
 
     def offset_at_position(self, position):
         """Return the byte-offset pointed at by the given position."""
-        print ''.join(self.lines[:position['line']])
         return position['character'] + len(''.join(self.lines[:position['line']]))
 
     def word_at_position(self, position):
