@@ -3,7 +3,7 @@ import os
 from pyls import lsp, uris
 from pyls.config import Config
 from pyls.workspace import Document
-from pyls.plugins import pycodestyle_lint, pyflakes_lint
+from pyls.plugins import mccabe_lint, pycodestyle_lint, pydocstyle_lint, pyflakes_lint
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
@@ -17,6 +17,26 @@ import json
 DOC_SYNTAX_ERR = """def hello()
     pass
 """
+
+
+def test_mccabe(config):
+    old_settings = config.settings
+    try:
+        config.update({'plugins': {'mccabe': {'threshold': 1}}})
+        doc = Document(DOC_URI, DOC)
+        diags = mccabe_lint.pyls_lint(config, doc)
+
+        assert all([d['source'] == 'mccabe' for d in diags])
+
+        # One we're expecting is:
+        msg = 'Cyclomatic complexity too high: 1 (threshold 1)'
+        mod_import = [d for d in diags if d['message'] == msg][0]
+
+        assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
+        assert mod_import['range']['start'] == {'line': 3, 'character': 0}
+        assert mod_import['range']['end'] == {'line': 3, 'character': 6}
+    finally:
+        config._settings = old_settings
 
 
 def test_pycodestyle(config):
@@ -75,6 +95,25 @@ def test_pycodestyle_config(workspace):
         assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
 
         os.unlink(os.path.join(workspace.root_path, conf_file))
+
+    # Make sure we can ignore via the PYLS config as well
+    config.update({'plugins': {'pycodestyle': {'ignore': ['W191']}}})
+    # And make sure we don't get any warnings
+    diags = pycodestyle_lint.pyls_lint(config, doc)
+    assert not [d for d in diags if d['code'] == 'W191']
+
+
+def test_pydocstyle():
+    doc = Document(DOC_URI, DOC)
+    diags = pydocstyle_lint.pyls_lint(doc)
+
+    assert all([d['source'] == 'pydocstyle' for d in diags])
+
+    # One we're expecting is:
+    msg = 'D100: Missing docstring in public module'
+    unused_import = [d for d in diags if d['message'] == msg][0]
+
+    assert unused_import['range']['start'] == {'line': 0, 'character': 0}
 
 
 def test_pyflakes():

@@ -21,12 +21,29 @@ def pyls_lint(config, document):
     conf_to_use = pycodestyle_conf if pycodestyle_conf else pep8_conf
 
     conf = {k.replace("-", "_"): v for k, v in conf_to_use.items()}
-    log.debug("Got pycodestyle config: %s", conf)
 
     # Grab the pycodestyle parser and set the defaults based on the config we found
     parser = pycodestyle.get_parser()
     parser.set_defaults(**conf)
-    opts, _args = parser.parse_args([])
+
+    # Override with any options set in the language server config
+    argv = []
+    ls_conf = config.plugin_settings('pycodestyle')
+    if ls_conf.get('exclude') is not None:
+        argv.extend(['--exclude', ','.join(ls_conf['exclude'])])
+    if ls_conf.get('filename') is not None:
+        argv.extend(['--filename', ','.join(ls_conf['filename'])])
+    if ls_conf.get('select') is not None:
+        argv.extend(['--select', ','.join(ls_conf['select'])])
+    if ls_conf.get('ignore') is not None:
+        argv.extend(['--ignore', ','.join(ls_conf['ignore'])])
+    if ls_conf.get('maxLineLength') is not None:
+        argv.extend(['--max-line-length', str(ls_conf['maxLineLength'])])
+    if ls_conf.get('hangClosing'):
+        argv.extend(['--hang-closing'])
+
+    opts, _args = parser.parse_args(argv)
+    log.debug("Got pycodestyle config: %s", opts)
     styleguide = pycodestyle.StyleGuide(vars(opts))
 
     c = pycodestyle.Checker(
@@ -64,12 +81,6 @@ class PyCodeStyleDiagnosticReport(pycodestyle.BaseReport):
             'range': range,
             'message': text,
             'code': code,
-            'severity': _get_severity(code)
+            # Are style errors really ever errors?
+            'severity': lsp.DiagnosticSeverity.Warning
         })
-
-
-def _get_severity(code):
-    if code[0] == 'E':
-        return lsp.DiagnosticSeverity.Error
-    elif code[0] == 'W':
-        return lsp.DiagnosticSeverity.Warning

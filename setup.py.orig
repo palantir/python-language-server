@@ -36,13 +36,16 @@ setup(
         'future',
         'jedi>=0.10',
         'json-rpc',
+<<<<<<< HEAD
+        'pluggy',
+=======
         'mccabe',
+>>>>>>> upstream/develop
         'pycodestyle',
         'pydocstyle',
         'pyflakes',
         'rope',
         'yapf',
-        'pluggy'
     ],
 
     # List additional groups of dependencies here (e.g. development
@@ -71,8 +74,11 @@ setup(
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
-            'yapf = pyls.plugins.format',
+<<<<<<< HEAD
             'rope_imports = pyls.plugins.rope_imports',
+=======
+            'yapf = pyls.plugins.format',
+>>>>>>> upstream/develop
         ]
     },
 )

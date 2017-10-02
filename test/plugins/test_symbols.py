@@ -9,17 +9,19 @@ DOC = """import sys
 
 a = 'hello'
 
-class B(object):
-    pass
+class B:
+    def __init__():
+        pass
 
 def main():
     pass
 """
 
 
-def test_symbols():
+def test_symbols(config):
     doc = Document(DOC_URI, DOC)
-    symbols = pyls_document_symbols(doc)
+    config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
+    symbols = pyls_document_symbols(config, doc)
 
     # All four symbols (import sys, a, B, main)
     assert len(symbols) == 4
@@ -31,6 +33,27 @@ def test_symbols():
     assert sym('sys')['kind'] == SymbolKind.Module
     assert sym('a')['kind'] == SymbolKind.Variable
     assert sym('B')['kind'] == SymbolKind.Class
+    assert sym('main')['kind'] == SymbolKind.Function
+
+    # Not going to get too in-depth here else we're just testing Jedi
+    assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
+
+
+def test_symbols_alls_scopes(config):
+    doc = Document(DOC_URI, DOC)
+    symbols = pyls_document_symbols(config, doc)
+
+    # All five symbols (import sys, a, B, __init__, main)
+    assert len(symbols) == 5
+
+    def sym(name):
+        return [s for s in symbols if s['name'] == name][0]
+
+    # Check we have some sane mappings to VSCode constants
+    assert sym('sys')['kind'] == SymbolKind.Module
+    assert sym('a')['kind'] == SymbolKind.Variable
+    assert sym('B')['kind'] == SymbolKind.Class
+    assert sym('__init__')['kind'] == SymbolKind.Function
     assert sym('main')['kind'] == SymbolKind.Function
 
     # Not going to get too in-depth here else we're just testing Jedi

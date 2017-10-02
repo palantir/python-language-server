@@ -37,10 +37,10 @@ def client_server():
 
     yield client, server
 
-    try:
-        client.call('shutdown')
-    except:
-        pass
+    client.call('shutdown')
+    response = _get_response(client)
+    assert response['result'] is None
+    client.notify('exit')
 
 
 def test_initialize(client_server):
@@ -54,13 +54,6 @@ def test_initialize(client_server):
     response = _get_response(client)
 
     assert 'capabilities' in response['result']
-
-
-def test_file_closed(client_server):
-    client, server = client_server
-    client.rfile.close()
-    with pytest.raises(Exception):
-        _get_response(client)
 
 
 def test_missing_message(client_server):
