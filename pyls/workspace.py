@@ -4,6 +4,8 @@ import logging
 import os
 import re
 import sys
+import imp
+import pkgutil
 
 import jedi
 from rope.base import libutils
@@ -18,11 +20,59 @@ RE_START_WORD = re.compile('[A-Za-z_0-9]*$')
 RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 
+def get_submodules(mod):
+    """Get all submodules of a given module"""
+    def catch_exceptions(module):
+        pass
+    try:
+        m = __import__(mod)
+        submodules = [mod]
+        submods = pkgutil.walk_packages(m.__path__, m.__name__ + '.',
+                                        catch_exceptions)
+        for sm in submods:
+            sm_name = sm[1]
+            submodules.append(sm_name)
+    except ImportError:
+        return []
+    except Exception:
+        return [mod]
+    return submodules
+
+
+def get_preferred_submodules():
+    mods = ['numpy', 'scipy', 'sympy', 'pandas',
+            'networkx', 'statsmodels', 'matplotlib', 'sklearn',
+            'skimage', 'mpmath', 'os', 'PIL',
+            'OpenGL', 'array', 'audioop', 'binascii', 'cPickle',
+            'cStringIO', 'cmath', 'collections', 'datetime',
+            'errno', 'exceptions', 'gc', 'imageop', 'imp',
+            'itertools', 'marshal', 'math', 'mmap', 'msvcrt',
+            'nt', 'operator', 'parser', 'rgbimg', 'signal',
+            'strop', 'sys', 'thread', 'time', 'wx', 'xxsubtype',
+            'zipimport', 'zlib', 'nose', 'os.path']
+
+    submodules = []
+    for mod in mods:
+        submods = get_submodules(mod)
+        submodules += submods
+
+    actual = []
+    for submod in submodules:
+        try:
+            imp.find_module(submod)
+            actual.append(submod)
+        except ImportError:
+            pass
+
+    return actual
+
+
 class Workspace(object):
 
     M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
     M_APPLY_EDIT = 'workspace/applyEdit'
     M_SHOW_MESSAGE = 'window/showMessage'
+    PRELOADED_MODULES = get_preferred_submodules()
 
     def __init__(self, root_uri, lang_server=None):
         self._root_uri = root_uri
@@ -33,6 +83,7 @@ class Workspace(object):
 
         # Whilst incubating, keep private
         self.__rope = Project(self._root_path)
+        self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
 
     @property
     def _rope(self):
