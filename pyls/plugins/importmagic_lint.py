@@ -1,8 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import re
+
 import importmagic
+
 from pyls import hookimpl, lsp
+
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +62,10 @@ def pyls_lint(document):
 
 
 @hookimpl
-def pyls_code_actions(workspace, document, context):
+def pyls_code_actions(config, workspace, document, context):
+    # Update the style configuration
+    importmagic.Imports.set_style(config.plugin_settings('importmagic_lint'))
+
     actions = []
     diagnostics = context.get('diagnostics', [])
     for diagnostic in diagnostics:
@@ -124,5 +130,5 @@ def pyls_execute_command(workspace, command, arguments):
 
 def _command_title(variable, module):
     if not variable:
-        return 'Import %s' % module
-    return 'Import %s from %s' % (variable, module)
+        return 'Import "%s"' % module
+    return 'Import "%s" from "%s"' % (variable, module)
