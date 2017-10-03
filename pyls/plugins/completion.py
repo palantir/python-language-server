@@ -3,19 +3,70 @@ import logging
 from pyls.lsp import CompletionItemKind
 from pyls import hookimpl
 
+from threading import Thread, Lock
+from rope.contrib.codeassist import code_assist, sorted_proposals
+
 log = logging.getLogger(__name__)
+
+
+class CompletionThread(Thread):
+    def __init__(self, func):
+        self.func = func
+        self.finish = False
+        self.results = []
+        self.lock = Lock()
+
+    def run(self):
+        self.results = self.func()
+        with self.lock:
+            self.finish = True
 
 
 @hookimpl
 def pyls_completions(document, position):
-    definitions = document.jedi_script(position).completions()
-    return [{
-        'label': d.name,
-        'kind': _kind(d),
-        'detail': d.description or "",
-        'documentation': d.docstring(),
-        'sortText': _sort_text(d)
-    } for d in definitions]
+
+    def jedi_closure():
+        return document.jedi_script(position).completions
+
+    def rope_closure():
+        offset = document.offset_at_position(position)
+        return code_assist(
+            document._rope_project, document.source,
+            offset, document._rope, maxfixes=3)
+
+    jedi_thread = CompletionThread(jedi_closure)
+    rope_thread = CompletionThread(rope_closure)
+
+    jedi_thread.start()
+    rope_thread.start()
+
+    jedi = False
+    definitions = []
+    while True:
+        with jedi_thread.lock:
+            if jedi_thread.finish:
+                jedi = True
+                definitions = jedi_thread.results
+                break
+        with rope_thread.lock:
+            if rope_thread.finish:
+                jedi = False
+                definitions = rope_thread.results
+                break
+
+    if jedi:
+        definitions = [{
+            'label': d.name,
+            'kind': _kind(d),
+            'detail': d.description or "",
+            'documentation': d.docstring(),
+            'sortText': _sort_text(d)
+        } for d in definitions]
+    else:
+        print(definitions)
+        definitions = []
+    # definitions = document.jedi_script(position).completions()
+    return definitions
 
 
 def _sort_text(definition):
