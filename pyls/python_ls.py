@@ -69,11 +69,7 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_document_symbols', doc_uri))
 
     def execute_command(self, command, arguments):
-<<<<<<< HEAD
-        return self._hook(self._hooks.pyls_execute_command, command=command, arguments=arguments) or {}
-=======
         return self._hook('pyls_execute_command', command=command, arguments=arguments)
->>>>>>> develop
 
     def format_document(self, doc_uri):
         return self._hook('pyls_format_document', doc_uri)
