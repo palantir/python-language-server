@@ -4,7 +4,7 @@ import re
 
 import importmagic
 
-from pyls import hookimpl, lsp
+from pyls import hookimpl, lsp, _utils
 
 
 log = logging.getLogger(__name__)
@@ -64,7 +64,8 @@ def pyls_lint(document):
 @hookimpl
 def pyls_code_actions(config, workspace, document, context):
     # Update the style configuration
-    importmagic.Imports.set_style(config.plugin_settings('importmagic_lint'))
+    conf = config.plugin_settings('importmagic_lint')
+    importmagic.Imports.set_style(**{_utils.camel_to_underscore(k): v for k, v in conf.items()})
 
     actions = []
     diagnostics = context.get('diagnostics', [])

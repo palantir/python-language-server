@@ -27,7 +27,7 @@
                 },
                 "pyls.plugins.importmagic_lint.maxColumns": {
                     "type": "number",
-                    "default": 79,
+                    "default": null,
                     "description": "The maximum number of columns for generated import statements"
                 },
                 "pyls.plugins.importmagic_lint.multiline": {
