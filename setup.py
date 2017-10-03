@@ -37,7 +37,9 @@ setup(
         'importmagic',
         'jedi>=0.10',
         'json-rpc',
+        'mccabe',
         'pycodestyle',
+        'pydocstyle',
         'pyflakes',
         'yapf',
         'pluggy'
@@ -58,5 +60,18 @@ setup(
         'console_scripts': [
             'pyls = pyls.__main__:main',
         ],
+        'pyls': [
+            'jedi_completion = pyls.plugins.completion',
+            'jedi_definition = pyls.plugins.definition',
+            'jedi_hover = pyls.plugins.hover',
+            'jedi_references = pyls.plugins.references',
+            'jedi_signature_help = pyls.plugins.signature',
+            'jedi_symbols = pyls.plugins.symbols',
+            'mccabe = pyls.plugins.mccabe_lint',
+            'pycodestyle = pyls.plugins.pycodestyle_lint',
+            'pydocstyle = pyls.plugins.pydocstyle_lint',
+            'pyflakes = pyls.plugins.pyflakes_lint',
+            'yapf = pyls.plugins.format',
+        ]
     },
 )

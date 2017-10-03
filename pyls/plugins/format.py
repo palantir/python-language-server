@@ -1,7 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls import hookimpl
+import os
+from yapf.yapflib import file_resources
 from yapf.yapflib.yapf_api import FormatCode
+from pyls import hookimpl
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +32,14 @@ def pyls_format_range(document, range):
 
 
 def _format(document, lines=None):
-        new_source, changed = FormatCode(document.source, lines=lines, filename=document.filename)
+        new_source, changed = FormatCode(
+            document.source,
+            lines=lines,
+            filename=document.filename,
+            style_config=file_resources.GetDefaultStyleForDir(
+                os.path.dirname(document.filename)
+            )
+        )
 
         if not changed:
             return []

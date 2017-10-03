@@ -26,14 +26,20 @@ def add_arguments(parser):
         help="Bind to this port"
     )
 
-    parser.add_argument(
+    log_group = parser.add_mutually_exclusive_group()
+    log_group.add_argument(
+        "--log-config",
+        help="Path to a JSON file containing Python logging config."
+    )
+    log_group.add_argument(
         "--log-file",
         help="Redirect logs to the given file instead of writing to stderr."
         "Has no effect if used with --log-config."
     )
+
     parser.add_argument(
-        "--log-config",
-        help="Path to a JSON file containing Python logging config."
+        '-v', '--verbose', action='count', default=0,
+        help="Increase verbosity of log output, overrides log config file"
     )
 
 
@@ -46,9 +52,17 @@ def main():
         with open(args.log_config, 'r') as f:
             logging.config.dictConfig(json.load(f))
     elif args.log_file:
-        logging.basicConfig(filename=args.log_file, level=logging.WARNING, format=LOG_FORMAT)
+        logging.basicConfig(filename=args.log_file, format=LOG_FORMAT)
     else:
-        logging.basicConfig(level=logging.WARNING, format=LOG_FORMAT)
+        logging.basicConfig(format=LOG_FORMAT)
+
+    if args.verbose == 0:
+        level = logging.WARNING
+    elif args.verbose == 1:
+        level = logging.INFO
+    elif args.verbose >= 2:
+        level = logging.DEBUG
+    logging.getLogger().setLevel(level)
 
     if args.tcp:
         language_server.start_tcp_lang_server(args.host, args.port, PythonLanguageServer)

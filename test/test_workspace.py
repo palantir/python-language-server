@@ -1,9 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import pytest
-from pyls import workspace
+from pyls import uris, workspace
 
-DOC_URI = 'file://' + __file__
+DOC_URI = uris.from_fs_path(__file__)
 
 
 def test_local(pyls):
@@ -34,16 +34,8 @@ def test_bad_get_document(pyls):
         pyls.workspace.get_document("BAD_URI")
 
 
-def test_uri_like():
-    assert workspace.get_uri_like('file:///some-path', '/my/path') == 'file:///my/path'
-    win_doc_uri = r'file:///D:/hello%20world.py'
-    win_doc_path = r'D:\hello world.py'
-    win_uri = workspace.get_uri_like(win_doc_uri, win_doc_path)
-    assert win_uri == win_doc_uri
-
-
 def test_non_root_project(pyls):
-    repo_root = os.path.join(pyls.workspace.root, 'repo-root')
+    repo_root = os.path.join(pyls.workspace.root_path, 'repo-root')
     os.mkdir(repo_root)
     project_root = os.path.join(repo_root, 'project-root')
     os.mkdir(project_root)
@@ -51,19 +43,7 @@ def test_non_root_project(pyls):
     with open(os.path.join(project_root, 'setup.py'), 'w+') as f:
         f.write('# setup.py')
 
-    test_uri = 'file://' + os.path.join(project_root, 'hello/test.py')
+    test_uri = uris.from_fs_path(os.path.join(project_root, 'hello/test.py'))
     pyls.workspace.put_document(test_uri, 'assert True')
     test_doc = pyls.workspace.get_document(test_uri)
     assert project_root in pyls.workspace.syspath_for_path(test_doc.path)
-
-
-def test_urlencoded_paths():
-    root_uri = "file:///Encoded%20%3FSpace/"
-    file_uri = root_uri + "test.py"
-
-    ws = workspace.Workspace(root_uri)
-    assert ws.root == "/Encoded ?Space/"
-
-    ws.put_document(file_uri, "")
-    doc = ws.get_document(file_uri)
-    assert doc.path == '/Encoded ?Space/test.py'

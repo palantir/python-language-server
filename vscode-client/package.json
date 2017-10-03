@@ -15,6 +15,125 @@
     "activationEvents": [
         "*"
     ],
+    "contributes": {
+        "configuration": {
+            "title": "Python Language Server Configuration",
+            "type": "object",
+            "properties": {
+                "pyls.plugins.jedi_completion.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.jedi_definition.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.jedi_hover.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.jedi_references.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.jedi_signature_help.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.jedi_symbols.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.jedi_symbols.all_scopes": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "If True lists the names of all scopes instead of only the module namespace."
+                },
+                "pyls.plugins.mccabe.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.mccabe.threshold": {
+                    "type": "number",
+                    "default": 15,
+                    "description": "The minimum threshold that triggers warnings about cyclomatic complexity."
+                },
+                "pyls.plugins.pycodestyle.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.pycodestyle.exclude": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Exclude files or directories which match these patterns."
+                },
+                "pyls.plugins.pycodestyle.filename": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "When parsing directories, only check filenames matching these patterns."
+                },
+                "pyls.plugins.pycodestyle.select": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Select errors and warnings"
+                },
+                "pyls.plugins.pycodestyle.ignore": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Ignore errors and warnings"
+                },
+                "pyls.plugins.pycodestyle.hangClosing": {
+                    "type": "boolean",
+                    "default": null,
+                    "description": "Hang closing bracket instead of matching indentation of opening bracket's line."
+                },
+                "pyls.plugins.pycodestyle.maxLineLength": {
+                    "type": "number",
+                    "default": null,
+                    "description": "Set maximum allowed line length."
+                },
+                "pyls.plugins.pydocstyle.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.pyflakes.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.yapf.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                }
+            }
+        }
+    },
     "main": "./out/extension",
     "scripts": {
         "vscode:prepublish": "tsc -p ./",

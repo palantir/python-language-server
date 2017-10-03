@@ -2,9 +2,8 @@
 import logging
 import re
 import socketserver
+from . import uris
 from .server import JSONRPCServer
-from urllib.parse import urljoin
-from urllib.request import pathname2url
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
         log.info("Serving %s on (%s, %s)", handler_class.__name__, bind_addr, port)
         server.serve_forever()
     except KeyboardInterrupt:
-        server.shutdown()
+        server.exit()
     finally:
         log.info("Shutting down")
         server.server_close()
@@ -92,7 +91,7 @@ class LanguageServer(MethodJSONRPCServer):
             self.root_uri = kwargs['rootUri']
         elif 'rootPath' in kwargs:
             root_path = kwargs['rootPath']
-            self.root_uri = urljoin(u'file://', pathname2url(root_path))
+            self.root_uri = uris.from_fs_path(root_path)
         else:
             self.root_uri = ''
         self.init_opts = kwargs.get('initializationOptions')
@@ -114,7 +113,7 @@ class LanguageServer(MethodJSONRPCServer):
         self.shutdown()
 
     def m_exit(self, **_kwargs):
-        self.shutdown()
+        self.exit()
 
 
 _RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')

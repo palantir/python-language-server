@@ -1,8 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import pytest
+from pyls import uris
 from pyls.plugins.signature import pyls_signature_help
 from pyls.workspace import Document
 
-DOC_URI = __file__
+DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
 
 def main(param1, param2):
@@ -27,7 +29,11 @@ def test_signature():
     sig_position = {'line': 6, 'character': 5}
     doc = Document(DOC_URI, DOC)
 
-    sigs = pyls_signature_help(doc, sig_position)['signatures']
+    sig_info = pyls_signature_help(doc, sig_position)
+
+    sigs = sig_info['signatures']
     assert len(sigs) == 1
     assert sigs[0]['label'] == 'main(param1, param2)'
     assert sigs[0]['parameters'][0]['label'] == 'param1'
+
+    assert sig_info['activeParameter'] == 0

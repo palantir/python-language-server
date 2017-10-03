@@ -26,10 +26,11 @@ def pyls_signature_help(document, position):
             'documentation': ""
         } for p in s.params]
 
+    # We only return a single signature because Python doesn't allow overloading
     sig_info = {'signatures': [sig], 'activeSignature': 0}
 
     if s.index is not None and s.params:
         # Then we know which parameter we're looking at
-        sig['activeParameter'] = s.index
+        sig_info['activeParameter'] = s.index
 
     return sig_info
