@@ -34,6 +34,7 @@ setup(
     install_requires=[
         'configparser',
         'future',
+        'importmagic',
         'jedi>=0.10',
         'json-rpc',
         'mccabe',
@@ -60,6 +61,7 @@ setup(
             'pyls = pyls.__main__:main',
         ],
         'pyls': [
+            'importmagic = pyls.plugins.importmagic_lint',
             'jedi_completion = pyls.plugins.completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',

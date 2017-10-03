@@ -20,6 +20,22 @@
             "title": "Python Language Server Configuration",
             "type": "object",
             "properties": {
+                "pyls.plugins.importmagic_lint.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.importmagic_lint.maxColumns": {
+                    "type": "number",
+                    "default": null,
+                    "description": "The maximum number of columns for generated import statements"
+                },
+                "pyls.plugins.importmagic_lint.multiline": {
+                    "type": "string",
+                    "default": "parentheses",
+                    "enum": ["parentheses", "backslash"],
+                    "description": "The style to use for multiline import statements"
+                },
                 "pyls.plugins.jedi_completion.enabled": {
                     "type": "boolean",
                     "default": true,

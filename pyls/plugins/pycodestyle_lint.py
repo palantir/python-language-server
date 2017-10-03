@@ -1,7 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+
 import pycodestyle
-from pyls import config as pyls_config, hookimpl, lsp, _utils
+
+from pyls import _utils, config as pyls_config, hookimpl, lsp
+
 
 log = logging.getLogger(__name__)
 
