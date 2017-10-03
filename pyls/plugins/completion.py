@@ -40,7 +40,6 @@ def pyls_completions(document, position):
 
     print(document.word_at_position(position))
     jedi_thread.start()
-    # if document.word_at_position(position) == '.':
     rope_thread.start()
 
     jedi = False
@@ -66,18 +65,26 @@ def pyls_completions(document, position):
             'sortText': _sort_text(d)
         } for d in definitions]
     else:
-        print(definitions)
-        definitions = []
+        definitions = sorted_proposals(definitions)
+        definitions = [{
+            'label': d.name,
+            'kind': _kind(d.type),
+            'detail': '{0} {1}'.format(d.scope or "", d.name),
+            'documentation': d.get_doc() or "",
+            'sortText': _sort_text(d, jedi=False)
+        } for d in definitions]
     # definitions = document.jedi_script(position).completions()
     return definitions
 
 
-def _sort_text(definition):
+def _sort_text(definition, jedi=True):
     """ Ensure builtins appear at the bottom.
     Description is of format <type>: <module>.<item>
     """
-    if definition.in_builtin_module():
+    if definition.in_builtin_module() and jedi:
         # It's a builtin, put it last
+        return 'z' + definition.name
+    elif definition == 'builtin' and not jedi:
         return 'z' + definition.name
 
     if definition.name.startswith("_"):
