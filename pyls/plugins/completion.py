@@ -27,7 +27,7 @@ class CompletionThread(Thread):
 def pyls_completions(document, position):
 
     def jedi_closure():
-        return document.jedi_script(position).completions
+        return document.jedi_script(position).completions()
 
     def rope_closure():
         offset = document.offset_at_position(position)
