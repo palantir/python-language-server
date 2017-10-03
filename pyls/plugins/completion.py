@@ -38,9 +38,10 @@ def pyls_completions(document, position):
     jedi_thread = CompletionThread(jedi_closure)
     rope_thread = CompletionThread(rope_closure)
 
+    print(document.word_at_position(position))
     jedi_thread.start()
-    if document.word_at_position(position) == '.':
-        rope_thread.start()
+    # if document.word_at_position(position) == '.':
+    rope_thread.start()
 
     jedi = False
     definitions = []
@@ -57,8 +58,6 @@ def pyls_completions(document, position):
                 break
 
     if jedi:
-        definitions = jedi_thread.completions
-        log.debug(type(definitions))
         definitions = [{
             'label': d.name,
             'kind': _kind(d),
