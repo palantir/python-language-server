@@ -97,3 +97,6 @@ ENV/
 
 # Idea
 .idea/
+
+# Merge orig files
+*.orig
