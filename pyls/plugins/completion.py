@@ -11,13 +11,14 @@ log = logging.getLogger(__name__)
 
 class CompletionThread(Thread):
     def __init__(self, func):
+        Thread.__init__(self)
         self.func = func
         self.finish = False
-        self.results = []
+        self.completions = []
         self.lock = Lock()
 
     def run(self):
-        self.results = self.func()
+        self.completions = self.func()
         with self.lock:
             self.finish = True
 
@@ -38,7 +39,8 @@ def pyls_completions(document, position):
     rope_thread = CompletionThread(rope_closure)
 
     jedi_thread.start()
-    rope_thread.start()
+    if document.word_at_position(position) == '.':
+        rope_thread.start()
 
     jedi = False
     definitions = []
@@ -46,15 +48,17 @@ def pyls_completions(document, position):
         with jedi_thread.lock:
             if jedi_thread.finish:
                 jedi = True
-                definitions = jedi_thread.results
+                definitions = jedi_thread.completions
                 break
         with rope_thread.lock:
             if rope_thread.finish:
                 jedi = False
-                definitions = rope_thread.results
+                definitions = rope_thread.completions
                 break
 
     if jedi:
+        definitions = jedi_thread.completions
+        log.debug(type(definitions))
         definitions = [{
             'label': d.name,
             'kind': _kind(d),
