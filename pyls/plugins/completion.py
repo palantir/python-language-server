@@ -12,10 +12,14 @@ def pyls_completions(document, position):
     return [{
         'label': d.name,
         'kind': _kind(d),
-        'detail': d.description or "",
+        'detail': _detail(d),
         'documentation': d.docstring(),
         'sortText': _sort_text(d)
     } for d in definitions]
+
+
+def _detail(definition):
+    return "builtin" if definition.in_builtin_module() else definition.parent().full_name or ""
 
 
 def _sort_text(definition):
