@@ -10,17 +10,25 @@ Python Language Server
 .. image:: https://img.shields.io/github/license/palantir/python-language-server.svg
      :target: https://github.com/palantir/python-language-server/blob/master/LICENSE
 
-A Python 2.7 and 3.4+ implementation of the `Language Server Protocol`_ making use of Jedi_, pycodestyle_, Pyflakes_ and YAPF_.
+A Python 2.7 and 3.4+ implementation of the `Language Server Protocol`_.
 
-Plugins
--------
+Feature Providers
+-----------------
+* Jedi_ for Completions, Definitions, Hover, References, Signature Help, and Symbols
+* Pyflakes_ linter to detect various errors
+* McCabe_ linter for complexity checking
+* pycodestyle_ linter for style checking
+* pydocstyle_ linter for docstring style checking
+* YAPF_ for code formatting
 
+3rd Party Plugins
+~~~~~~~~~~~~~~~~~
 Installing these plugins will add extra functionality to the language server:
 
-* Mypy type checking (requires Python 3) - https://github.com/tomv564/pyls-mypy
+* pyls-mypy_ Mypy type checking for Python 3
 
-Features
---------
+Language Server Features
+------------------------
 
 Auto Completion:
 
@@ -101,6 +109,9 @@ This project is made available under the MIT License.
 
 .. _Language Server Protocol: https://github.com/Microsoft/language-server-protocol
 .. _Jedi: https://github.com/davidhalter/jedi
-.. _pycodestyle: https://github.com/PyCQA/pycodestyle
 .. _Pyflakes: https://github.com/PyCQA/pyflakes
+.. _McCabe: https://github.com/PyCQA/mccabe
+.. _pycodestyle: https://github.com/PyCQA/pycodestyle
+.. _pydocstyle: https://github.com/PyCQA/pydocstyle
 .. _YAPF: https://github.com/google/yapf
+.. _pyls-mypy: https://github.com/tomv564/pyls-mypy
