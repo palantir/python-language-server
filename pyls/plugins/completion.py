@@ -40,9 +40,10 @@ def pyls_completions(document, position):
 
     mock_position = dict(position)
     mock_position['character'] -= 1
-    print(document.word_at_position(mock_position))
+    word = document.word_at_position(mock_position)
     jedi_thread.start()
-    rope_thread.start()
+    if word != 'import':
+        rope_thread.start()
 
     jedi = False
     definitions = []
