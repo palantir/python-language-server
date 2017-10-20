@@ -84,6 +84,7 @@ class Workspace(object):
         # Whilst incubating, keep private
         self.__rope = Project(self._root_path)
         self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+        # jedi.api.preload_module(*self.PRELOADED_MODULES)
 
     @property
     def _rope(self):

@@ -38,7 +38,9 @@ def pyls_completions(document, position):
     jedi_thread = CompletionThread(jedi_closure)
     rope_thread = CompletionThread(rope_closure)
 
-    print(document.word_at_position(position))
+    mock_position = dict(position)
+    mock_position['character'] -= 1
+    print(document.word_at_position(mock_position))
     jedi_thread.start()
     rope_thread.start()
 
@@ -66,13 +68,19 @@ def pyls_completions(document, position):
         } for d in definitions]
     else:
         definitions = sorted_proposals(definitions)
-        definitions = [{
-            'label': d.name,
-            'kind': _kind(d.type),
-            'detail': '{0} {1}'.format(d.scope or "", d.name),
-            'documentation': d.get_doc() or "",
-            'sortText': _sort_text(d, jedi=False)
-        } for d in definitions]
+        new_definitions = []
+        for d in definitions:
+            try:
+                doc = d.get_doc()
+            except AttributeError:
+                doc = None
+            new_definitions.append({
+                'label': d.name,
+                'kind': _kind(d),
+                'detail': '{0} {1}'.format(d.scope or "", d.name),
+                'documentation': doc or "",
+                'sortText': _sort_text(d, jedi=False)})
+        definitions = new_definitions
     # definitions = document.jedi_script(position).completions()
     return definitions
 
@@ -81,10 +89,10 @@ def _sort_text(definition, jedi=True):
     """ Ensure builtins appear at the bottom.
     Description is of format <type>: <module>.<item>
     """
-    if definition.in_builtin_module() and jedi:
+    if jedi and definition.in_builtin_module():
         # It's a builtin, put it last
         return 'z' + definition.name
-    elif definition == 'builtin' and not jedi:
+    elif not jedi and definition.scope == 'builtin':
         return 'z' + definition.name
 
     if definition.name.startswith("_"):
