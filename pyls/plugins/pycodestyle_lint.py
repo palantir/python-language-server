@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import pycodestyle
-from pyls import config as pyls_config, hookimpl, lsp
+from pyls import config as pyls_config, hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
 
@@ -11,38 +11,31 @@ CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
 
 @hookimpl
 def pyls_lint(config, document):
-    # Read config from all over the place
-    config_files = config.find_parents(document.path, CONFIG_FILES)
+    # Start with empty config, and update with each level of settings
+    conf = {}
+
+    def _config_from_files(config_files):
+        pycodestyle_conf = pyls_config.build_config('pycodestyle', config_files)
+        pep8_conf = pyls_config.build_config('pep8', config_files)
+        conf_to_use = pycodestyle_conf or pep8_conf or {}
+        return {k.replace("-", "_"): v for k, v in conf_to_use.items()}
+
+    # First, read the user configuration (in user's home directory)
     if pycodestyle.USER_CONFIG:
-        config_files = [pycodestyle.USER_CONFIG] + config_files
-    pycodestyle_conf = pyls_config.build_config('pycodestyle', config_files)
-    pep8_conf = pyls_config.build_config('pep8', config_files)
+        conf.update(_config_from_files([pycodestyle.USER_CONFIG]))
 
-    conf_to_use = pycodestyle_conf if pycodestyle_conf else pep8_conf
+    # Then, read the PYLS configuration
+    ide_conf = config.plugin_settings('pycodestyle')
+    conf.update({_utils.camel_to_underscore(k): v for k, v in ide_conf.items()})
 
-    conf = {k.replace("-", "_"): v for k, v in conf_to_use.items()}
+    # Finally, read the project configuration
+    conf.update(_config_from_files(config.find_parents(document.path, CONFIG_FILES)))
 
     # Grab the pycodestyle parser and set the defaults based on the config we found
     parser = pycodestyle.get_parser()
     parser.set_defaults(**conf)
 
-    # Override with any options set in the language server config
-    argv = []
-    ls_conf = config.plugin_settings('pycodestyle')
-    if ls_conf.get('exclude') is not None:
-        argv.extend(['--exclude', ','.join(ls_conf['exclude'])])
-    if ls_conf.get('filename') is not None:
-        argv.extend(['--filename', ','.join(ls_conf['filename'])])
-    if ls_conf.get('select') is not None:
-        argv.extend(['--select', ','.join(ls_conf['select'])])
-    if ls_conf.get('ignore') is not None:
-        argv.extend(['--ignore', ','.join(ls_conf['ignore'])])
-    if ls_conf.get('maxLineLength') is not None:
-        argv.extend(['--max-line-length', str(ls_conf['maxLineLength'])])
-    if ls_conf.get('hangClosing'):
-        argv.extend(['--hang-closing'])
-
-    opts, _args = parser.parse_args(argv)
+    opts, _args = parser.parse_args([])
     log.debug("Got pycodestyle config: %s", opts)
     styleguide = pycodestyle.StyleGuide(vars(opts))
 

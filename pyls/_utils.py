@@ -1,6 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import functools
+import re
 import threading
+
+FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
+ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 
 def debounce(interval_s):
@@ -14,3 +18,8 @@ def debounce(interval_s):
             debounced._timer.start()
         return debounced
     return wrapper
+
+
+def camel_to_underscore(string):
+    s1 = FIRST_CAP_RE.sub(r'\1_\2', string)
+    return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
