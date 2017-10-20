@@ -26,7 +26,7 @@ def pyls_lint(config, document):
 
     # Then, read the PYLS configuration
     ide_conf = config.plugin_settings('pycodestyle')
-    conf.update({_utils.camel_to_underscore(k): v for k, v in ide_conf.items()})
+    conf.update({_utils.camel_to_underscore(k): _utils.list_to_string(v) for k, v in ide_conf.items()})
 
     # Finally, read the project configuration
     conf.update(_config_from_files(config.find_parents(document.path, CONFIG_FILES)))
