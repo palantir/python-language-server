@@ -27,7 +27,8 @@ class PyflakesDiagnosticReport(object):
         self.diagnostics.append({
             'source': 'pyflakes',
             'range': range,
-            'message': msg
+            'message': msg,
+            'severity': lsp.DiagnosticSeverity.Error,
         })
 
     def flake(self, message):
