@@ -24,3 +24,13 @@ def test_debounce():
     time.sleep(interval * 2)
     call_m()
     assert call_m._count == 2
+
+
+def test_list_to_string():
+    assert _utils.list_to_string("string") == "string"
+    assert _utils.list_to_string(["a", "r", "r", "a", "y"]) == "a,r,r,a,y"
+
+
+def test_camel_to_underscore():
+    assert _utils.camel_to_underscore("camelCase") == "camel_case"
+    assert _utils.camel_to_underscore("under_score") == "under_score"

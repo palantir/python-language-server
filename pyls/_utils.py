@@ -23,3 +23,7 @@ def debounce(interval_s):
 def camel_to_underscore(string):
     s1 = FIRST_CAP_RE.sub(r'\1_\2', string)
     return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
+
+
+def list_to_string(value):
+    return ",".join(value) if type(value) == list else value
