@@ -1,18 +1,65 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import time
 import logging
 from . import config, lsp, _utils
 from .language_server import LanguageServer
 from .workspace import Workspace
+
+from threading import Thread, Lock
 
 log = logging.getLogger(__name__)
 
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
+class ParallelThreadRunner(Thread):
+    def __init__(self, name, func, *args, **kwargs):
+        Thread.__init__(self)
+        self.func = func
+        self.name = name
+        self.finish = False
+        self.results = None
+        self.args = args
+        self.kwargs = kwargs
+        self.lock = Lock()
+
+    def run(self):
+        self.results = self.func(*self.args, **self.kwargs)
+        if len(self.results) > 0:
+            with self.lock:
+                log.info('{0}: Finished'.format(self.name))
+                self.finish = True
+
+
 class PythonLanguageServer(LanguageServer):
 
     workspace = None
     config = None
+
+    def parallel_run(self, hooks, doc_uri=None, timeout=5):
+        threads = []
+        for hook in hooks:
+            runner = ParallelThreadRunner(
+                hook['name'], self._hook, hook['name'], doc_uri,
+                **hook['args'])
+            runner.start()
+            threads.append(runner)
+        start_time = time.time()
+        result = None
+        finish = False
+        while not finish:
+            for runner in threads:
+                with runner.lock:
+                    if runner.finish:
+                        log.info('Picking results from {0}'.format(
+                            runner.name))
+                        result = runner.results
+                        finish = True
+                        break
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= timeout:
+                finish = True
+        return result
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
@@ -57,7 +104,14 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_code_lens', doc_uri))
 
     def completions(self, doc_uri, position):
-        completions = self._hook('pyls_completions', doc_uri, position=position)
+        hooks = [
+            {'name': 'pyls_jedi_completions',
+             'args': {'position': position}},
+            {'name': 'pyls_rope_completions',
+             'args': {'position': position}}
+        ]
+        completions = self.parallel_run(hooks, doc_uri) or []
+        # completions = self._hook('pyls_completions', doc_uri, position=position)
         return {
             'isIncomplete': False,
             'items': flatten(completions)

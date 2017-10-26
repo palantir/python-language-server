@@ -61,7 +61,8 @@ setup(
             'pyls = pyls.__main__:main',
         ],
         'pyls': [
-            'jedi_completion = pyls.plugins.completion',
+            'rope_completion = pyls.plugins.rope_completion',
+            'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',
             'jedi_references = pyls.plugins.references',
