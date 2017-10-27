@@ -23,7 +23,7 @@ def test_completion():
     items = pyls_completions(doc, com_position)
 
     assert len(items) > 0
-    assert items[0]['label'] == 'read'
+    assert items[0]['label'] == 'read(args)'
 
 
 def test_completion_ordering():
@@ -35,6 +35,6 @@ def test_completion_ordering():
     items = {c['label']: c['sortText'] for c in completions}
 
     # Assert that builtins come after our own functions even if alphabetically they're before
-    assert items['hello'] < items['dict']
+    assert items['hello()'] < items['dict']
     # And that 'hidden' functions come after unhidden ones
-    assert items['hello'] < items['_a_hello']
+    assert items['hello()'] < items['_a_hello()']
