@@ -25,6 +25,8 @@ def _include_def(definition):
     return (
         # Don't tend to include parameters as symbols
         definition.type != 'param' and
+        # Only include symbols that have a parent
+        _container(definition) is not None and
         definition.name != '_' and
         _kind(definition) is not None
     )
