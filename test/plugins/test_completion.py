@@ -23,7 +23,7 @@ def test_completion():
     items = pyls_completions(doc, com_position)
 
     assert len(items) > 0
-    assert items[0]['label'] == 'read(args)'
+    assert items[0]['label'] == 'read()'
 
 
 def test_completion_ordering():
