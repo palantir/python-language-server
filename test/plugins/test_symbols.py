@@ -33,7 +33,6 @@ def test_symbols(config):
         return [s for s in symbols if s['name'] == name][0]
 
     # Check we have some sane mappings to VSCode constants
-    assert sym('sys')['kind'] == SymbolKind.Module
     assert sym('a')['kind'] == SymbolKind.Variable
     assert sym('B')['kind'] == SymbolKind.Class
     assert sym('main')['kind'] == SymbolKind.Function
@@ -42,18 +41,18 @@ def test_symbols(config):
     assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
 
 
-def test_symbols_alls_scopes(config):
+def test_symbols_all_scopes(config):
     doc = Document(DOC_URI, DOC)
     symbols = pyls_document_symbols(config, doc)
 
     # All five symbols (import sys, a, B, __init__, main)
+    raise Exception([s['name'] for s in symbols])
     assert len(symbols) == 5
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]
 
     # Check we have some sane mappings to VSCode constants
-    assert sym('sys')['kind'] == SymbolKind.Module
     assert sym('a')['kind'] == SymbolKind.Variable
     assert sym('B')['kind'] == SymbolKind.Class
     assert sym('__init__')['kind'] == SymbolKind.Function

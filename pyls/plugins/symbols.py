@@ -9,42 +9,40 @@ log = logging.getLogger(__name__)
 @hookimpl
 def pyls_document_symbols(config, document):
     all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
-    names = document.jedi_names(all_scopes=all_scopes)
-    return list(filter(None, [serialize_name(n, document.uri) for n in names]))
+    definitions = document.jedi_names(all_scopes=all_scopes)
+    print definitions[0].name, definitions[0].type
+    return [{
+        'name': d.name,
+        'containerName': _container(d),
+        'location': {
+            'uri': document.uri,
+            'range': _range(d),
+        },
+        'kind': _kind(d),
+    } for d in definitions if _include_def(d)]
 
 
-def serialize_name(name, uri):
-    result = {}
-    parent = None
+def _include_def(definition):
+    return (
+        # Don't tend to include parameters as symbols
+        definition.type != 'param' and
+        definition.name != '_' and
+        _kind(definition) is not None
+    )
 
+
+def _container(definition):
     try:
         # Jedi sometimes fails here.
-        parent = name.parent()
+        parent = definition.parent()
+        return parent.name
     except:
-        pass
-
-    # - Only include global assignments in outline.
-    # - Don't include underscore assignments in outline.
-    # - Don't include function parameters in outline.
-    if (name.type == 'statement' and
-        (name.name == '_' or parent is None or
-         (parent and parent.parent()))) or name.type == 'param':
-        return None
-    else:
-        result['name'] = name.name
-
-    result['location'] = {'uri': uri, 'range': _range(name)}
-    result['kind'] = _kind(name)
-
-    # All assignments have the filename as a there toplevel parent.
-    if parent and parent.parent():
-        result['containerName'] = parent.name
-
-    return result
+        parent = None
 
 
-def _range(name):
-    definition = name._name.tree_name.get_definition()
+def _range(definition):
+    # This gets us more accurate end position
+    definition = definition._name.tree_name.get_definition()
     (start_line, start_column) = definition.start_pos
     (end_line, end_column) = definition.end_pos
     return {
