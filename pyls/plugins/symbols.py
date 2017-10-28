@@ -22,7 +22,6 @@ def pyls_document_symbols(config, document):
 
 
 def _include_def(definition):
-    log.info("Definition %s has parent %s", definition.name, definition.parent().name)
     return (
         # Don't tend to include parameters as symbols
         definition.type != 'param' and
