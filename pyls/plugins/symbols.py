@@ -12,15 +12,45 @@ def pyls_document_symbols(config, document):
     definitions = document.jedi_names(all_scopes=all_scopes)
     return [{
         'name': d.name,
+        'containerName': _container(d),
+        'location': {
+            'uri': document.uri,
+            'range': _range(d),
+        },
         'kind': _kind(d),
-        'location': {'uri': document.uri, 'range': _range(d)}
-    } for d in definitions]
+    } for d in definitions if _include_def(d)]
 
 
-def _range(d):
+def _include_def(definition):
+    return (
+        # Don't tend to include parameters as symbols
+        definition.type != 'param' and
+        # Unused vars should also be skipped
+        definition.name != '_' and
+        _kind(definition) is not None
+    )
+
+
+def _container(definition):
+    try:
+        # Jedi sometimes fails here.
+        parent = definition.parent()
+        # Here we check that a grand-parent exists to avoid declaring symbols
+        # as children of the module.
+        if parent.parent():
+            return parent.name
+    except:
+        pass
+
+
+def _range(definition):
+    # This gets us more accurate end position
+    definition = definition._name.tree_name.get_definition()
+    (start_line, start_column) = definition.start_pos
+    (end_line, end_column) = definition.end_pos
     return {
-        'start': {'line': d.line - 1, 'character': d.column},
-        'end': {'line': d.line - 1, 'character': d.column + len(d.name)}
+        'start': {'line': start_line - 1, 'character': start_column},
+        'end': {'line': end_line - 1, 'character': end_column}
     }
 
 
