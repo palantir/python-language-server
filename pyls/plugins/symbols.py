@@ -10,7 +10,6 @@ log = logging.getLogger(__name__)
 def pyls_document_symbols(config, document):
     all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
     definitions = document.jedi_names(all_scopes=all_scopes)
-    print definitions[0].name, definitions[0].type
     return [{
         'name': d.name,
         'containerName': _container(d),
