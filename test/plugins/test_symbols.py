@@ -10,11 +10,14 @@ DOC = """import sys
 a = 'hello'
 
 class B:
-    def __init__():
-        pass
+    def __init__(self):
+        x = 2
+        self.y = x
 
-def main():
-    pass
+def main(x):
+    y = 2 * x
+    return y
+
 """
 
 
