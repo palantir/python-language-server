@@ -26,8 +26,8 @@ def test_symbols(config):
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
     symbols = pyls_document_symbols(config, doc)
 
-    # All four symbols (import sys, a, B, main)
-    assert len(symbols) == 4
+    # All four symbols (import sys, a, B, main, y)
+    assert len(symbols) == 5
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]
@@ -45,9 +45,8 @@ def test_symbols_all_scopes(config):
     doc = Document(DOC_URI, DOC)
     symbols = pyls_document_symbols(config, doc)
 
-    # All five symbols (import sys, a, B, __init__, main)
-    raise Exception([s['name'] for s in symbols])
-    assert len(symbols) == 5
+    # All eight symbols (import sys, a, B, __init__, x, y, main, y)
+    assert len(symbols) == 8
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]

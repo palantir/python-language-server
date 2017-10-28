@@ -22,11 +22,11 @@ def pyls_document_symbols(config, document):
 
 
 def _include_def(definition):
+    log.info("Definition %s has parent %s", definition.name, definition.parent().name)
     return (
         # Don't tend to include parameters as symbols
         definition.type != 'param' and
-        # Only include symbols that have a parent
-        _container(definition) is not None and
+        # Unused vars should also be skipped
         definition.name != '_' and
         _kind(definition) is not None
     )
@@ -36,9 +36,12 @@ def _container(definition):
     try:
         # Jedi sometimes fails here.
         parent = definition.parent()
-        return parent.name
+        # Here we check that a grand-parent exists to avoid declaring symbols
+        # as children of the module.
+        if parent.parent():
+            return parent.name
     except:
-        parent = None
+        pass
 
 
 def _range(definition):
