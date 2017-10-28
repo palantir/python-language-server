@@ -9,18 +9,47 @@ log = logging.getLogger(__name__)
 @hookimpl
 def pyls_document_symbols(config, document):
     all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
-    definitions = document.jedi_names(all_scopes=all_scopes)
-    return [{
-        'name': d.name,
-        'kind': _kind(d),
-        'location': {'uri': document.uri, 'range': _range(d)}
-    } for d in definitions]
+    names = document.jedi_names(all_scopes=all_scopes)
+    return list(filter(None, [serialize_name(n, document.uri) for n in names]))
 
 
-def _range(d):
+def serialize_name(name, uri):
+    result = {}
+    parent = None
+
+    try:
+        # Jedi sometimes fails here.
+        parent = name.parent()
+    except:
+        pass
+
+    # - Only include global assignments in outline.
+    # - Don't include underscore assignments in outline.
+    # - Don't include function parameters in outline.
+    if (name.type == 'statement' and
+        (name.name == '_' or parent is None or
+         (parent and parent.parent()))) or name.type == 'param':
+        return None
+    else:
+        result['name'] = name.name
+
+    result['location'] = {'uri': uri, 'range': _range(name)}
+    result['kind'] = _kind(name)
+
+    # All assignments have the filename as a there toplevel parent.
+    if parent and parent.parent():
+        result['containerName'] = parent.name
+
+    return result
+
+
+def _range(name):
+    definition = name._name.tree_name.get_definition()
+    (start_line, start_column) = definition.start_pos
+    (end_line, end_column) = definition.end_pos
     return {
-        'start': {'line': d.line - 1, 'character': d.column},
-        'end': {'line': d.line - 1, 'character': d.column + len(d.name)}
+        'start': {'line': start_line - 1, 'character': start_column},
+        'end': {'line': end_line - 1, 'character': end_column}
     }
 
 
