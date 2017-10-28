@@ -18,11 +18,15 @@ def pyls_hover(document, position):
         return {'contents': ''}
 
     # Maybe the docstring could be huuuuuuuuuuge...
-    return {'contents': _preserve_whitespace(definitions[0].docstring()) or ""}
+    return {'contents': _format_docstring(definitions[0].docstring()) or ""}
 
 
-def _preserve_whitespace(contents):
-    """Preserve indentation in (non-markdown) ascii docstrings."""
+def _format_docstring(contents):
+    """Python doc strings come in a number of formats, but LSP wants markdown.
+
+    Until we can find a fast enough way of discovering and parsing each format,
+    we can do a little better by at least preserving indentation.
+    """
     contents = contents.replace('\t', '\u00A0' * 4)
     contents = contents.replace('  ', '\u00A0' * 2)
     return contents
