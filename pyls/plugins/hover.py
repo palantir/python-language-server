@@ -18,4 +18,11 @@ def pyls_hover(document, position):
         return {'contents': ''}
 
     # Maybe the docstring could be huuuuuuuuuuge...
-    return {'contents': definitions[0].docstring() or ""}
+    return {'contents': _preserve_whitespace(definitions[0].docstring()) or ""}
+
+
+def _preserve_whitespace(contents):
+    """Preserve indentation in (non-markdown) ascii docstrings."""
+    contents = contents.replace('\t', '\u00A0' * 4)
+    contents = contents.replace('  ', '\u00A0' * 2)
+    return contents
