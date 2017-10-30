@@ -21,7 +21,7 @@ def pyls_completions(document, position):
 
 def _label(definition):
     if definition.type in ('function', 'method'):
-        params = ", ".join(map(lambda definition: definition.name, definition.params))
+        params = ", ".join(param.name for param in definition.params)
         return "{}({})".format(definition.name, params)
 
     return definition.name
