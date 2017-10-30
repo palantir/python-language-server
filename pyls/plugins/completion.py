@@ -10,12 +10,25 @@ log = logging.getLogger(__name__)
 def pyls_completions(document, position):
     definitions = document.jedi_script(position).completions()
     return [{
-        'label': d.name,
+        'label': _label(d),
         'kind': _kind(d),
-        'detail': d.description or "",
+        'detail': _detail(d),
         'documentation': d.docstring(),
-        'sortText': _sort_text(d)
+        'sortText': _sort_text(d),
+        'insertText': d.name
     } for d in definitions]
+
+
+def _label(definition):
+    if definition.type in ('function', 'method'):
+        params = ", ".join(param.name for param in definition.params)
+        return "{}({})".format(definition.name, params)
+
+    return definition.name
+
+
+def _detail(definition):
+    return "builtin" if definition.in_builtin_module() else definition.parent().full_name or ""
 
 
 def _sort_text(definition):
