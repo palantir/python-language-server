@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import sys
 from pyls import uris
 from pyls.plugins.completion import pyls_completions
 from pyls.workspace import Document
@@ -23,7 +24,10 @@ def test_completion():
     items = pyls_completions(doc, com_position)
 
     assert len(items) > 0
-    assert items[0]['label'] == 'read()'
+    if (sys.version_info > (3, 0)):
+        assert items[0]['label'] == 'read(args)'
+    else:
+        assert items[0]['label'] == 'read()'
 
 
 def test_completion_ordering():
