@@ -1,5 +1,4 @@
 # Copyright 2017 Palantir Technologies, Inc.
-import os
 import pytest
 from pyls import uris
 from pyls.workspace import Document
@@ -32,6 +31,7 @@ def test_offset_at_position(doc):
     assert doc.offset_at_position({'line': 1, 'character': 5}) == 16
     assert doc.offset_at_position({'line': 2, 'character': 0}) == 12
     assert doc.offset_at_position({'line': 2, 'character': 4}) == 16
+    assert doc.offset_at_position({'line': 4, 'character': 0}) == 51
 
 
 def test_word_at_position(doc):
@@ -44,6 +44,8 @@ def test_word_at_position(doc):
     assert doc.word_at_position({'line': 1, 'character': 5}) == ''
     # def main():
     assert doc.word_at_position({'line': 2, 'character': 0}) == 'def'
+    # Past end of file
+    assert doc.word_at_position({'line': 4, 'character': 0}) == ''
 
 
 def test_document_empty_edit():

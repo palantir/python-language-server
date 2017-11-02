@@ -16,7 +16,7 @@ def pyls_completions(document, position):
     word = document.word_at_position({
         # The -1 should really be trying to look at the previous word, but that might be quite expensive
         # So we only skip import completions when the cursor is one space after `import`
-        'line': position['line'], 'character': position['character'] - 1,
+        'line': position['line'], 'character': max(position['character'] - 1, 0),
     })
     if word == 'import':
         return None
