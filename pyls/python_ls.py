@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 from multiprocessing import dummy as multiprocessing
-
 from . import config, lsp, _utils
 from .language_server import LanguageServer
 from .workspace import Workspace
@@ -70,7 +69,7 @@ class PythonLanguageServer(LanguageServer):
         )
         return {
             'isIncomplete': False,
-            'items': flatten(completions)
+            'items': completions or []
         }
 
     def definitions(self, doc_uri, position):

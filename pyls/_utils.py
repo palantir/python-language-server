@@ -49,6 +49,7 @@ def race_hooks(hook_caller, pool, **kwargs):
     # imap unordered gives us an iterator over the items in the order they finish.
     # We have to be careful to set chunksize to 1 to ensure hooks each get their own thread.
     # Unfortunately, there's no way to interrupt these threads, so we just have to leave them be.
-    first_impl, result = next(pool.imap_unordered(_apply, impls, chunksize=1))
-    log.debug("Hook from plugin %s returned: %s", first_impl.plugin_name, result)
-    return result
+    for impl, result in pool.imap_unordered(_apply, impls, chunksize=1):
+        if result is not None:
+            log.debug("Hook from plugin %s returned: %s", impl.plugin_name, result)
+            return result
