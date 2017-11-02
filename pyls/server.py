@@ -66,6 +66,13 @@ class JSONRPCServer(object):
         log.debug("Sending request %s: %s: %s", msg_id, method, params)
         req = jsonrpc2.JSONRPC20Request(method=method, params=params)
         req._id = msg_id
+
+        def _default_on_error(error):
+            log.error("Call to %s failed with %s", method, error)
+
+        if not on_error:
+            on_error = _default_on_error
+
         self._callbacks[msg_id] = (on_result, on_error)
         self._write_message(req.data)
 
