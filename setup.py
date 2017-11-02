@@ -72,8 +72,8 @@ setup(
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'rope_rename = pyls.plugins.rope_rename',
             'yapf = pyls.plugins.format',
-            'rope_imports = pyls.plugins.rope_imports',
         ]
     },
 )
