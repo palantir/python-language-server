@@ -26,6 +26,7 @@ Feature Providers
 Installing these plugins will add extra functionality to the language server:
 
 * pyls-mypy_ Mypy type checking for Python 3
+* pyls-isort_ Isort import sort code formatting
 
 Language Server Features
 ------------------------
@@ -115,3 +116,4 @@ This project is made available under the MIT License.
 .. _pydocstyle: https://github.com/PyCQA/pydocstyle
 .. _YAPF: https://github.com/google/yapf
 .. _pyls-mypy: https://github.com/tomv564/pyls-mypy
+.. _pyls-isort: https://github.com/paradoxxxzero/pyls-isort
