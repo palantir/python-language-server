@@ -122,9 +122,11 @@ class Workspace(object):
         self._docs[doc_uri].apply_change(change)
         self._docs[doc_uri].version = version
 
-    def apply_edit(self, edit):
-        # Note that lang_server.call currently doesn't return anything
-        return self._lang_server.call(self.M_APPLY_EDIT, {'edit': edit})
+    def apply_edit(self, edit, on_result=None, on_error=None):
+        return self._lang_server.call(
+            self.M_APPLY_EDIT, {'edit': edit},
+            on_result=on_result, on_error=on_error
+        )
 
     def publish_diagnostics(self, doc_uri, diagnostics):
         params = {'uri': doc_uri, 'diagnostics': diagnostics}
