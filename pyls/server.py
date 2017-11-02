@@ -39,6 +39,9 @@ class JSONRPCServer(object):
                     JSONRPCResponseManager.handle(data, {'exit': self.exit})
                     break
 
+                if isinstance(data, bytes):
+                    data = data.decode("utf-8")
+
                 msg = json.loads(data)
                 if 'method' in msg:
                     # It's a notification or request
