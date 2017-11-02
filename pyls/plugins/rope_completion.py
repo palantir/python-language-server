@@ -11,9 +11,13 @@ log = logging.getLogger(__name__)
 @hookimpl
 def pyls_completions(document, position):
     log.debug('Launching Rope')
-    mock_position = dict(position)
-    mock_position['character'] -= 1
-    word = document.word_at_position(mock_position)
+
+    # Rope is a bit rubbish at completing module imports, so we'll return None
+    word = document.word_at_position({
+        # The -1 should really be trying to look at the previous word, but that might be quite expensive
+        # So we only skip import completions when the cursor is one space after `import`
+        'line': position['line'], 'character': position['character'] - 1,
+    })
     if word == 'import':
         return None
 
