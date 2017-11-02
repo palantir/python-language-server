@@ -9,8 +9,8 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_rope_completions(document, position):
-    log.info('Launching Rope')
+def pyls_completions(document, position):
+    log.debug('Launching Rope')
     mock_position = dict(position)
     mock_position['character'] -= 1
     word = document.word_at_position(mock_position)
@@ -36,7 +36,7 @@ def pyls_rope_completions(document, position):
             'documentation': doc or "",
             'sortText': _sort_text(d)})
     definitions = new_definitions
-    log.info('Rope finished')
+    log.debug('Rope finished')
     return definitions
 
 

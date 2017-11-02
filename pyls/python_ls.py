@@ -1,34 +1,15 @@
 # Copyright 2017 Palantir Technologies, Inc.
-import time
 import logging
+from multiprocessing import dummy as multiprocessing
+
 from . import config, lsp, _utils
 from .language_server import LanguageServer
 from .workspace import Workspace
 
-from threading import Thread, Lock
-
 log = logging.getLogger(__name__)
 
+PLUGGY_RACE_POOL_SIZE = 5
 LINT_DEBOUNCE_S = 0.5  # 500 ms
-
-
-class ParallelThreadRunner(Thread):
-    def __init__(self, name, func, *args, **kwargs):
-        Thread.__init__(self)
-        self.func = func
-        self.name = name
-        self.finish = False
-        self.results = None
-        self.args = args
-        self.kwargs = kwargs
-        self.lock = Lock()
-
-    def run(self):
-        self.results = self.func(*self.args, **self.kwargs)
-        if len(self.results) > 0:
-            with self.lock:
-                log.info('{0}: Finished'.format(self.name))
-                self.finish = True
 
 
 class PythonLanguageServer(LanguageServer):
@@ -36,35 +17,12 @@ class PythonLanguageServer(LanguageServer):
     workspace = None
     config = None
 
-    def parallel_run(self, hooks, doc_uri=None, timeout=5):
-        threads = []
-        for hook in hooks:
-            runner = ParallelThreadRunner(
-                hook['name'], self._hook, hook['name'], doc_uri,
-                **hook['args'])
-            runner.start()
-            threads.append(runner)
-        start_time = time.time()
-        result = None
-        finish = False
-        while not finish:
-            for runner in threads:
-                with runner.lock:
-                    if runner.finish:
-                        log.info('Picking results from {0}'.format(
-                            runner.name))
-                        result = runner.results
-                        finish = True
-                        break
-            elapsed_time = time.time() - start_time
-            if elapsed_time >= timeout:
-                finish = True
-        return result
+    def _hook_caller(self, hook_name):
+        return self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
-        hook = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+        return self._hook_caller(hook_name)(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def capabilities(self):
         return {
@@ -95,6 +53,7 @@ class PythonLanguageServer(LanguageServer):
     def initialize(self, root_uri, init_opts, _process_id):
         self.workspace = Workspace(root_uri, lang_server=self)
         self.config = config.Config(root_uri, init_opts)
+        self._pool = multiprocessing.Pool(PLUGGY_RACE_POOL_SIZE)
         self._hook('pyls_initialize')
 
     def code_actions(self, doc_uri, range, context):
@@ -104,14 +63,11 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_code_lens', doc_uri))
 
     def completions(self, doc_uri, position):
-        hooks = [
-            {'name': 'pyls_jedi_completions',
-             'args': {'position': position}},
-            {'name': 'pyls_rope_completions',
-             'args': {'position': position}}
-        ]
-        completions = self.parallel_run(hooks, doc_uri) or []
-        # completions = self._hook('pyls_completions', doc_uri, position=position)
+        completions = _utils.race_hooks(
+            self._hook_caller('pyls_completions'), self._pool,
+            document=self.workspace.get_document(doc_uri) if doc_uri else None,
+            position=position
+        )
         return {
             'isIncomplete': False,
             'items': flatten(completions)
