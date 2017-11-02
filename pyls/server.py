@@ -93,7 +93,6 @@ class JSONRPCServer(object):
         return self.rfile.read(content_length)
 
     def _write_message(self, msg):
-        """Thread-safe method for writing messages to the wfile."""
         body = json.dumps(msg, separators=(",", ":"))
         content_length = len(body)
         response = (
