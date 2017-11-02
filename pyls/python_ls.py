@@ -1,11 +1,14 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+from multiprocessing import dummy as multiprocessing
+
 from . import config, lsp, _utils
 from .language_server import LanguageServer
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
 
+PLUGGY_RACE_POOL_SIZE = 5
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
@@ -14,10 +17,12 @@ class PythonLanguageServer(LanguageServer):
     workspace = None
     config = None
 
+    def _hook_caller(self, hook_name):
+        return self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
-        hook = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+        return self._hook_caller(hook_name)(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def capabilities(self):
         return {
@@ -38,6 +43,7 @@ class PythonLanguageServer(LanguageServer):
             },
             'hoverProvider': True,
             'referencesProvider': True,
+            'renameProvider': True,
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',']
             },
@@ -47,6 +53,7 @@ class PythonLanguageServer(LanguageServer):
     def initialize(self, root_uri, init_opts, _process_id):
         self.workspace = Workspace(root_uri, lang_server=self)
         self.config = config.Config(root_uri, init_opts)
+        self._pool = multiprocessing.Pool(PLUGGY_RACE_POOL_SIZE)
         self._hook('pyls_initialize')
 
     def code_actions(self, doc_uri, range, context):
@@ -56,7 +63,11 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_code_lens', doc_uri))
 
     def completions(self, doc_uri, position):
-        completions = self._hook('pyls_completions', doc_uri, position=position)
+        completions = _utils.race_hooks(
+            self._hook_caller('pyls_completions'), self._pool,
+            document=self.workspace.get_document(doc_uri) if doc_uri else None,
+            position=position
+        )
         return {
             'isIncomplete': False,
             'items': flatten(completions)
@@ -91,6 +102,9 @@ class PythonLanguageServer(LanguageServer):
             'pyls_references', doc_uri, position=position,
             exclude_declaration=exclude_declaration
         ))
+
+    def rename(self, doc_uri, position, new_name):
+        return self._hook('pyls_rename', doc_uri, position=position, new_name=new_name)
 
     def signature_help(self, doc_uri, position):
         return self._hook('pyls_signature_help', doc_uri, position=position)
@@ -136,6 +150,9 @@ class PythonLanguageServer(LanguageServer):
     def m_text_document__formatting(self, textDocument=None, options=None, **_kwargs):
         # For now we're ignoring formatting options.
         return self.format_document(textDocument['uri'])
+
+    def m_text_document__rename(self, textDocument=None, position=None, newName=None, **_kwargs):
+        return self.rename(textDocument['uri'], position, newName)
 
     def m_text_document__range_formatting(self, textDocument=None, range=None, options=None, **_kwargs):
         # Again, we'll ignore formatting options for now.

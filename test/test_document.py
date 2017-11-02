@@ -27,6 +27,13 @@ def test_document_lines(doc):
     assert doc.lines[0] == 'import sys\n'
 
 
+def test_offset_at_position(doc):
+    assert doc.offset_at_position({'line': 0, 'character': 8}) == 8
+    assert doc.offset_at_position({'line': 1, 'character': 5}) == 16
+    assert doc.offset_at_position({'line': 2, 'character': 0}) == 12
+    assert doc.offset_at_position({'line': 2, 'character': 4}) == 16
+
+
 def test_word_at_position(doc):
     """ Return the position under the cursor (or last in line if past the end) """
     # import sys

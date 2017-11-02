@@ -4,8 +4,12 @@ import logging
 import os
 import re
 import sys
+import imp
+import pkgutil
 
 import jedi
+from rope.base import libutils
+from rope.base.project import Project
 
 from . import config, lsp, uris
 
@@ -16,11 +20,59 @@ RE_START_WORD = re.compile('[A-Za-z_0-9]*$')
 RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 
+def get_submodules(mod):
+    """Get all submodules of a given module"""
+    def catch_exceptions(module):
+        pass
+    try:
+        m = __import__(mod)
+        submodules = [mod]
+        submods = pkgutil.walk_packages(m.__path__, m.__name__ + '.',
+                                        catch_exceptions)
+        for sm in submods:
+            sm_name = sm[1]
+            submodules.append(sm_name)
+    except ImportError:
+        return []
+    except Exception:
+        return [mod]
+    return submodules
+
+
+def get_preferred_submodules():
+    mods = ['numpy', 'scipy', 'sympy', 'pandas',
+            'networkx', 'statsmodels', 'matplotlib', 'sklearn',
+            'skimage', 'mpmath', 'os', 'PIL',
+            'OpenGL', 'array', 'audioop', 'binascii', 'cPickle',
+            'cStringIO', 'cmath', 'collections', 'datetime',
+            'errno', 'exceptions', 'gc', 'imageop', 'imp',
+            'itertools', 'marshal', 'math', 'mmap', 'msvcrt',
+            'nt', 'operator', 'parser', 'rgbimg', 'signal',
+            'strop', 'sys', 'thread', 'time', 'wx', 'xxsubtype',
+            'zipimport', 'zlib', 'nose', 'os.path']
+
+    submodules = []
+    for mod in mods:
+        submods = get_submodules(mod)
+        submodules += submods
+
+    actual = []
+    for submod in submodules:
+        try:
+            imp.find_module(submod)
+            actual.append(submod)
+        except ImportError:
+            pass
+
+    return actual
+
+
 class Workspace(object):
 
     M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
     M_APPLY_EDIT = 'workspace/applyEdit'
     M_SHOW_MESSAGE = 'window/showMessage'
+    PRELOADED_MODULES = get_preferred_submodules()
 
     def __init__(self, root_uri, lang_server=None):
         self._root_uri = root_uri
@@ -28,6 +80,16 @@ class Workspace(object):
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
         self._lang_server = lang_server
+
+        # Whilst incubating, keep private
+        self.__rope = Project(self._root_path)
+        self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+
+    @property
+    def _rope(self):
+        # TODO: we could keep track of dirty files and validate only those
+        self.__rope.validate()
+        return self.__rope
 
     @property
     def documents(self):
@@ -50,7 +112,7 @@ class Workspace(object):
     def put_document(self, doc_uri, content, version=None):
         path = uris.to_fs_path(doc_uri)
         self._docs[doc_uri] = Document(
-            doc_uri, content, sys_path=self.syspath_for_path(path), version=version
+            doc_uri, content, sys_path=self.syspath_for_path(path), version=version, rope=self._rope
         )
 
     def rm_document(self, doc_uri):
@@ -94,7 +156,7 @@ class Workspace(object):
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, sys_path=None):
+    def __init__(self, uri, source=None, version=None, local=True, sys_path=None, rope=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -103,9 +165,14 @@ class Document(object):
         self._local = local
         self._source = source
         self._sys_path = sys_path or sys.path
+        self._rope_project = rope
 
     def __str__(self):
         return str(self.uri)
+
+    @property
+    def _rope(self):
+        return libutils.path_to_resource(self._rope_project, self.path)
 
     @property
     def lines(self):
@@ -160,6 +227,10 @@ class Document(object):
                 new.write(line[end_col:])
 
         self._source = new.getvalue()
+
+    def offset_at_position(self, position):
+        """Return the byte-offset pointed at by the given position."""
+        return position['character'] + len(''.join(self.lines[:position['line']]))
 
     def word_at_position(self, position):
         """Get the word under the cursor returning the start and end positions."""

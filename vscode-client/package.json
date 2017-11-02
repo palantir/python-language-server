@@ -126,6 +126,11 @@
                     "default": true,
                     "description": "Enable or disable the plugin."
                 },
+                "pyls.plugins.rope_completion.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
                 "pyls.plugins.yapf.enabled": {
                     "type": "boolean",
                     "default": true,
