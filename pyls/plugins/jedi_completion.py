@@ -7,8 +7,8 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_jedi_completions(document, position):
-    log.info('Launching Jedi')
+def pyls_completions(document, position):
+    log.debug('Launching Jedi')
     definitions = document.jedi_script(position).completions()
     definitions = [{
         'label': d.name,
@@ -17,7 +17,7 @@ def pyls_jedi_completions(document, position):
         'documentation': d.docstring(),
         'sortText': _sort_text(d)
     } for d in definitions]
-    log.info('Jedi finished')
+    log.debug('Jedi finished')
     return definitions
 
 
