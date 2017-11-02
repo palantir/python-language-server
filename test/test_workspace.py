@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import pytest
-from pyls import uris, workspace
+from pyls import uris
 
 DOC_URI = uris.from_fs_path(__file__)
 

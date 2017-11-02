@@ -44,7 +44,11 @@ def race_hooks(hook_caller, pool, **kwargs):
         return None
 
     def _apply(impl):
-        return impl, impl.function(**kwargs)
+        try:
+            return impl, impl.function(**kwargs)
+        except Exception:
+            log.exception("Failed to run hook %s", impl.plugin_name)
+            raise
 
     # imap unordered gives us an iterator over the items in the order they finish.
     # We have to be careful to set chunksize to 1 to ensure hooks each get their own thread.

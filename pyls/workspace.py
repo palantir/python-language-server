@@ -234,6 +234,9 @@ class Document(object):
 
     def word_at_position(self, position):
         """Get the word under the cursor returning the start and end positions."""
+        if position['line'] >= len(self.lines):
+            return ''
+
         line = self.lines[position['line']]
         i = position['character']
         # Split word in two
