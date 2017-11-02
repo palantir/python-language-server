@@ -95,17 +95,6 @@ class PythonLanguageServer(LanguageServer):
     def signature_help(self, doc_uri, position):
         return self._hook('pyls_signature_help', doc_uri, position=position)
 
-    def m_initialized(self, **_kwargs):
-        self.workspace.apply_edit({
-            'documentChanges': [{
-                'textDocument': {
-                    'uri': 'file:///tmp/test',
-                    'version': 123,
-                },
-                'edits': []
-            }]
-        }, on_result=lambda result: log.error("EDIT: %s", result))
-
     def m_text_document__did_close(self, textDocument=None, **_kwargs):
         self.workspace.rm_document(textDocument['uri'])
 
