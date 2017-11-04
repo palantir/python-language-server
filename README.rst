@@ -15,6 +15,7 @@ A Python 2.7 and 3.4+ implementation of the `Language Server Protocol`_.
 Feature Providers
 -----------------
 * Jedi_ for Completions, Definitions, Hover, References, Signature Help, and Symbols
+* Rope_ for Completions and renaming
 * Pyflakes_ linter to detect various errors
 * McCabe_ linter for complexity checking
 * pycodestyle_ linter for style checking
@@ -110,6 +111,7 @@ This project is made available under the MIT License.
 
 .. _Language Server Protocol: https://github.com/Microsoft/language-server-protocol
 .. _Jedi: https://github.com/davidhalter/jedi
+.. _Rope: https://github.com/python-rope/rope
 .. _Pyflakes: https://github.com/PyCQA/pyflakes
 .. _McCabe: https://github.com/PyCQA/mccabe
 .. _pycodestyle: https://github.com/PyCQA/pycodestyle
