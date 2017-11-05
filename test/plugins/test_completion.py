@@ -15,7 +15,7 @@ LOCATION = osp.realpath(osp.join(os.getcwd(),
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import os
-print os.path.join()
+print os.path.isabs("/tmp")
 
 def hello():
     pass
@@ -34,17 +34,17 @@ def test_rope_import_completion():
 
 
 def test_jedi_completion():
-    # Over 'j' in os.path.join()
+    # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
     doc = Document(DOC_URI, DOC)
     items = pyls_jedi_completions(doc, com_position)
 
     assert len(items) > 0
-    assert items[0]['label'] == 'join(a, p)'
+    assert items[0]['label'] == 'isabs(s)'
 
 
 def test_rope_completion():
-    # Over 'j' in os.path.join()
+    # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
     rope = Project(LOCATION)
     rope.prefs.set('extension_modules', get_preferred_submodules())
@@ -52,7 +52,7 @@ def test_rope_completion():
     items = pyls_rope_completions(doc, com_position)
 
     assert len(items) > 0
-    assert items[0]['label'] == 'join'
+    assert items[0]['label'] == 'isabs'
 
 
 def test_jedi_completion_ordering():
