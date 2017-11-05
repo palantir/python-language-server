@@ -34,3 +34,12 @@ def test_list_to_string():
 def test_camel_to_underscore():
     assert _utils.camel_to_underscore("camelCase") == "camel_case"
     assert _utils.camel_to_underscore("under_score") == "under_score"
+
+
+def test_find_parents(tmpdir):
+    subsubdir = tmpdir.ensure_dir("subdir", "subsubdir")
+    path = subsubdir.ensure("path.py")
+    test_cfg = tmpdir.ensure("test.cfg")
+
+    assert _utils.find_parents(tmpdir.strpath, path.strpath, ["test.cfg"]) == [test_cfg.strpath]
+

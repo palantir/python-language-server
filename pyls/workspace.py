@@ -11,7 +11,7 @@ import jedi
 from rope.base import libutils
 from rope.base.project import Project
 
-from . import config, lsp, uris
+from . import config, lsp, uris, _utils
 
 log = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ class Workspace(object):
         Since the workspace root may not be the root of the Python project we instead
         append the closest parent directory containing a setup.py file.
         """
-        files = config.find_parents(self._root_path, path, ['setup.py']) or []
+        files = _utils.find_parents(self._root_path, path, ['setup.py']) or []
         path = [os.path.dirname(setup_py) for setup_py in files]
 
         # Check to see if we're in a virtualenv

@@ -1,7 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 from multiprocessing import dummy as multiprocessing
-from . import config, lsp, _utils
+from . import lsp, _utils
+from .config import config
 from .language_server import LanguageServer
 from .workspace import Workspace
 
@@ -15,6 +16,8 @@ class PythonLanguageServer(LanguageServer):
 
     workspace = None
     config = None
+
+    _pool = multiprocessing.Pool(PLUGGY_RACE_POOL_SIZE)
 
     def _hook_caller(self, hook_name):
         return self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
@@ -52,7 +55,6 @@ class PythonLanguageServer(LanguageServer):
     def initialize(self, root_uri, init_opts, _process_id):
         self.workspace = Workspace(root_uri, lang_server=self)
         self.config = config.Config(root_uri, init_opts)
-        self._pool = multiprocessing.Pool(PLUGGY_RACE_POOL_SIZE)
         self._hook('pyls_initialize')
 
     def code_actions(self, doc_uri, range, context):
