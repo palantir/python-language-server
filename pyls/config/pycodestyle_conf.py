@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import pycodestyle
 from .source import ConfigSource
-from . import _utils
 from pyls._utils import find_parents
 
 
@@ -23,9 +22,9 @@ class PyCodeStyleConfig(ConfigSource):
 
     def user_config(self):
         config = self.read_config_from_files(USER_CONFIGS)
-        return _utils.parse_config(config, CONFIG_KEY, OPTIONS)
+        return self.parse_config(config, CONFIG_KEY, OPTIONS)
 
     def project_config(self, document_path):
         files = find_parents(self.root_path, document_path, PROJECT_CONFIGS)
         config = self.read_config_from_files(files)
-        return _utils.parse_config(config, CONFIG_KEY, OPTIONS)
+        return self.parse_config(config, CONFIG_KEY, OPTIONS)

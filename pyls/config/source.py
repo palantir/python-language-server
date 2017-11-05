@@ -46,7 +46,8 @@ class ConfigSource(object):
 
         return config
 
-    def parse_config(self, config, key, options):
+    @staticmethod
+    def parse_config(config, key, options):
         """Parse the config with the given options."""
         conf = {}
         for source, destination, opt_type in options:

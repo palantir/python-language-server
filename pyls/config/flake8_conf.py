@@ -2,7 +2,6 @@
 import logging
 import os
 from .source import ConfigSource
-from . import _utils
 from pyls._utils import find_parents
 
 log = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class Flake8Config(ConfigSource):
     def user_config(self):
         config_file = self._user_config_file()
         config = self.read_config_from_files([config_file])
-        return _utils.parse_config(config, CONFIG_KEY, OPTIONS)
+        return self.parse_config(config, CONFIG_KEY, OPTIONS)
 
     def _user_config_file(self):
         if self.is_windows:
@@ -40,4 +39,4 @@ class Flake8Config(ConfigSource):
     def project_config(self, document_path):
         files = find_parents(self.root_path, document_path, PROJECT_CONFIGS)
         config = self.read_config_from_files(files)
-        return _utils.parse_config(config, CONFIG_KEY, OPTIONS)
+        return self.parse_config(config, CONFIG_KEY, OPTIONS)
