@@ -11,7 +11,7 @@ import jedi
 from rope.base import libutils
 from rope.base.project import Project
 
-from . import config, lsp, uris, _utils
+from . import lsp, uris, _utils
 
 log = logging.getLogger(__name__)
 
