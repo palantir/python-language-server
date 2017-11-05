@@ -12,7 +12,7 @@ PROJECT_CONFIGS = ['pycodestyle.cfg', 'setup.cfg', 'tox.ini']
 OPTIONS = [
     ('exclude', 'plugins.pycodestyle.exclude', list),
     ('filename', 'plugins.pycodestyle.filename', list),
-    ('hang_closing', 'plugins.pycodestyle.hangClosing', bool),
+    ('hang-closing', 'plugins.pycodestyle.hangClosing', bool),
     ('ignore', 'plugins.pycodestyle.ignore', list),
     ('max-line-length', 'plugins.pycodestyle.maxLineLength', int),
     ('select', 'plugins.pycodestyle.select', list),

@@ -43,3 +43,9 @@ def test_find_parents(tmpdir):
 
     assert _utils.find_parents(tmpdir.strpath, path.strpath, ["test.cfg"]) == [test_cfg.strpath]
 
+
+def test_merge_dicts():
+    assert _utils.merge_dicts(
+        {'a': True, 'b': {'x': 123, 'y': {'hello': 'world'}}},
+        {'a': False, 'b': {'y': [], 'z': 987}}
+    ) == {'a': False, 'b': {'x': 123, 'y': [], 'z': 987}}
