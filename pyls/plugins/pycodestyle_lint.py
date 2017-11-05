@@ -12,26 +12,29 @@ CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
 @hookimpl
 def pyls_lint(config, document):
     # Start with empty config, and update with each level of settings
-    conf = {}
+    # conf = {}
 
-    def _config_from_files(config_files):
-        pycodestyle_conf = pyls_config.build_config('pycodestyle', config_files)
-        pep8_conf = pyls_config.build_config('pep8', config_files)
-        conf_to_use = pycodestyle_conf or pep8_conf or {}
-        return {k.replace("-", "_"): v for k, v in conf_to_use.items()}
+    # def _config_from_files(config_files):
+    #     pycodestyle_conf = pyls_config.build_config('pycodestyle', config_files)
+    #     pep8_conf = pyls_config.build_config('pep8', config_files)
+    #     conf_to_use = pycodestyle_conf or pep8_conf or {}
+    #     return {k.replace("-", "_"): v for k, v in conf_to_use.items()}
 
-    # First, read the user configuration (in user's home directory)
-    if pycodestyle.USER_CONFIG:
-        conf.update(_config_from_files([pycodestyle.USER_CONFIG]))
+    # # First, read the user configuration (in user's home directory)
+    # if pycodestyle.USER_CONFIG:
+    #     conf.update(_config_from_files([pycodestyle.USER_CONFIG]))
 
-    # Then, read the PYLS configuration
-    ide_conf = config.plugin_settings('pycodestyle')
-    conf.update({_utils.camel_to_underscore(k): _utils.list_to_string(v) for k, v in ide_conf.items()})
+    # # Then, read the PYLS configuration
+    # ide_conf = config.plugin_settings('pycodestyle')
+    # conf.update({_utils.camel_to_underscore(k): _utils.list_to_string(v) for k, v in ide_conf.items()})
 
-    # Finally, read the project configuration
-    conf.update(_config_from_files(config.find_parents(document.path, CONFIG_FILES)))
+    # # Finally, read the project configuration
+    # conf.update(_config_from_files(config.find_parents(document.path, CONFIG_FILES)))
 
     # Grab the pycodestyle parser and set the defaults based on the config we found
+
+    conf = {}
+
     parser = pycodestyle.get_parser()
     parser.set_defaults(**conf)
 
@@ -59,7 +62,6 @@ class PyCodeStyleDiagnosticReport(pycodestyle.BaseReport):
         #   e.g. no newline at end of file
         # In that case, the end offset should just be some number ~100
         # (because why not? There's nothing to underline anyways)
-        log.info("Got pycodestyle error at %d:%d %s", lineno, offset, text)
         range = {
             'start': {'line': lineno - 1, 'character': offset},
             'end': {

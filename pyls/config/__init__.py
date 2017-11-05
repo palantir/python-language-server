@@ -4,19 +4,31 @@ import logging
 import os
 import pluggy
 
-from . import hookspecs, uris, PYLS
+from .. import hookspecs, uris, PYLS
+from .flake8_conf import Flake8Config
+from .pycodestyle_conf import PyCodeStyleConfig
+
 
 log = logging.getLogger(__name__)
+
+# Sources of config, first source overrides next source
+DEFAULT_CONFIG_SOURCES = ['pycodestyle', 'flake8']
 
 
 class Config(object):
 
     def __init__(self, root_uri, init_opts):
+        self._root_path = uris.to_fs_path(root_uri)
         self._root_uri = root_uri
         self._init_opts = init_opts
 
         self._disabled_plugins = []
         self._settings = {}
+
+        self._config_sources = {
+            'flake8': Flake8Config(self._root_path),
+            'pycodestyle': PyCodeStyleConfig(self._root_path)
+        }
 
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
@@ -54,7 +66,28 @@ class Config(object):
         root_path = uris.to_fs_path(self._root_uri)
         return find_parents(root_path, path, names)
 
-    def plugin_settings(self, plugin):
+    def plugin_settings(self, plugin, doc_path=None):
+        # Language server settings > Project settings > User settings
+        config = {}
+        sources = self._settings.get('configSources', DEFAULT_CONFIG_SOURCES)
+
+        for source_name in reversed(sources):
+            source = self._config_sources[source_name]
+            source_conf = source.user_config()
+            log.debug("Got user config from %s: %s", source.__class__.__name__, source_conf)
+            config = _merge_dicts(config, source_conf)
+        log.debug("With user configuration: %s", config)
+
+        for source_name in reversed(sources):
+            source = self._config_sources[source_name]
+            source_conf = source.project_config(path=doc_path)
+            log.debug("Got project config from %s: %s", source.__class__.__name__, source_conf)
+            config = _merge_dicts(config, source_conf)
+        log.debug("With project configuration: %s", config)
+
+        config = _merge_dicts(config, self._settings)
+        log.debug("With pyls configuration: %s", config)
+
         return self.settings.get('plugins', {}).get(plugin, {})
 
     def update(self, settings):
