@@ -5,9 +5,6 @@ from pyls import hookimpl, lsp
 
 log = logging.getLogger(__name__)
 
-# Potential config files in reverse order of preference
-CONFIG_FILES = ['tox.ini', 'pep8.cfg', 'setup.cfg', 'pycodestyle.cfg']
-
 
 @hookimpl
 def pyls_lint(config, document):

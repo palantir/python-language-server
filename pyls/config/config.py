@@ -2,8 +2,7 @@
 import logging
 import pluggy
 
-from .. import hookspecs, uris, PYLS
-from . import _utils
+from pyls import _utils, hookspecs, uris, PYLS
 from .flake8_conf import Flake8Config
 from .pycodestyle_conf import PyCodeStyleConfig
 

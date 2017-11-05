@@ -1,12 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import configparser
-import logging
 import os
 import sys
-
-from . import _utils
-
-log = logging.getLogger(__name__)
 
 
 class ConfigSource(object):
@@ -23,15 +18,12 @@ class ConfigSource(object):
         """Return user-level (i.e. home directory) configuration."""
         raise NotImplementedError()
 
-    def project_config(self, path=None):
+    def project_config(self, document_path):
         """Return project-level (i.e. workspace directory) configuration."""
         raise NotImplementedError()
 
-    def find_project_files(self, path, filenames):
-        return _utils.find_parents(self.root_path, path, filenames)
-
     def read_config_from_files(self, files):
-        # TODO(gatesn): check if files updated
+        # TODO(gatesn): cache based on file modified timestamps
         config = configparser.RawConfigParser()
         found_files = []
         for filename in files:

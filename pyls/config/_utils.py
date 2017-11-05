@@ -23,27 +23,6 @@ def build_config(key, config_files):
     return {}
 
 
-def merge_dicts(dict_a, dict_b):
-    """Recursively merge dictionary b into dictionary a.
-
-    If override_nones is True, then
-    """
-    def _merge_dicts_(a, b):
-        for key in set(a.keys()).union(b.keys()):
-            if key in a and key in b:
-                if isinstance(a[key], dict) and isinstance(b[key], dict):
-                    yield (key, dict(_merge_dicts_(a[key], b[key])))
-                elif b[key] is not None:
-                    yield (key, b[key])
-                else:
-                    yield (key, a[key])
-            elif key in a:
-                yield (key, a[key])
-            elif b[key] is not None:
-                yield (key, b[key])
-    return dict(_merge_dicts_(dict_a, dict_b))
-
-
 def parse_config(config, key, options):
     """Parse the config with the given options."""
     conf = {}

@@ -1,5 +1,4 @@
 # Copyright 2017 Palantir Technologies, Inc.
-import os
 import pycodestyle
 from .source import ConfigSource
 from . import _utils
@@ -23,21 +22,10 @@ OPTIONS = [
 class PyCodeStyleConfig(ConfigSource):
 
     def user_config(self):
-        config_file = self._user_config_file()
-        config = self.read_config_from_files([config_file])
+        config = self.read_config_from_files(USER_CONFIGS)
         return _utils.parse_config(config, CONFIG_KEY, OPTIONS)
 
-    def _user_config_file(self):
-        if self.is_windows:
-            return os.path.expanduser('~\\.pycodestyle')
-        else:
-            return os.path.join(self.xdg_home, 'pycodestyle')
-
-    def project_config(self, path=None):
-        if path:
-            files = find_parents(self.root_path, path, PROJECT_CONFIGS)
-        else:
-            files = [os.path.join(self.root_path, filename) for filename in PROJECT_CONFIGS]
-
+    def project_config(self, document_path):
+        files = find_parents(self.root_path, document_path, PROJECT_CONFIGS)
         config = self.read_config_from_files(files)
         return _utils.parse_config(config, CONFIG_KEY, OPTIONS)
