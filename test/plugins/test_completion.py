@@ -14,8 +14,8 @@ LOCATION = osp.realpath(osp.join(os.getcwd(),
                                  osp.dirname(__file__)))
 
 DOC_URI = uris.from_fs_path(__file__)
-DOC = """import sys
-print sys.stdin.read()
+DOC = """import os
+print os.path.join()
 
 def hello():
     pass
@@ -34,28 +34,25 @@ def test_rope_import_completion():
 
 
 def test_jedi_completion():
-    # Over 'r' in sys.stdin.read()
-    com_position = {'line': 1, 'character': 17}
+    # Over 'j' in os.path.join()
+    com_position = {'line': 1, 'character': 15}
     doc = Document(DOC_URI, DOC)
     items = pyls_jedi_completions(doc, com_position)
 
     assert len(items) > 0
-    if (sys.version_info > (3, 0)):
-        assert items[0]['label'] == 'read(args)'
-    else:
-        assert items[0]['label'] == 'read()'
+    assert items[0]['label'] == 'join(a, p)'
 
 
 def test_rope_completion():
-    # Over 'r' in sys.stdin.read()
-    com_position = {'line': 1, 'character': 17}
+    # Over 'j' in os.path.join()
+    com_position = {'line': 1, 'character': 15}
     rope = Project(LOCATION)
     rope.prefs.set('extension_modules', get_preferred_submodules())
     doc = Document(DOC_URI, DOC, rope=rope)
     items = pyls_rope_completions(doc, com_position)
 
     assert len(items) > 0
-    assert items[0]['label'] == 'read'
+    assert items[0]['label'] == 'join'
 
 
 def test_jedi_completion_ordering():

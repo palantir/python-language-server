@@ -61,7 +61,6 @@ def test_pycodestyle_config(workspace):
 
     content = {
         'setup.cfg': ('[pycodestyle]\nignore = W191', True),
-        'pep8.cfg': ('[pep8]\nignore = W191', True),
         'tox.ini': ('', False)
     }
 
