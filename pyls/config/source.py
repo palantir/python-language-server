@@ -1,7 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import configparser
+import logging
 import os
 import sys
+
+log = logging.getLogger(__name__)
 
 
 class ConfigSource(object):
@@ -14,6 +17,9 @@ class ConfigSource(object):
             'XDG_CONFIG_HOME', os.path.expanduser('~/.config')
         )
 
+        self._modified_times = {}
+        self._configs_cache = {}
+
     def user_config(self):
         """Return user-level (i.e. home directory) configuration."""
         raise NotImplementedError()
@@ -23,11 +29,21 @@ class ConfigSource(object):
         raise NotImplementedError()
 
     def read_config_from_files(self, files):
-        # TODO(gatesn): cache based on file modified timestamps
+        files = tuple([f for f in files if os.path.exists(f) and not os.path.isdir(f)])
+        modified = tuple([os.path.getmtime(f) for f in files])
+
+        if files in self._modified_times and modified == self._modified_times[files]:
+            log.debug("Using cached configuration for %s", files)
+            return self._configs_cache[files]
+
         config = configparser.RawConfigParser()
         found_files = []
         for filename in files:
             found_files.extend(config.read(filename))
+
+        self._configs_cache[files] = config
+        self._modified_times[files] = modified
+
         return config
 
     def parse_config(self, config, key, options):

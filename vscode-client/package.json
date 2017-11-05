@@ -23,7 +23,7 @@
                 "pyls.configurationSources": {
                     "type": "array",
                     "default": ["pycodestyle"],
-                    "description": "List of configuration sources to use."
+                    "description": "List of configuration sources to use.",
                     "items": {
                         "type": "string",
                         "enum": ["pycodestyle", "pyflakes"]

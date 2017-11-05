@@ -10,7 +10,7 @@ from .pycodestyle_conf import PyCodeStyleConfig
 log = logging.getLogger(__name__)
 
 # Sources of config, first source overrides next source
-DEFAULT_CONFIG_SOURCES = ['pycodestyle', 'flake8']
+DEFAULT_CONFIG_SOURCES = ['pycodestyle']
 
 
 class Config(object):
@@ -66,7 +66,7 @@ class Config(object):
             4. Project settings, found in config files in the current project.
         """
         settings = {}
-        sources = self._settings.get('configSources', DEFAULT_CONFIG_SOURCES)
+        sources = self._settings.get('configurationSources', DEFAULT_CONFIG_SOURCES)
 
         for source_name in reversed(sources):
             source = self._config_sources[source_name]
