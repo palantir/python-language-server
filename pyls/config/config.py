@@ -57,7 +57,7 @@ class Config(object):
     def root_uri(self):
         return self._root_uri
 
-    def settings(self, doc_path=None):
+    def settings(self, document_path=None):
         """Settings are constructed from a few sources:
 
             1. User settings, found in user's home directory
@@ -83,7 +83,7 @@ class Config(object):
 
         for source_name in reversed(sources):
             source = self._config_sources[source_name]
-            source_conf = source.project_config(path=doc_path)
+            source_conf = source.project_config(document_path or self._root_path)
             log.debug("Got project config from %s: %s", source.__class__.__name__, source_conf)
             settings = _utils.merge_dicts(settings, source_conf)
         log.debug("With project configuration: %s", settings)
@@ -94,8 +94,8 @@ class Config(object):
         root_path = uris.to_fs_path(self._root_uri)
         return _utils.find_parents(root_path, path, names)
 
-    def plugin_settings(self, plugin, doc_path=None):
-        return self.settings(doc_path=doc_path).get('plugins', {}).get(plugin, {})
+    def plugin_settings(self, plugin, document_path=None):
+        return self.settings(document_path=document_path).get('plugins', {}).get(plugin, {})
 
     def update(self, settings):
         """Recursively merge the given settings into the current settings."""
