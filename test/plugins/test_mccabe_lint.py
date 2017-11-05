@@ -4,17 +4,12 @@ from pyls.workspace import Document
 from pyls.plugins import mccabe_lint
 
 DOC_URI = uris.from_fs_path(__file__)
-DOC = """import sys
-
-def hello():
+DOC = """def hello():
 \tpass
-
-import json
 """
 
 DOC_SYNTAX_ERR = """def hello()
-    pass
-"""
+\tpass"""
 
 
 def test_mccabe(config):
@@ -31,7 +26,12 @@ def test_mccabe(config):
         mod_import = [d for d in diags if d['message'] == msg][0]
 
         assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
-        assert mod_import['range']['start'] == {'line': 3, 'character': 0}
-        assert mod_import['range']['end'] == {'line': 3, 'character': 6}
+        assert mod_import['range']['start'] == {'line': 1, 'character': 0}
+        assert mod_import['range']['end'] == {'line': 1, 'character': 6}
     finally:
         config._settings = old_settings
+
+
+def test_mccabe_syntax_error(config):
+    doc = Document(DOC_URI, DOC_SYNTAX_ERR)
+    assert mccabe_lint.pyls_lint(config, doc) is None

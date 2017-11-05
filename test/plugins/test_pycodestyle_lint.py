@@ -14,10 +14,6 @@ def hello():
 import json
 """
 
-DOC_SYNTAX_ERR = """def hello()
-    pass
-"""
-
 
 def test_pycodestyle(config):
     doc = Document(DOC_URI, DOC)
