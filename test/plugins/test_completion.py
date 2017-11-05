@@ -1,17 +1,15 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-import sys
-from pyls import uris
-from pyls.workspace import Document
-import os.path as osp
-from rope.base import libutils
 from rope.base.project import Project
+
+from pyls import uris
 from pyls.workspace import Document, get_preferred_submodules
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
-LOCATION = osp.realpath(osp.join(os.getcwd(),
-                                 osp.dirname(__file__)))
+LOCATION = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__))
+)
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import os
