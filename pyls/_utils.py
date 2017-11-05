@@ -1,6 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import functools
 import logging
+import os
 import re
 import threading
 
@@ -28,8 +29,64 @@ def camel_to_underscore(string):
     return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
 
 
+def find_parents(root, path, names):
+    """Find files matching the given names relative to the given path.
+
+    Args:
+        path (str): The file path to start searching up from.
+        names (List[str]): The file/directory names to look for.
+        root (str): The directory at which to stop recursing upwards.
+
+    Note:
+        The path MUST be within the root.
+    """
+    if not root:
+        return []
+
+    if not os.path.commonprefix((root, path)):
+        log.warning("Path %s not in %s", path, root)
+        return []
+
+    # Split the relative by directory, generate all the parent directories, then check each of them.
+    # This avoids running a loop that has different base-cases for unix/windows
+    # e.g. /a/b and /a/b/c/d/e.py -> ['/a/b', 'c', 'd']
+    dirs = [root] + os.path.relpath(os.path.dirname(path), root).split(os.path.sep)
+
+    # Search each of /a/b/c, /a/b, /a
+    while dirs:
+        search_dir = os.path.join(*dirs)
+        existing = list(filter(os.path.exists, [os.path.join(search_dir, n) for n in names]))
+        if existing:
+            return existing
+        dirs.pop()
+
+    # Otherwise nothing
+    return []
+
+
 def list_to_string(value):
     return ",".join(value) if type(value) == list else value
+
+
+def merge_dicts(dict_a, dict_b):
+    """Recursively merge dictionary b into dictionary a.
+
+    If override_nones is True, then
+    """
+    def _merge_dicts_(a, b):
+        for key in set(a.keys()).union(b.keys()):
+            if key in a and key in b:
+                if isinstance(a[key], dict) and isinstance(b[key], dict):
+                    yield (key, dict(_merge_dicts_(a[key], b[key])))
+                elif b[key] is not None:
+                    yield (key, b[key])
+                else:
+                    yield (key, a[key])
+            elif key in a:
+                yield (key, a[key])
+            elif b[key] is not None:
+                yield (key, b[key])
+    return dict(_merge_dicts_(dict_a, dict_b))
 
 
 def race_hooks(hook_caller, pool, **kwargs):

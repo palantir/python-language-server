@@ -29,6 +29,20 @@ Installing these plugins will add extra functionality to the language server:
 * pyls-mypy_ Mypy type checking for Python 3
 * pyls-isort_ Isort import sort code formatting
 
+Configuration
+-------------
+
+Configuration is loaded from zero or more configuration sources. Currently implemented are:
+
+* pycodestyle: discovered in ~/.config/pycodestyle, setup.cfg, tox.ini and pycodestyle.cfg.
+* flake8: discovered in ~/.config/flake8, setup.cfg, tox.ini and flake8.cfg
+
+The default configuration source is pycodestyle. Change the `pyls.configurationSources` setting to `['flake8']` in
+order to respect flake8 configuration instead.
+
+Overall configuration is computed first from user configuration (in home directory), overridden by configuration
+passed in by the language client, and then overriden by configuration discovered in the workspace.
+
 Language Server Features
 ------------------------
 

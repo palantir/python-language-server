@@ -13,6 +13,7 @@ DEFAULT_THRESHOLD = 15
 @hookimpl
 def pyls_lint(config, document):
     threshold = config.plugin_settings('mccabe').get(THRESHOLD, DEFAULT_THRESHOLD)
+    log.debug("Running mccabe lint with threshold: %s", threshold)
 
     try:
         tree = compile(document.source, document.path, "exec", ast.PyCF_ONLY_AST)

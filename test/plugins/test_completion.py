@@ -1,21 +1,19 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-import sys
-from pyls import uris
-from pyls.workspace import Document
-import os.path as osp
-from rope.base import libutils
 from rope.base.project import Project
+
+from pyls import uris
 from pyls.workspace import Document, get_preferred_submodules
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
-LOCATION = osp.realpath(osp.join(os.getcwd(),
-                                 osp.dirname(__file__)))
+LOCATION = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__))
+)
 
 DOC_URI = uris.from_fs_path(__file__)
-DOC = """import sys
-print sys.stdin.read()
+DOC = """import os
+print os.path.isabs("/tmp")
 
 def hello():
     pass
@@ -34,28 +32,25 @@ def test_rope_import_completion():
 
 
 def test_jedi_completion():
-    # Over 'r' in sys.stdin.read()
-    com_position = {'line': 1, 'character': 17}
+    # Over 'i' in os.path.isabs(...)
+    com_position = {'line': 1, 'character': 15}
     doc = Document(DOC_URI, DOC)
     items = pyls_jedi_completions(doc, com_position)
 
     assert len(items) > 0
-    if (sys.version_info > (3, 0)):
-        assert items[0]['label'] == 'read(args)'
-    else:
-        assert items[0]['label'] == 'read()'
+    assert items[0]['label'] == 'isabs(s)'
 
 
 def test_rope_completion():
-    # Over 'r' in sys.stdin.read()
-    com_position = {'line': 1, 'character': 17}
+    # Over 'i' in os.path.isabs(...)
+    com_position = {'line': 1, 'character': 15}
     rope = Project(LOCATION)
     rope.prefs.set('extension_modules', get_preferred_submodules())
     doc = Document(DOC_URI, DOC, rope=rope)
     items = pyls_rope_completions(doc, com_position)
 
     assert len(items) > 0
-    assert items[0]['label'] == 'read'
+    assert items[0]['label'] == 'isabs'
 
 
 def test_jedi_completion_ordering():

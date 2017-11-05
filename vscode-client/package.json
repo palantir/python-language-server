@@ -20,6 +20,16 @@
             "title": "Python Language Server Configuration",
             "type": "object",
             "properties": {
+                "pyls.configurationSources": {
+                    "type": "array",
+                    "default": ["pycodestyle"],
+                    "description": "List of configuration sources to use.",
+                    "items": {
+                        "type": "string",
+                        "enum": ["pycodestyle", "pyflakes"]
+                    },
+                    "uniqueItems": true
+                },
                 "pyls.plugins.jedi_completion.enabled": {
                     "type": "boolean",
                     "default": true,
