@@ -12,6 +12,8 @@ def hello():
 \tpass
 
 import json
+
+
 """
 
 
@@ -29,6 +31,14 @@ def test_pycodestyle(config):
     assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
     assert mod_import['range']['start'] == {'line': 3, 'character': 0}
     assert mod_import['range']['end'] == {'line': 3, 'character': 6}
+
+    msg = 'W391 blank line at end of file'
+    mod_import = [d for d in diags if d['message'] == msg][0]
+
+    assert mod_import['code'] == 'W391'
+    assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
+    assert mod_import['range']['start'] == {'line': 7, 'character': 0}
+    assert mod_import['range']['end'] == {'line': 7, 'character': 1}
 
 
 def test_pycodestyle_config(workspace):
@@ -73,6 +83,7 @@ def test_pycodestyle_config(workspace):
 
     # Make sure we can ignore via the PYLS config as well
     config.update({'plugins': {'pycodestyle': {'ignore': ['W191']}}})
-    # And make sure we don't get any warnings
+    # And make sure we only get one warning
     diags = pycodestyle_lint.pyls_lint(config, doc)
     assert not [d for d in diags if d['code'] == 'W191']
+    assert [d for d in diags if d['code'] == 'W391']
