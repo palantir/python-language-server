@@ -4,6 +4,8 @@ import logging
 import os
 import sys
 
+from . import find_parents
+
 log = logging.getLogger(__name__)
 
 
@@ -19,19 +21,22 @@ class ConfigSource(object):
 
     def user_config(self):
         """Return user-level (i.e. home directory) configuration."""
-        return {}
+        raise NotImplementedError()
 
     def project_config(self, path=None):
         """Return project-level (i.e. workspace directory) configuration."""
-        return {}
+        raise NotImplementedError()
 
+    def find_project_files(self, path, filenames):
+        return find_parents(self.root_path, path, filenames)
 
-def read_config(files):
-    config = configparser.RawConfigParser()
-    found_files = []
-    for filename in files:
-        found_files.extend(config.read(filename))
-    return config
+    def read_config_from_files(self, files):
+        # TODO(gatesn): check if files updated
+        config = configparser.RawConfigParser()
+        found_files = []
+        for filename in files:
+            found_files.extend(config.read(filename))
+        return config
 
 
 def parse_config(config, key, options):

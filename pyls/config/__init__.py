@@ -67,7 +67,7 @@ class Config(object):
         return find_parents(root_path, path, names)
 
     def plugin_settings(self, plugin, doc_path=None):
-        # Language server settings > Project settings > User settings
+        # Project settings > Language server settings > User settings
         config = {}
         sources = self._settings.get('configSources', DEFAULT_CONFIG_SOURCES)
 
@@ -78,6 +78,9 @@ class Config(object):
             config = _merge_dicts(config, source_conf)
         log.debug("With user configuration: %s", config)
 
+        config = _merge_dicts(config, self._settings)
+        log.debug("With pyls configuration: %s", config)
+
         for source_name in reversed(sources):
             source = self._config_sources[source_name]
             source_conf = source.project_config(path=doc_path)
@@ -85,10 +88,7 @@ class Config(object):
             config = _merge_dicts(config, source_conf)
         log.debug("With project configuration: %s", config)
 
-        config = _merge_dicts(config, self._settings)
-        log.debug("With pyls configuration: %s", config)
-
-        return self.settings.get('plugins', {}).get(plugin, {})
+        return config.get('plugins', {}).get(plugin, {})
 
     def update(self, settings):
         """Recursively merge the given settings into the current settings."""
@@ -157,16 +157,18 @@ def find_parents(root, path, names):
 
 
 def _merge_dicts(dict_a, dict_b):
-    """Recursively merge dictionary b into dictionary a."""
+    """Recursively merge dictionary b into dictionary a if the value is not None."""
     def _merge_dicts_(a, b):
         for key in set(a.keys()).union(b.keys()):
             if key in a and key in b:
                 if isinstance(a[key], dict) and isinstance(b[key], dict):
                     yield (key, dict(_merge_dicts_(a[key], b[key])))
-                else:
+                elif b[key] is not None:
                     yield (key, b[key])
+                else:
+                    yield (key, a[key])
             elif key in a:
                 yield (key, a[key])
-            else:
+            elif b[key] is not None:
                 yield (key, b[key])
     return dict(_merge_dicts_(dict_a, dict_b))
