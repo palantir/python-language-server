@@ -36,8 +36,6 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
     try:
         log.info("Serving %s on (%s, %s)", handler_class.__name__, bind_addr, port)
         server.serve_forever()
-    except KeyboardInterrupt:
-        server.exit()
     finally:
         log.info("Shutting down")
         server.server_close()
