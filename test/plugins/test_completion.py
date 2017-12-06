@@ -41,6 +41,13 @@ def test_jedi_completion():
     assert items[0]['label'] == 'isabs(s)'
 
 
+def test_jedi_completion_bad_position():
+    bad_position = {'line': 100, 'character': 1500}
+    doc = Document(DOC_URI, DOC)
+    # Does not raise
+    pyls_jedi_completions(doc, bad_position)
+
+
 def test_rope_completion():
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}

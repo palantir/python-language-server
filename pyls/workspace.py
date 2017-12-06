@@ -263,6 +263,6 @@ class Document(object):
             'sys_path': self._sys_path
         }
         if position:
-            kwargs['line'] = position['line'] + 1
-            kwargs['column'] = position['character']
+            kwargs['line'] = min(position['line'] + 1, len(self.lines)) or 1
+            kwargs['column'] = min(position['character'], len(self.lines[kwargs['line'] - 1]) - 1)
         return jedi.Script(**kwargs)
