@@ -1,8 +1,15 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls import hookimpl
+import re
+from pyls import hookimpl, _utils
 
 log = logging.getLogger(__name__)
+
+SPHINX = re.compile("\s*:param\s+(?P<param>\w+):\s*(?P<doc>[^\\n]+)")
+EPYDOC = re.compile("\s*@param\s+(?P<param>\w+):\s*(?P<doc>[^\\n]+)")
+GOOGLE = re.compile("\s*(?P<param>\w+).*:\s*(?P<doc>[^\\n]+)")
+
+DOC_REGEX = [SPHINX, EPYDOC, GOOGLE]
 
 
 @hookimpl
@@ -15,15 +22,14 @@ def pyls_signature_help(document, position):
     s = signatures[0]
     sig = {
         'label': s.docstring().splitlines()[0],
-        'documentation': s.docstring(raw=True)
+        'documentation': _utils.format_docstring(s.docstring(raw=True))
     }
 
     # If there are params, add those
     if len(s.params) > 0:
         sig['parameters'] = [{
             'label': p.name,
-            # TODO: we could do smarter things here like parsing the function docstring
-            'documentation': ""
+            'documentation': _param_docs(s.docstring(), p.name)
         } for p in s.params]
 
     # We only return a single signature because Python doesn't allow overloading
@@ -34,3 +40,14 @@ def pyls_signature_help(document, position):
         sig_info['activeParameter'] = s.index
 
     return sig_info
+
+
+def _param_docs(docstring, param_name):
+    for line in docstring.splitlines():
+        for regex in DOC_REGEX:
+            m = regex.match(line)
+            if not m:
+                continue
+            if m.group('param') != param_name:
+                continue
+            return m.group('doc') or ""

@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls import hookimpl
+from pyls import hookimpl, _utils
 
 log = logging.getLogger(__name__)
 
@@ -17,16 +17,4 @@ def pyls_hover(document, position):
         # :(
         return {'contents': ''}
 
-    # Maybe the docstring could be huuuuuuuuuuge...
-    return {'contents': _format_docstring(definitions[0].docstring()) or ""}
-
-
-def _format_docstring(contents):
-    """Python doc strings come in a number of formats, but LSP wants markdown.
-
-    Until we can find a fast enough way of discovering and parsing each format,
-    we can do a little better by at least preserving indentation.
-    """
-    contents = contents.replace('\t', '\u00A0' * 4)
-    contents = contents.replace('  ', '\u00A0' * 2)
-    return contents
+    return {'contents': _utils.format_docstring(definitions[0].docstring()) or ""}
