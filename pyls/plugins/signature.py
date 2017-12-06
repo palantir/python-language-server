@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls import hookimpl
+from pyls import hookimpl, _utils
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ def pyls_signature_help(document, position):
     s = signatures[0]
     sig = {
         'label': s.docstring().splitlines()[0],
-        'documentation': s.docstring(raw=True)
+        'documentation': _utils.format_docstring(s.docstring(raw=True))
     }
 
     # If there are params, add those

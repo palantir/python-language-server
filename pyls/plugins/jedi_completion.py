@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 from pyls.lsp import CompletionItemKind
-from pyls import hookimpl
+from pyls import hookimpl, _utils
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ def pyls_completions(document, position):
         'label': _label(d),
         'kind': _kind(d),
         'detail': _detail(d),
-        'documentation': d.docstring(),
+        'documentation': _utils.format_docstring(d.docstring()),
         'sortText': _sort_text(d),
         'insertText': d.name
     } for d in definitions]
