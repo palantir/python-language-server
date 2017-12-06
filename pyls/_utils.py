@@ -124,4 +124,5 @@ def format_docstring(contents):
     """
     contents = contents.replace('\t', '\u00A0' * 4)
     contents = contents.replace('  ', '\u00A0' * 2)
+    contents = contents.replace('*', '\\*')
     return contents
