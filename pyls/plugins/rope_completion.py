@@ -41,6 +41,8 @@ def pyls_completions(document, position):
             'sortText': _sort_text(d)})
     definitions = new_definitions
     log.debug('Rope finished')
+    if len(definitions) == 0:
+        return None
     return definitions
 
 
