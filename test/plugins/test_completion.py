@@ -46,7 +46,7 @@ def test_rope_completion():
     com_position = {'line': 1, 'character': 15}
     rope = Project(LOCATION)
     rope.prefs.set('extension_modules', get_preferred_submodules())
-    doc = Document(DOC_URI, DOC, rope=rope)
+    doc = Document(DOC_URI, DOC, rope_provider=lambda: rope)
     items = pyls_rope_completions(doc, com_position)
 
     assert len(items) > 0

@@ -80,13 +80,16 @@ class Workspace(object):
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
         self._lang_server = lang_server
-
-        # Whilst incubating, keep private
-        self.__rope = Project(self._root_path)
-        self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+        # Initialize to None so we can lazily construct
+        self.__rope = None
 
     @property
     def _rope(self):
+        if not self.__rope:
+            # Whilst incubating, keep private
+            self.__rope = Project(self._root_path)
+            self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+
         # TODO: we could keep track of dirty files and validate only those
         self.__rope.validate()
         return self.__rope
@@ -112,7 +115,10 @@ class Workspace(object):
     def put_document(self, doc_uri, content, version=None):
         path = uris.to_fs_path(doc_uri)
         self._docs[doc_uri] = Document(
-            doc_uri, content, sys_path=self.syspath_for_path(path), version=version, rope=self._rope
+            doc_uri, content,
+            sys_path=self.syspath_for_path(path),
+            version=version,
+            rope_provider=lambda: self._rope
         )
 
     def rm_document(self, doc_uri):
@@ -156,7 +162,7 @@ class Workspace(object):
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, sys_path=None, rope=None):
+    def __init__(self, uri, source=None, version=None, local=True, sys_path=None, rope_provider=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -165,14 +171,16 @@ class Document(object):
         self._local = local
         self._source = source
         self._sys_path = sys_path or sys.path
-        self._rope_project = rope
+        self._rope_project_provider = rope_provider
 
     def __str__(self):
         return str(self.uri)
 
     @property
     def _rope(self):
-        return libutils.path_to_resource(self._rope_project, self.path)
+        if not self._rope_project_provider:
+            raise ValueError("Cannot use rope without passing a rope project provider")
+        return libutils.path_to_resource(self._rope_project_provider(), self.path)
 
     @property
     def lines(self):

@@ -23,7 +23,7 @@ def pyls_completions(document, position):
 
     offset = document.offset_at_position(position)
     definitions = code_assist(
-        document._rope_project, document.source,
+        document._rope_project_provider(), document.source,
         offset, document._rope, maxfixes=3)
 
     definitions = sorted_proposals(definitions)
