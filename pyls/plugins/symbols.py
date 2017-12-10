@@ -39,7 +39,7 @@ def _container(definition):
         # as children of the module.
         if parent.parent():
             return parent.name
-    except:
+    except:  # pylint: disable=bare-except
         pass
 
 

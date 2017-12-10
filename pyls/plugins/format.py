@@ -14,7 +14,7 @@ def pyls_format_document(document):
 
 
 @hookimpl
-def pyls_format_range(document, range):
+def pyls_format_range(document, range):  # pylint: disable=redefined-builtin
     # First we 'round' the range up/down to full lines only
     range['start']['character'] = 0
     range['end']['line'] += 1
@@ -32,25 +32,25 @@ def pyls_format_range(document, range):
 
 
 def _format(document, lines=None):
-        new_source, changed = FormatCode(
-            document.source,
-            lines=lines,
-            filename=document.filename,
-            style_config=file_resources.GetDefaultStyleForDir(
-                os.path.dirname(document.filename)
-            )
+    new_source, changed = FormatCode(
+        document.source,
+        lines=lines,
+        filename=document.filename,
+        style_config=file_resources.GetDefaultStyleForDir(
+            os.path.dirname(document.filename)
         )
+    )
 
-        if not changed:
-            return []
+    if not changed:
+        return []
 
-        # I'm too lazy at the moment to parse diffs into TextEdit items
-        # So let's just return the entire file...
-        return [{
-            'range': {
-                'start': {'line': 0, 'character': 0},
-                # End char 0 of the line after our document
-                'end': {'line': len(document.lines), 'character': 0}
-            },
-            'newText': new_source
-        }]
+    # I'm too lazy at the moment to parse diffs into TextEdit items
+    # So let's just return the entire file...
+    return [{
+        'range': {
+            'start': {'line': 0, 'character': 0},
+            # End char 0 of the line after our document
+            'end': {'line': len(document.lines), 'character': 0}
+        },
+        'newText': new_source
+    }]

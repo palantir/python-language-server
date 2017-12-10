@@ -15,6 +15,7 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
 
     def setup(self):
         super(_StreamHandlerWrapper, self).setup()
+        # pylint: disable=no-member
         self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
 
     def handle(self):
@@ -62,7 +63,7 @@ class MethodJSONRPCServer(JSONRPCServer):
         def wrapped(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except:  # pylint: disable=bare-except
+            except:
                 log.exception("CAUGHT")
                 raise
         return wrapped
@@ -77,7 +78,7 @@ class LanguageServer(MethodJSONRPCServer):
     root_uri = None
     init_opts = None
 
-    def capabilities(self):
+    def capabilities(self):  # pylint: disable=no-self-use
         return {}
 
     def initialize(self, root_uri, init_opts, process_id):

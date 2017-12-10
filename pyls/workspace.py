@@ -22,19 +22,19 @@ RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 def get_submodules(mod):
     """Get all submodules of a given module"""
-    def catch_exceptions(module):
+    def catch_exceptions(_module):
         pass
+
     try:
         m = __import__(mod)
         submodules = [mod]
-        submods = pkgutil.walk_packages(m.__path__, m.__name__ + '.',
-                                        catch_exceptions)
+        submods = pkgutil.walk_packages(m.__path__, m.__name__ + '.', catch_exceptions)
         for sm in submods:
             sm_name = sm[1]
             submodules.append(sm_name)
     except ImportError:
         return []
-    except Exception:
+    except:  # pylint: disable=bare-except
         return [mod]
     return submodules
 

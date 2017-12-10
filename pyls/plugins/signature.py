@@ -5,9 +5,9 @@ from pyls import hookimpl, _utils
 
 log = logging.getLogger(__name__)
 
-SPHINX = re.compile("\s*:param\s+(?P<param>\w+):\s*(?P<doc>[^\\n]+)")
-EPYDOC = re.compile("\s*@param\s+(?P<param>\w+):\s*(?P<doc>[^\\n]+)")
-GOOGLE = re.compile("\s*(?P<param>\w+).*:\s*(?P<doc>[^\\n]+)")
+SPHINX = re.compile(r"\s*:param\s+(?P<param>\w+):\s*(?P<doc>[^\n]+)")
+EPYDOC = re.compile(r"\s*@param\s+(?P<param>\w+):\s*(?P<doc>[^\n]+)")
+GOOGLE = re.compile(r"\s*(?P<param>\w+).*:\s*(?P<doc>[^\n]+)")
 
 DOC_REGEX = [SPHINX, EPYDOC, GOOGLE]
 
@@ -16,7 +16,7 @@ DOC_REGEX = [SPHINX, EPYDOC, GOOGLE]
 def pyls_signature_help(document, position):
     signatures = document.jedi_script(position).call_signatures()
 
-    if len(signatures) == 0:
+    if not signatures:
         return {'signatures': []}
 
     s = signatures[0]
@@ -26,7 +26,7 @@ def pyls_signature_help(document, position):
     }
 
     # If there are params, add those
-    if len(s.params) > 0:
+    if s.params:
         sig['parameters'] = [{
             'label': p.name,
             'documentation': _param_docs(s.docstring(), p.name)

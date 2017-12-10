@@ -13,6 +13,7 @@ LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
 class PythonLanguageServer(LanguageServer):
+    # pylint: disable=too-many-public-methods,redefined-builtin
 
     workspace = None
     config = None
@@ -148,14 +149,14 @@ class PythonLanguageServer(LanguageServer):
     def m_text_document__document_symbol(self, textDocument=None, **_kwargs):
         return self.document_symbols(textDocument['uri'])
 
-    def m_text_document__formatting(self, textDocument=None, options=None, **_kwargs):
+    def m_text_document__formatting(self, textDocument=None, _options=None, **_kwargs):
         # For now we're ignoring formatting options.
         return self.format_document(textDocument['uri'])
 
     def m_text_document__rename(self, textDocument=None, position=None, newName=None, **_kwargs):
         return self.rename(textDocument['uri'], position, newName)
 
-    def m_text_document__range_formatting(self, textDocument=None, range=None, options=None, **_kwargs):
+    def m_text_document__range_formatting(self, textDocument=None, range=None, _options=None, **_kwargs):
         # Again, we'll ignore formatting options for now.
         return self.format_range(textDocument['uri'], range)
 

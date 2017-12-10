@@ -80,12 +80,14 @@ def _binary_stdio():
     PY3K = sys.version_info >= (3, 0)
 
     if PY3K:
+        # pylint: disable=no-member
         stdin, stdout = sys.stdin.buffer, sys.stdout.buffer
     else:
         # Python 2 on Windows opens sys.stdin in text mode, and
         # binary data that read from it becomes corrupted on \r\n
         if sys.platform == "win32":
             # set sys.stdin to binary mode
+            # pylint: disable=no-member,import-error
             import os
             import msvcrt
             msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)

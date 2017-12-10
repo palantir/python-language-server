@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import pycodestyle
-from .source import ConfigSource
 from pyls._utils import find_parents
+from .source import ConfigSource
 
 
 CONFIG_KEY = 'pycodestyle'
