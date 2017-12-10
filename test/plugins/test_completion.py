@@ -40,6 +40,9 @@ def test_jedi_completion():
     assert len(items) > 0
     assert items[0]['label'] == 'isabs(s)'
 
+    # Test we don't throw with big character
+    pyls_jedi_completions(doc, {'line': 1, 'character': 1000})
+
 
 def test_rope_completion():
     # Over 'i' in os.path.isabs(...)
