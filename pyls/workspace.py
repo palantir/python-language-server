@@ -264,5 +264,9 @@ class Document(object):
         }
         if position:
             kwargs['line'] = position['line'] + 1
-            kwargs['column'] = position['character']
+
+            # Normalise the position as per the LSP that accepts character positions > line length
+            # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
+            line_len = len(self.lines[position['line']])
+            kwargs['column'] = min(position['character'], line_len - 1)
         return jedi.Script(**kwargs)
