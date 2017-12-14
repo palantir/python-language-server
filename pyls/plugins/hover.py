@@ -13,7 +13,7 @@ def pyls_hover(document, position):
     # Find an exact match for a completion
     definitions = [d for d in definitions if d.name == word]
 
-    if len(definitions) == 0:
+    if not definitions:
         # :(
         return {'contents': ''}
 

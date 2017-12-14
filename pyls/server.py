@@ -56,7 +56,7 @@ class JSONRPCServer(object):
                         on_result(msg['result'])
                     elif 'error' in msg and on_error:
                         on_error(msg['error'])
-            except Exception:
+            except:  # pylint: disable=bare-except
                 log.exception("Language server exiting due to uncaught exception")
                 break
 
