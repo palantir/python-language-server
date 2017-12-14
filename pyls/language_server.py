@@ -44,7 +44,7 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
 
 def start_io_lang_server(rfile, wfile, handler_class):
     if not issubclass(handler_class, JSONRPCServer):
-        raise ValueError("Handler class must be a subclass of LanguagJSONRPCServereServer")
+        raise ValueError("Handler class must be a subclass of JSONRPCServer")
     log.info("Starting %s IO language server", handler_class.__name__)
     server = handler_class(rfile, wfile)
     server.handle()
