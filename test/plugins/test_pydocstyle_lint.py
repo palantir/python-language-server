@@ -24,3 +24,10 @@ def test_pydocstyle():
     unused_import = [d for d in diags if d['message'] == msg][0]
 
     assert unused_import['range']['start'] == {'line': 0, 'character': 0}
+
+
+def test_pydocstyle_invalid_source():
+    doc = Document(DOC_URI, "bad syntax")
+    diags = pydocstyle_lint.pyls_lint(doc)
+    # We're unable to parse the file, so can't get any pydocstyle diagnostics
+    assert not diags

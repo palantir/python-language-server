@@ -29,22 +29,35 @@ def pyls_lint(document):
             document.source, filename, ignore_decorators=ignore_decorators
         )
 
-        for err in errors:
-            if err.code not in checked_codes:
-                continue
-
-            lineno = err.definition.start - 1
-            line = document.lines[lineno]
-            character = len(line) - len(line.lstrip())
-            diags.append({
-                'source': 'pydocstyle',
-                'code': err.code,
-                'message': err.message,
-                'severity': lsp.DiagnosticSeverity.Warning,
-                'range': {
-                    'start': {'line': lineno, 'character': character},
-                    'end': {'line': lineno, 'character': len(document.lines[lineno])}
-                }
-            })
+        try:
+            for error in errors:
+                if error.code not in checked_codes:
+                    continue
+                diags.append(_parse_diagnostic(document, error))
+        except pydocstyle.parser.ParseError as e:
+            # In the case we cannot parse the Python file, just continue
+            pass
 
     return diags
+
+
+def _parse_diagnostic(document, error):
+    lineno = error.definition.start - 1
+    line = document.lines[lineno]
+    character = len(line) - len(line.lstrip())
+    return {
+        'source': 'pydocstyle',
+        'code': error.code,
+        'message': error.message,
+        'severity': lsp.DiagnosticSeverity.Warning,
+        'range': {
+            'start': {
+                'line': lineno,
+                'character': character
+            },
+            'end': {
+                'line': lineno,
+                'character': len(document.lines[lineno])
+            }
+        }
+    }
