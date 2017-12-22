@@ -19,7 +19,7 @@ def pyls_lint(config, document):
         tree = compile(document.source, document.path, "exec", ast.PyCF_ONLY_AST)
     except SyntaxError:
         # We'll let the other linters point this one out
-        return
+        return None
 
     visitor = mccabe.PathGraphingAstVisitor()
     visitor.preorder(tree, visitor)

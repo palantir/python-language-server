@@ -40,7 +40,9 @@ def _container(definition):
         if parent.parent():
             return parent.name
     except:  # pylint: disable=bare-except
-        pass
+        return None
+
+    return None
 
 
 def _range(definition):

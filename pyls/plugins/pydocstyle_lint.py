@@ -34,7 +34,7 @@ def pyls_lint(document):
                 if error.code not in checked_codes:
                     continue
                 diags.append(_parse_diagnostic(document, error))
-        except pydocstyle.parser.ParseError as e:
+        except pydocstyle.parser.ParseError:
             # In the case we cannot parse the Python file, just continue
             pass
 
@@ -44,7 +44,7 @@ def pyls_lint(document):
 def _parse_diagnostic(document, error):
     log.info("Got error: %s", error)
     lineno = error.definition.start - 1
-    line = (document.lines and document.lines[0]) or ""
+    line = document.lines[0] if document.lines else ""
 
     start_character = len(line) - len(line.lstrip())
     end_character = len(line)

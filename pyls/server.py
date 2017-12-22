@@ -123,3 +123,5 @@ def _content_length(line):
             return int(value)
         except ValueError:
             raise ValueError("Invalid Content-Length header: {}".format(value))
+
+    return None

@@ -75,7 +75,7 @@ def _get_opt(config, key, option, opt_type):
         if opt_type == list:
             return _parse_list_opt(config.get(key, opt_key))
 
-        raise ValueError("Unknown option type: %s", opt_type)
+        raise ValueError("Unknown option type: %s" % opt_type)
 
 
 def _parse_list_opt(string):
