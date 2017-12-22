@@ -42,9 +42,13 @@ def pyls_lint(document):
 
 
 def _parse_diagnostic(document, error):
+    log.info("Got error: %s", error)
     lineno = error.definition.start - 1
-    line = document.lines[lineno]
-    character = len(line) - len(line.lstrip())
+    line = (document.lines and document.lines[0]) or ""
+
+    start_character = len(line) - len(line.lstrip())
+    end_character = len(line)
+
     return {
         'source': 'pydocstyle',
         'code': error.code,
@@ -53,11 +57,11 @@ def _parse_diagnostic(document, error):
         'range': {
             'start': {
                 'line': lineno,
-                'character': character
+                'character': start_character
             },
             'end': {
                 'line': lineno,
-                'character': len(document.lines[lineno])
+                'character': end_character
             }
         }
     }

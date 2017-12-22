@@ -1,5 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyls import uris
+from pyls import lsp, uris
 from pyls.workspace import Document
 from pyls.plugins import pydocstyle_lint
 
@@ -20,10 +20,23 @@ def test_pydocstyle():
     assert all([d['source'] == 'pydocstyle' for d in diags])
 
     # One we're expecting is:
-    msg = 'D100: Missing docstring in public module'
-    unused_import = [d for d in diags if d['message'] == msg][0]
+    assert diags[0] == {
+        'code': 'D100',
+        'message': 'D100: Missing docstring in public module',
+        'severity': lsp.DiagnosticSeverity.Warning,
+        'range': {
+            'start': {'line': 0, 'character': 0},
+            'end': {'line': 0, 'character': 11},
+        },
+        'source': 'pydocstyle'
+    }
 
-    assert unused_import['range']['start'] == {'line': 0, 'character': 0}
+
+def test_pydocstyle_empty_source():
+    doc = Document(DOC_URI, "")
+    diags = pydocstyle_lint.pyls_lint(doc)
+    assert diags[0]['message'] == 'D100: Missing docstring in public module'
+    assert len(diags) == 1
 
 
 def test_pydocstyle_invalid_source():
