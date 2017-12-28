@@ -89,33 +89,6 @@ def merge_dicts(dict_a, dict_b):
     return dict(_merge_dicts_(dict_a, dict_b))
 
 
-def race_hooks(hook_caller, pool, **kwargs):
-    """Given a pluggy hook spec, execute impls in parallel returning the first non-None result.
-
-    Note this does not support a lot of pluggy functionality, e.g. hook wrappers.
-    """
-    impls = hook_caller._nonwrappers + hook_caller._wrappers
-    log.debug("Racing hook impls for hook %s: %s", hook_caller, impls)
-
-    if not impls:
-        return None
-
-    def _apply(impl):
-        try:
-            return impl, impl.function(**kwargs)
-        except Exception:
-            log.exception("Failed to run hook %s", impl.plugin_name)
-            raise
-
-    # imap unordered gives us an iterator over the items in the order they finish.
-    # We have to be careful to set chunksize to 1 to ensure hooks each get their own thread.
-    # Unfortunately, there's no way to interrupt these threads, so we just have to leave them be.
-    for impl, result in pool.imap_unordered(_apply, impls, chunksize=1):
-        if result is not None:
-            log.debug("Hook from plugin %s returned: %s", impl.plugin_name, result)
-            return result
-
-
 def format_docstring(contents):
     """Python doc strings come in a number of formats, but LSP wants markdown.
 

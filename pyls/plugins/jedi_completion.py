@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_completions(document, position):
+def pyls_jedi_completions(document, position):
     log.debug('Launching Jedi')
     definitions = document.jedi_script(position).completions()
     definitions = [{
