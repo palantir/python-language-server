@@ -59,11 +59,7 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_code_lens', doc_uri))
 
     def completions(self, doc_uri, position):
-        if self.config.plugin_settings('completion').get('enabled', True) is False:
-            return {'isIncomplete': False, 'items': []}
-
-        provider = self.config.plugin_settings('completion').get('provider', 'jedi')
-        completions = self._hook('pyls_{}_completions'.format(provider), doc_uri, position=position)
+        completions = self._hook('pyls_completions', doc_uri, position=position)
         return {
             'isIncomplete': False,
             'items': flatten(completions)

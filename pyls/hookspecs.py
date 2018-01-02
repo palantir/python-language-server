@@ -23,12 +23,7 @@ def pyls_commands(config, workspace):
 
 
 @hookspec
-def pyls_jedi_completions(config, workspace, document, position):
-    pass
-
-
-@hookspec
-def pyls_rope_completions(config, workspace, document, position):
+def pyls_completions(config, workspace, document, position):
     pass
 
 
