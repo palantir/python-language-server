@@ -21,7 +21,7 @@ def pyls_signature_help(document, position):
 
     s = signatures[0]
     sig = {
-        'label': s.docstring().splitlines()[0],
+        'label': _get_signature_label(s),
         'documentation': _utils.format_docstring(s.docstring(raw=True))
     }
 
@@ -51,3 +51,15 @@ def _param_docs(docstring, param_name):
             if m.group('param') != param_name:
                 continue
             return m.group('doc') or ""
+
+
+def _get_signature_label(signature):
+    if signature.type == "class" or signature.type == "function":
+        param_prefix_len = 6  # len("param ")
+        params = [
+            param.description[param_prefix_len:] for param in signature.params
+        ]
+        label = signature.name + "(" + ", ".join(params) + ")"
+        return label
+
+    return signature.docstring().splitlines()[0]
