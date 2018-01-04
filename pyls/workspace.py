@@ -267,6 +267,6 @@ class Document(object):
 
             # Normalise the position as per the LSP that accepts character positions > line length
             # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
-            line_len = len(self.lines[position['line']])
-            kwargs['column'] = min(position['character'], line_len - 1)
+            max_column = len(self.lines[position['line']]) - 1 if len(self.lines) > position['line'] else 0
+            kwargs['column'] = min(position['character'], max_column)
         return jedi.Script(**kwargs)
