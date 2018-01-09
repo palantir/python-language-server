@@ -27,6 +27,7 @@ def pyls_lint(config, document):
     )
     c.check_all()
     diagnostics = c.report.diagnostics
+
     return diagnostics
 
 
