@@ -112,7 +112,8 @@ class Workspace(object):
     def put_document(self, doc_uri, content, version=None):
         path = uris.to_fs_path(doc_uri)
         self._docs[doc_uri] = Document(
-            doc_uri, content, sys_path=self.syspath_for_path(path), version=version, rope=self._rope
+            doc_uri, content,
+            extra_sys_path=self.source_roots(path), version=version, rope=self._rope
         )
 
     def rm_document(self, doc_uri):
@@ -136,27 +137,15 @@ class Workspace(object):
         params = {'type': msg_type, 'message': message}
         self._lang_server.notify(self.M_SHOW_MESSAGE, params)
 
-    def syspath_for_path(self, path):
-        """Construct a sensible sys path to use for the given file path.
-
-        Since the workspace root may not be the root of the Python project we instead
-        append the closest parent directory containing a setup.py file.
-        """
-        files = _utils.find_parents(self._root_path, path, ['setup.py']) or []
-        path = [os.path.dirname(setup_py) for setup_py in files]
-
-        # Check to see if we're in a virtualenv
-        if 'VIRTUAL_ENV' in os.environ:
-            log.info("Using virtualenv %s", os.environ['VIRTUAL_ENV'])
-            path.extend(jedi.evaluate.sys_path.get_venv_path(os.environ['VIRTUAL_ENV']))
-        else:
-            path.extend(sys.path)
-        return path
+    def source_roots(self, document_path):
+        """Return the source roots for the given document."""
+        files = _utils.find_parents(self._root_path, document_path, ['setup.py']) or []
+        return [os.path.dirname(setup_py) for setup_py in files]
 
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, sys_path=None, rope=None):
+    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -164,7 +153,7 @@ class Document(object):
 
         self._local = local
         self._source = source
-        self._sys_path = sys_path or sys.path
+        self._extra_sys_path = extra_sys_path
         self._rope_project = rope
 
     def __str__(self):
@@ -260,7 +249,7 @@ class Document(object):
         kwargs = {
             'source': self.source,
             'path': self.path,
-            'sys_path': self._sys_path
+            'sys_path': self.sys_path()
         }
         if position:
             kwargs['line'] = position['line'] + 1
@@ -270,3 +259,16 @@ class Document(object):
             line_len = len(self.lines[position['line']])
             kwargs['column'] = min(position['character'], line_len - 1)
         return jedi.Script(**kwargs)
+
+    def sys_path(self):
+        # Copy our extra sys path
+        path = list(self._extra_sys_path or [])
+
+        # Check to see if we're in a virtualenv
+        if 'VIRTUAL_ENV' in os.environ:
+            log.info("Using virtualenv %s", os.environ['VIRTUAL_ENV'])
+            path.extend(jedi.evaluate.sys_path.get_venv_path(os.environ['VIRTUAL_ENV']))
+        else:
+            path.extend(sys.path)
+
+        return path

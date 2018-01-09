@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import sys
 import pytest
 from pyls import uris
 from pyls.workspace import Document
@@ -46,6 +47,14 @@ def test_word_at_position(doc):
     assert doc.word_at_position({'line': 2, 'character': 0}) == 'def'
     # Past end of file
     assert doc.word_at_position({'line': 4, 'character': 0}) == ''
+
+
+def test_document_sys_path(doc):
+    """Test the document's sys path is updated."""
+    assert 'foo' not in doc.sys_path()
+    sys.path.append('foo')
+    # Check that the new sys path is included in the doc's sys path
+    assert 'foo' in doc.sys_path()
 
 
 def test_document_empty_edit():
