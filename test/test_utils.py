@@ -49,3 +49,9 @@ def test_merge_dicts():
         {'a': True, 'b': {'x': 123, 'y': {'hello': 'world'}}},
         {'a': False, 'b': {'y': [], 'z': 987}}
     ) == {'a': False, 'b': {'x': 123, 'y': [], 'z': 987}}
+
+
+def test_clip_column():
+    assert _utils.clip_column(5, ['123'], 0) == 2
+    assert _utils.clip_column(2, ['\n', '123'], 1) == 2
+    assert _utils.clip_column(0, [], 0) == 0
