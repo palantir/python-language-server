@@ -12,12 +12,12 @@ def pyls_lint(config, document):
     log.debug("Got pycodestyle settings: %s", settings)
 
     opts = {
-        'exclude': ','.join(settings.get('exclude', [])),
-        'filename': ','.join(settings.get('filename', [])),
+        'exclude': ','.join(settings.get('exclude') or []),
+        'filename': ','.join(settings.get('filename') or []),
         'hang_closing': settings.get('hangClosing'),
-        'ignore': ','.join(settings.get('ignore', [])),
+        'ignore': ','.join(settings.get('ignore') or []),
         'max_line_length': settings.get('maxLineLength'),
-        'select': ','.join(settings.get('select', [])),
+        'select': ','.join(settings.get('select') or []),
     }
 
     styleguide = pycodestyle.StyleGuide({k: v for k, v in opts.items() if v is not None})
