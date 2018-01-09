@@ -153,7 +153,7 @@ class Document(object):
 
         self._local = local
         self._source = source
-        self._extra_sys_path = extra_sys_path
+        self._extra_sys_path = extra_sys_path or []
         self._rope_project = rope
 
     def __str__(self):
@@ -262,7 +262,7 @@ class Document(object):
 
     def sys_path(self):
         # Copy our extra sys path
-        path = list(self._extra_sys_path or [])
+        path = list(self._extra_sys_path)
 
         # Check to see if we're in a virtualenv
         if 'VIRTUAL_ENV' in os.environ:
