@@ -126,3 +126,10 @@ def format_docstring(contents):
     contents = contents.replace('  ', u'\u00A0' * 2)
     contents = contents.replace('*', '\\*')
     return contents
+
+
+def clip_column(column, lines, line_number):
+    # Normalise the position as per the LSP that accepts character positions > line length
+    # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
+    max_column = len(lines[line_number]) - 1 if len(lines) > line_number else 0
+    return min(column, max_column)
