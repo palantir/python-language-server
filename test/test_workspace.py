@@ -46,4 +46,4 @@ def test_non_root_project(pyls):
     test_uri = uris.from_fs_path(os.path.join(project_root, 'hello/test.py'))
     pyls.workspace.put_document(test_uri, 'assert True')
     test_doc = pyls.workspace.get_document(test_uri)
-    assert project_root in pyls.workspace.syspath_for_path(test_doc.path)
+    assert project_root in test_doc.sys_path()
