@@ -86,4 +86,9 @@ def test_pycodestyle_config(workspace):
     # And make sure we only get one warning
     diags = pycodestyle_lint.pyls_lint(config, doc)
     assert not [d for d in diags if d['code'] == 'W191']
-    assert [d for d in diags if d['code'] == 'W391']
+
+    # Ignore both warnings
+    config.update({'plugins': {'pycodestyle': {'ignore': ['W191', 'W391']}}})
+    # And make sure we get neither
+    assert not [d for d in diags if d['code'] == 'W191']
+    assert not [d for d in diags if d['code'] == 'W391']
