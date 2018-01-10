@@ -30,16 +30,10 @@
                     },
                     "uniqueItems": true
                 },
-                "pyls.plugins.completion.enabled": {
+                "pyls.plugins.jedi_completion.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable or disable completions."
-                },
-                "pyls.plugins.completion.provider": {
-                    "type": "string",
-                    "default": "jedi",
-                    "enum": ["jedi", "rope"],
-                    "description": "Select a completion provider."
+                    "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.jedi_definition.enabled": {
                     "type": "boolean",
@@ -138,6 +132,11 @@
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.pyflakes.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.rope_completion.enabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable or disable the plugin."
