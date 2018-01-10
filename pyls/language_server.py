@@ -1,8 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import re
 import socketserver
-from . import uris
+from . import dispatcher, uris
 from .server import JSONRPCServer
 
 log = logging.getLogger(__name__)
@@ -50,26 +49,7 @@ def start_io_lang_server(rfile, wfile, handler_class):
     server.handle()
 
 
-class MethodJSONRPCServer(JSONRPCServer):
-    """JSONRPCServer that calls methods on itself with params."""
-
-    def __getitem__(self, item):
-        """The jsonrpc dispatcher uses getitem to retrieve the RPC method implementation."""
-        method_name = "m_" + _method_to_string(item)
-        if not hasattr(self, method_name):
-            raise KeyError("Cannot find method %s" % method_name)
-        func = getattr(self, method_name)
-
-        def wrapped(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except:
-                log.exception("CAUGHT")
-                raise
-        return wrapped
-
-
-class LanguageServer(MethodJSONRPCServer):
+class LanguageServer(dispatcher.JSONRPCMethodDispatcher, JSONRPCServer):
     """ Implementation of the Microsoft VSCode Language Server Protocol
     https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
     """
@@ -113,18 +93,3 @@ class LanguageServer(MethodJSONRPCServer):
 
     def m_exit(self, **_kwargs):
         self.exit()
-
-
-_RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
-_RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
-
-
-def _method_to_string(method):
-    return _camel_to_underscore(
-        method.replace("/", "__").replace("$", "")
-    )
-
-
-def _camel_to_underscore(string):
-    s1 = _RE_FIRST_CAP.sub(r'\1_\2', string)
-    return _RE_ALL_CAP.sub(r'\1_\2', s1).lower()
