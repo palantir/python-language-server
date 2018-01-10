@@ -61,7 +61,7 @@ setup(
             'pyls = pyls.__main__:main',
         ],
         'pyls': [
-            'completion = pyls.plugins.completion',
+            'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',
             'jedi_references = pyls.plugins.references',
@@ -71,6 +71,7 @@ setup(
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'rope_completion = pyls.plugins.rope_completion',
             'rope_rename = pyls.plugins.rope_rename',
             'yapf = pyls.plugins.format',
         ]

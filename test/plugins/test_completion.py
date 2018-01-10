@@ -4,8 +4,8 @@ from rope.base.project import Project
 
 from pyls import uris
 from pyls.workspace import Document, get_preferred_submodules
-from pyls.plugins.completion.jedi_completion import pyls_jedi_completions
-from pyls.plugins.completion.rope_completion import pyls_rope_completions
+from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
+from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
 LOCATION = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__))

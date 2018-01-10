@@ -1,53 +1,41 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from rope.contrib.codeassist import code_assist, sorted_proposals
-
-from pyls import lsp
-
+from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
 
 
-def pyls_rope_completions(document, position):
-    log.debug('Launching Rope')
+@hookimpl
+def pyls_completions(document, position):
+    definitions = document.jedi_script(position).completions()
+    return [{
+        'label': _label(d),
+        'kind': _kind(d),
+        'detail': _detail(d),
+        'documentation': _utils.format_docstring(d.docstring()),
+        'sortText': _sort_text(d),
+        'insertText': d.name
+    } for d in definitions] or None
 
-    # Rope is a bit rubbish at completing module imports, so we'll return None
-    word = document.word_at_position({
-        # The -1 should really be trying to look at the previous word, but that might be quite expensive
-        # So we only skip import completions when the cursor is one space after `import`
-        'line': position['line'], 'character': max(position['character'] - 1, 0),
-    })
-    if word == 'import':
-        return None
 
-    offset = document.offset_at_position(position)
-    definitions = code_assist(
-        document._rope_project, document.source,
-        offset, document._rope, maxfixes=3)
+def _label(definition):
+    if definition.type in ('function', 'method'):
+        params = ", ".join(param.name for param in definition.params)
+        return "{}({})".format(definition.name, params)
 
-    definitions = sorted_proposals(definitions)
-    new_definitions = []
-    for d in definitions:
-        try:
-            doc = d.get_doc()
-        except AttributeError:
-            doc = None
-        new_definitions.append({
-            'label': d.name,
-            'kind': _kind(d),
-            'detail': '{0} {1}'.format(d.scope or "", d.name),
-            'documentation': doc or "",
-            'sortText': _sort_text(d)})
-    definitions = new_definitions
-    log.debug('Rope finished')
-    return definitions or None
+    return definition.name
+
+
+def _detail(definition):
+    return "builtin" if definition.in_builtin_module() else definition.parent().full_name or ""
 
 
 def _sort_text(definition):
     """ Ensure builtins appear at the bottom.
     Description is of format <type>: <module>.<item>
     """
-    if definition.scope == 'builtin':
+    if definition.in_builtin_module():
+        # It's a builtin, put it last
         return 'z' + definition.name
 
     if definition.name.startswith("_"):
