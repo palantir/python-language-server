@@ -44,7 +44,7 @@ class PythonLanguageServer(LanguageServer):
         return self._hook_caller(hook_name)(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def capabilities(self):
-        return {
+        server_capabilities = {
             'codeActionProvider': True,
             'codeLensProvider': {
                 'resolveProvider': False,  # We may need to make this configurable
@@ -66,8 +66,11 @@ class PythonLanguageServer(LanguageServer):
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',']
             },
-            'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL
+            'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL,
+            'experimental': merge(self._hook('pyls_experimental_capabilities'))
         }
+        log.info("Server capabilities: %s", server_capabilities)
+        return server_capabilities
 
     def initialize(self, root_uri, init_opts, _process_id):
         self.workspace = Workspace(root_uri, lang_server=self)
@@ -200,3 +203,7 @@ class PythonLanguageServer(LanguageServer):
 
 def flatten(list_of_lists):
     return [item for lst in list_of_lists for item in lst]
+
+
+def merge(list_of_dicts):
+    return {k: v for dictionary in list_of_dicts for k, v in dictionary.items()}

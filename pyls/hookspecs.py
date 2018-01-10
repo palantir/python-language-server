@@ -57,6 +57,11 @@ def pyls_execute_command(config, workspace, command, arguments):
     pass
 
 
+@hookspec
+def pyls_experimental_capabilities(config, workspace):
+    pass
+
+
 @hookspec(firstresult=True)
 def pyls_format_document(config, workspace, document):
     pass
