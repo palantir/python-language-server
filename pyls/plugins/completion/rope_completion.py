@@ -2,14 +2,13 @@
 import logging
 from rope.contrib.codeassist import code_assist, sorted_proposals
 
-from pyls import hookimpl, lsp
+from pyls import lsp
 
 
 log = logging.getLogger(__name__)
 
 
-@hookimpl
-def pyls_completions(document, position):
+def pyls_rope_completions(document, position):
     log.debug('Launching Rope')
 
     # Rope is a bit rubbish at completing module imports, so we'll return None

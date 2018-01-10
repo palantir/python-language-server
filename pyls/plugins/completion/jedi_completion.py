@@ -1,13 +1,12 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 from pyls.lsp import CompletionItemKind
-from pyls import hookimpl, _utils
+from pyls import _utils
 
 log = logging.getLogger(__name__)
 
 
-@hookimpl
-def pyls_completions(document, position):
+def pyls_jedi_completions(document, position):
     log.debug('Launching Jedi')
     definitions = document.jedi_script(position).completions()
     definitions = [{
