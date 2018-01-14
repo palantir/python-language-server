@@ -1,6 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from multiprocessing import dummy as multiprocessing
 from . import lsp, _utils
 from .config import config
 from .language_server import LanguageServer
@@ -8,7 +7,6 @@ from .workspace import Workspace
 
 log = logging.getLogger(__name__)
 
-PLUGGY_RACE_POOL_SIZE = 5
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
@@ -20,8 +18,6 @@ class PythonLanguageServer(LanguageServer):
 
     # Set of method dispatchers to query
     _dispatchers = []
-
-    _pool = multiprocessing.Pool(PLUGGY_RACE_POOL_SIZE)
 
     def __getitem__(self, item):
         """Override the method dispatcher to farm out any unknown messages to our plugins."""
@@ -41,7 +37,8 @@ class PythonLanguageServer(LanguageServer):
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
-        return self._hook_caller(hook_name)(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+        hook = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def capabilities(self):
         server_capabilities = {
@@ -85,14 +82,10 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_code_lens', doc_uri))
 
     def completions(self, doc_uri, position):
-        completions = _utils.race_hooks(
-            self._hook_caller('pyls_completions'), self._pool,
-            document=self.workspace.get_document(doc_uri) if doc_uri else None,
-            position=position
-        )
+        completions = self._hook('pyls_completions', doc_uri, position=position)
         return {
             'isIncomplete': False,
-            'items': completions or []
+            'items': flatten(completions)
         }
 
     def definitions(self, doc_uri, position):

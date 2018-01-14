@@ -1,25 +1,21 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls.lsp import CompletionItemKind
-from pyls import hookimpl, _utils
+from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
 
 
 @hookimpl
 def pyls_completions(document, position):
-    log.debug('Launching Jedi')
     definitions = document.jedi_script(position).completions()
-    definitions = [{
+    return [{
         'label': _label(d),
         'kind': _kind(d),
         'detail': _detail(d),
         'documentation': _utils.format_docstring(d.docstring()),
         'sortText': _sort_text(d),
         'insertText': d.name
-    } for d in definitions]
-    log.debug('Jedi finished')
-    return definitions
+    } for d in definitions] or None
 
 
 def _label(definition):
@@ -53,36 +49,36 @@ def _sort_text(definition):
 def _kind(d):
     """ Return the VSCode type """
     MAP = {
-        'none': CompletionItemKind.Value,
-        'type': CompletionItemKind.Class,
-        'tuple': CompletionItemKind.Class,
-        'dict': CompletionItemKind.Class,
-        'dictionary': CompletionItemKind.Class,
-        'function': CompletionItemKind.Function,
-        'lambda': CompletionItemKind.Function,
-        'generator': CompletionItemKind.Function,
-        'class': CompletionItemKind.Class,
-        'instance': CompletionItemKind.Reference,
-        'method': CompletionItemKind.Method,
-        'builtin': CompletionItemKind.Class,
-        'builtinfunction': CompletionItemKind.Function,
-        'module': CompletionItemKind.Module,
-        'file': CompletionItemKind.File,
-        'xrange': CompletionItemKind.Class,
-        'slice': CompletionItemKind.Class,
-        'traceback': CompletionItemKind.Class,
-        'frame': CompletionItemKind.Class,
-        'buffer': CompletionItemKind.Class,
-        'dictproxy': CompletionItemKind.Class,
-        'funcdef': CompletionItemKind.Function,
-        'property': CompletionItemKind.Property,
-        'import': CompletionItemKind.Module,
-        'keyword': CompletionItemKind.Keyword,
-        'constant': CompletionItemKind.Variable,
-        'variable': CompletionItemKind.Variable,
-        'value': CompletionItemKind.Value,
-        'param': CompletionItemKind.Variable,
-        'statement': CompletionItemKind.Keyword,
+        'none': lsp.CompletionItemKind.Value,
+        'type': lsp.CompletionItemKind.Class,
+        'tuple': lsp.CompletionItemKind.Class,
+        'dict': lsp.CompletionItemKind.Class,
+        'dictionary': lsp.CompletionItemKind.Class,
+        'function': lsp.CompletionItemKind.Function,
+        'lambda': lsp.CompletionItemKind.Function,
+        'generator': lsp.CompletionItemKind.Function,
+        'class': lsp.CompletionItemKind.Class,
+        'instance': lsp.CompletionItemKind.Reference,
+        'method': lsp.CompletionItemKind.Method,
+        'builtin': lsp.CompletionItemKind.Class,
+        'builtinfunction': lsp.CompletionItemKind.Function,
+        'module': lsp.CompletionItemKind.Module,
+        'file': lsp.CompletionItemKind.File,
+        'xrange': lsp.CompletionItemKind.Class,
+        'slice': lsp.CompletionItemKind.Class,
+        'traceback': lsp.CompletionItemKind.Class,
+        'frame': lsp.CompletionItemKind.Class,
+        'buffer': lsp.CompletionItemKind.Class,
+        'dictproxy': lsp.CompletionItemKind.Class,
+        'funcdef': lsp.CompletionItemKind.Function,
+        'property': lsp.CompletionItemKind.Property,
+        'import': lsp.CompletionItemKind.Module,
+        'keyword': lsp.CompletionItemKind.Keyword,
+        'constant': lsp.CompletionItemKind.Variable,
+        'variable': lsp.CompletionItemKind.Variable,
+        'value': lsp.CompletionItemKind.Value,
+        'param': lsp.CompletionItemKind.Variable,
+        'statement': lsp.CompletionItemKind.Keyword,
     }
 
     return MAP.get(d.type)

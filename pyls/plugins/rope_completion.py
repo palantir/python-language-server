@@ -9,9 +9,13 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_completions(document, position):
-    log.debug('Launching Rope')
+def pyls_settings():
+    # Default rope_completion to disabled
+    return {'plugins': {'rope_completion': {'enabled': False}}}
 
+
+@hookimpl
+def pyls_completions(document, position):
     # Rope is a bit rubbish at completing module imports, so we'll return None
     word = document.word_at_position({
         # The -1 should really be trying to look at the previous word, but that might be quite expensive
@@ -40,7 +44,7 @@ def pyls_completions(document, position):
             'documentation': doc or "",
             'sortText': _sort_text(d)})
     definitions = new_definitions
-    log.debug('Rope finished')
+
     return definitions or None
 
 
