@@ -33,6 +33,11 @@ def pyls_definitions(config, workspace, document, position):
 
 
 @hookspec
+def pyls_dispatchers(config, workspace):
+    pass
+
+
+@hookspec
 def pyls_document_did_open(config, workspace, document):
     pass
 
@@ -49,6 +54,11 @@ def pyls_document_symbols(config, workspace, document):
 
 @hookspec(firstresult=True)
 def pyls_execute_command(config, workspace, command, arguments):
+    pass
+
+
+@hookspec
+def pyls_experimental_capabilities(config, workspace):
     pass
 
 
