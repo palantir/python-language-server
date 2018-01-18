@@ -50,7 +50,8 @@ class Config(object):
             "_plugin_settings: %s" % str(self._plugin_settings),
             "_disabled_plugins: %s" % str(self._disabled_plugins),
         ]
-        representation.extend(["_config_sources(%s): %s" % (item, self._config_sources[item]) for item in self._config_sources])
+        representation.extend(["_config_sources(%s): %s" % (item, self._config_sources[item])
+                for item in self._config_sources])
         return ", ".join(representation)
 
     @property
