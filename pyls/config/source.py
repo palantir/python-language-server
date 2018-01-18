@@ -20,6 +20,22 @@ class ConfigSource(object):
         self._modified_times = {}
         self._configs_cache = {}
 
+    def __str__(self):
+        representation = [
+            "%s Object, root_path: %s" % (self.__class__.__name__, str(self.root_path)),
+            "is_windows: %s" % str(self.is_windows),
+            "xdg_home: %s" % str(self.xdg_home),
+            "_modified_times: %s" % str(self._modified_times),
+        ]
+        for files in self._configs_cache:
+            options = []
+            raw_config = self._configs_cache[files]
+            sections = raw_config._sections
+            for section in sections:
+                options.append("%s. %s" % (section, sections[section]))
+            representation.append("_configs_cache(%s): %s" % (str(files), str(options)))
+        return ", ".join(representation)
+
     def user_config(self):
         """Return user-level (i.e. home directory) configuration."""
         raise NotImplementedError()

@@ -41,6 +41,18 @@ class Config(object):
         for plugin_conf in self._pm.hook.pyls_settings(config=self):
             self._plugin_settings = _utils.merge_dicts(self._plugin_settings, plugin_conf)
 
+    def __str__(self):
+        representation = [
+            "%s Object, _root_path: %s" % (self.__class__.__name__, str(self._root_path)),
+            "_root_uri: %s" % str(self._root_uri),
+            "_init_opts: %s" % str(self._init_opts),
+            "_settings: %s" % str(self._settings),
+            "_plugin_settings: %s" % str(self._plugin_settings),
+            "_disabled_plugins: %s" % str(self._disabled_plugins),
+        ]
+        representation.extend(["_config_sources(%s): %s" % (item, self._config_sources[item]) for item in self._config_sources])
+        return ", ".join(representation)
+
     @property
     def disabled_plugins(self):
         return self._disabled_plugins
