@@ -19,8 +19,9 @@ def pyls_lint(config, document):
         'max_line_length': settings.get('maxLineLength'),
         'select': ','.join(settings.get('select') or []),
     }
+    kwargs = {k: v for k, v in opts.items() if v}
+    styleguide = pycodestyle.StyleGuide(kwargs)
 
-    styleguide = pycodestyle.StyleGuide({k: v for k, v in opts.items() if v is not None})
     c = pycodestyle.Checker(
         filename=document.uri, lines=document.lines, options=styleguide.options,
         report=PyCodeStyleDiagnosticReport(styleguide.options)
@@ -33,11 +34,19 @@ def pyls_lint(config, document):
 
 class PyCodeStyleDiagnosticReport(pycodestyle.BaseReport):
 
-    def __init__(self, options=None):
+    def __init__(self, options):
         self.diagnostics = []
         super(PyCodeStyleDiagnosticReport, self).__init__(options=options)
 
     def error(self, line_number, offset, text, check):
+        code = text[:4]
+        if self._ignore_code(code):
+            return
+
+        # Don't care about expected errors or warnings
+        if code in self.expected:
+            return
+
         # PyCodeStyle will sometimes give you an error the line after the end of the file
         #   e.g. no newline at end of file
         # In that case, the end offset should just be some number ~100
@@ -50,8 +59,6 @@ class PyCodeStyleDiagnosticReport(pycodestyle.BaseReport):
                 'character': 100 if line_number > len(self.lines) else len(self.lines[line_number - 1])
             },
         }
-        code, _message = text.split(" ", 1)
-
         self.diagnostics.append({
             'source': 'pycodestyle',
             'range': err_range,
