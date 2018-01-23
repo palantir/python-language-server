@@ -109,11 +109,11 @@ The Python language server can be developed against a local instance of Visual S
 
     # Install the vscode-client extension
     cd vscode-client
-    npm install .
+    yarn install .
 
     # Run VSCode which is configured to use pyls
     # See the bottom of vscode-client/src/extension.ts for info
-    npm run vscode -- $PWD/../
+    yarn run vscode -- $PWD/../
 
 Then to debug, click View -> Output and in the dropdown will be pyls.
 To refresh VSCode, press `Cmd + r`
