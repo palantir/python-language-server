@@ -43,11 +43,11 @@ def pyls_lint(document):
             # In the case we cannot parse the Python file, just continue
             pass
 
+    log.debug("Got pydocstyle errors: %s", diags)
     return diags
 
 
 def _parse_diagnostic(document, error):
-    log.info("Got error: %s", error)
     lineno = error.definition.start - 1
     line = document.lines[0] if document.lines else ""
 
