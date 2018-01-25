@@ -115,3 +115,4 @@ def _configure_logger(args):
         level = logging.DEBUG
 
     root_logger.setLevel(level)
+
