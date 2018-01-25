@@ -38,7 +38,7 @@ def pyls_lint(document):
             # In the case we cannot parse the Python file, just continue
             pass
 
-    log.info("Got pydocstyle errors: %s", diags)
+    log.debug("Got pydocstyle errors: %s", diags)
     return diags
 
 
