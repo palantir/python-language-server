@@ -20,26 +20,25 @@ def pyls_completions(document, position):
 
 def _label(definition):
     if definition.type in ('function', 'method'):
-        params = ", ".join(param.name for param in definition.params)
-        return "{}({})".format(definition.name, params)
+        params = ', '.join(param.name for param in definition.params)
+        return '{}({})'.format(definition.name, params)
 
     return definition.name
 
 
 def _detail(definition):
-    return "builtin" if definition.in_builtin_module() else definition.parent().full_name or ""
+    return 'builtin' if definition.name.startswith('_') else definition.parent().full_name or ''
 
 
 def _sort_text(definition):
     """ Ensure builtins appear at the bottom.
     Description is of format <type>: <module>.<item>
     """
-    if definition.in_builtin_module():
-        # It's a builtin, put it last
+    if definition.name.startswith('_'):
+        # It's a 'hidden' func, put it next last
         return 'z' + definition.name
 
-    if definition.name.startswith("_"):
-        # It's a 'hidden' func, put it next last
+    if definition.in_builtin_module():
         return 'y' + definition.name
 
     # Else put it at the front
