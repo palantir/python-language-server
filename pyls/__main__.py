@@ -65,7 +65,6 @@ def _binary_stdio():
     PY3K = sys.version_info >= (3, 0)
 
     if PY3K:
-        # pylint: disable=no-member
         stdin, stdout = sys.stdin.buffer, sys.stdout.buffer
     else:
         # Python 2 on Windows opens sys.stdin in text mode, and
@@ -115,4 +114,3 @@ def _configure_logger(args):
         level = logging.DEBUG
 
     root_logger.setLevel(level)
-
