@@ -85,6 +85,18 @@ class Workspace(object):
         self.__rope = Project(self._root_path)
         self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
 
+    def __str__(self):
+        representation = [
+            "%s. _root_path: %s" % (self.__class__.__name__, str(self._root_path)),
+            "_root_uri: %s" % str(self._root_uri),
+            "_root_uri_scheme: %s" % str(self._root_uri_scheme),
+            "_lang_server: %s" % str(self._lang_server),
+            "__rope: %s" % str(self.__rope),
+        ]
+        representation.extend(["_docs(%s): %s" % (item, self._docs[item])
+                               for item in self._docs])
+        return ", ".join(representation)
+
     @property
     def _rope(self):
         # TODO: we could keep track of dirty files and validate only those
