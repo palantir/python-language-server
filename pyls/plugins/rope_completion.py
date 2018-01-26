@@ -52,11 +52,10 @@ def _sort_text(definition):
     """ Ensure builtins appear at the bottom.
     Description is of format <type>: <module>.<item>
     """
-    if definition.scope == 'builtin':
-        return 'z' + definition.name
-
     if definition.name.startswith("_"):
         # It's a 'hidden' func, put it next last
+        return 'z' + definition.name
+    elif definition.scope == 'builtin':
         return 'y' + definition.name
 
     # Else put it at the front
