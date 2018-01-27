@@ -4,6 +4,7 @@ import json
 import logging
 import logging.config
 import sys
+
 from . import language_server
 from .python_ls import PythonLanguageServer
 
@@ -81,15 +82,13 @@ def _binary_stdio():
 
     return stdin, stdout
 
-def _configure_logger(args):
-    log_config = args.log_config
+def _configure_logger(verbose=0, log_config=None, log_file=None):
     root_logger = logging.root
 
     if log_config:
         with open(log_config, 'r') as f:
             logging.config.dictConfig(json.load(f))
     else:
-        log_file = args.log_file
         formatter = logging.Formatter(LOG_FORMAT)
         if log_file:
             log_handler = logging.handlers.RotatingFileHandler(
@@ -101,18 +100,11 @@ def _configure_logger(args):
         log_handler.setFormatter(formatter)
         root_logger.addHandler(log_handler)
 
-    # CRITICAL = 50
-    # FATAL = CRITICAL
-    # ERROR = 40
-    # WARNING = 30
-    # INFO = 20
-    # DEBUG = 10
-    if args.verbose == 0:
+    if verbose == 0:
         level = logging.WARNING
-    elif args.verbose == 1:
+    elif verbose == 1:
         level = logging.INFO
-    elif args.verbose >= 2:
+    elif verbose >= 2:
         level = logging.DEBUG
 
     root_logger.setLevel(level)
-
