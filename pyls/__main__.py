@@ -82,6 +82,7 @@ def _binary_stdio():
 
     return stdin, stdout
 
+
 def _configure_logger(verbose=0, log_config=None, log_file=None):
     root_logger = logging.root
 
