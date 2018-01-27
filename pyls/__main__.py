@@ -48,7 +48,7 @@ def main():
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args()
-    _configure_logger(args)
+    _configure_logger(args.verbose, args.log_config, args.log_file)
 
     if args.tcp:
         language_server.start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
