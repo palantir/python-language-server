@@ -26,7 +26,7 @@ def pyls(tmpdir):
 @pytest.fixture
 def workspace(tmpdir):
     """Return a workspace."""
-    return Workspace(uris.from_fs_path(str(tmpdir)))
+    return Workspace(uris.from_fs_path(str(tmpdir)), pyls(tmpdir))
 
 
 @pytest.fixture

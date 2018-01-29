@@ -74,7 +74,7 @@ class Workspace(object):
     M_SHOW_MESSAGE = 'window/showMessage'
     PRELOADED_MODULES = get_preferred_submodules()
 
-    def __init__(self, root_uri, lang_server=None):
+    def __init__(self, root_uri, lang_server):
         self._root_uri = root_uri
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
         self._root_path = uris.to_fs_path(self._root_uri)
