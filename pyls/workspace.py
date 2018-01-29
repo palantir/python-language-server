@@ -84,7 +84,7 @@ class Workspace(object):
         # Whilst incubating, keep private
         self.__rope = Project(self._root_path)
 
-        if self._lang_server.config.plugin_settings('rope').get('create_folder' ,True):
+        if self._lang_server.config.plugin_settings('rope').get('create_folder', True):
             self.__rope = Project(self._root_path)
         else:
             self.__rope = get_no_project()
