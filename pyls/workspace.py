@@ -9,7 +9,7 @@ import pkgutil
 
 import jedi
 from rope.base import libutils
-from rope.base.project import Project
+from rope.base.project import Project, get_no_project
 
 from . import lsp, uris, _utils
 
@@ -83,12 +83,17 @@ class Workspace(object):
 
         # Whilst incubating, keep private
         self.__rope = Project(self._root_path)
+
+        if self._lang_server.config.plugin_settings('rope').get('create_folder' ,True):
+            self.__rope = Project(self._root_path)
+        else:
+            self.__rope = get_no_project()
         self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
 
     @property
     def _rope(self):
         # TODO: we could keep track of dirty files and validate only those
-        self.__rope.validate()
+        self.__rope.validate(None)
         return self.__rope
 
     @property

@@ -70,8 +70,8 @@ class PythonLanguageServer(LanguageServer):
         return server_capabilities
 
     def initialize(self, root_uri, init_opts, _process_id):
-        self.workspace = Workspace(root_uri, lang_server=self)
         self.config = config.Config(root_uri, init_opts)
+        self.workspace = Workspace(root_uri, lang_server=self)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
