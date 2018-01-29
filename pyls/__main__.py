@@ -5,6 +5,8 @@ import logging
 import logging.config
 import sys
 
+from concurrent_log_handler import ConcurrentRotatingFileHandler
+
 from . import language_server
 from .python_ls import PythonLanguageServer
 
@@ -40,7 +42,7 @@ def add_arguments(parser):
 
     parser.add_argument(
         '-v', '--verbose', action='count', default=0,
-        help="Increase verbosity of log output, overrides log config file"
+        help="Increase verbosity of log output, overrides log config file."
     )
 
 
@@ -92,7 +94,7 @@ def _configure_logger(verbose=0, log_config=None, log_file=None):
     else:
         formatter = logging.Formatter(LOG_FORMAT)
         if log_file:
-            log_handler = logging.handlers.RotatingFileHandler(
+            log_handler = ConcurrentRotatingFileHandler(
                 log_file, mode='a', maxBytes=50*1024*1024,
                 backupCount=10, encoding=None, delay=0
             )
