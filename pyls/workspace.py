@@ -88,6 +88,9 @@ class Workspace(object):
             self.__rope = Project(self._root_path)
         else:
             self.__rope = get_no_project()
+            self.__rope.root = property(lambda self: self.get_resource(''))
+            self.__rope.address = property(lambda self: self._address)
+            self.__rope._get_resource_path = lambda self, name: os.path.join(self._address, *name.split('/'))
         self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
 
     @property
