@@ -32,6 +32,13 @@ class PythonLanguageServer(LanguageServer):
                     pass
         raise KeyError("Unknown item %s" % item)
 
+    def __str__(self):
+        representation = [
+            "%s. config: %s" % (self.__class__.__name__, str(self.config)),
+            "_dispatchers: %s" % str(self._dispatchers),
+        ]
+        return ", ".join(representation)
+
     def _hook_caller(self, hook_name):
         return self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
 
