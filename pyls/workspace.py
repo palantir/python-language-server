@@ -74,7 +74,7 @@ class Workspace(object):
     M_SHOW_MESSAGE = 'window/showMessage'
     PRELOADED_MODULES = get_preferred_submodules()
 
-    def __init__(self, root_uri, lang_server=None):
+    def __init__(self, root_uri, lang_server):
         self._root_uri = root_uri
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
         self._root_path = uris.to_fs_path(self._root_uri)
@@ -82,13 +82,16 @@ class Workspace(object):
         self._lang_server = lang_server
 
         # Whilst incubating, keep private
-        self.__rope = Project(self._root_path)
+        if self._lang_server.config.plugin_settings('rope').get('create_folder', False):
+            self.__rope = Project(self._root_path)
+        else:
+            self.__rope = Project(self._root_path, ropefolder=None)
         self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
 
     @property
     def _rope(self):
         # TODO: we could keep track of dirty files and validate only those
-        self.__rope.validate()
+        self.__rope.validate(None)
         return self.__rope
 
     @property
