@@ -9,7 +9,7 @@ import pkgutil
 
 import jedi
 from rope.base import libutils
-from rope.base.project import Project, get_no_project
+from rope.base.project import Project
 
 from . import lsp, uris, _utils
 
@@ -82,15 +82,10 @@ class Workspace(object):
         self._lang_server = lang_server
 
         # Whilst incubating, keep private
-        self.__rope = Project(self._root_path)
-
-        if self._lang_server.config.plugin_settings('rope').get('create_folder', True):
+        if self._lang_server.config.plugin_settings('rope').get('create_folder', False):
             self.__rope = Project(self._root_path)
         else:
-            self.__rope = get_no_project()
-            self.__rope.root = property(lambda self: self.get_resource(''))
-            self.__rope.address = property(lambda self: self._address)
-            self.__rope._get_resource_path = lambda self, name: os.path.join(self._address, *name.split('/'))
+            self.__rope = Project(self._root_path, ropefolder=None)
         self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
 
     @property
