@@ -33,6 +33,8 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'configparser',
+        'concurrent-log-handler',
+        'pypiwin32',
         'future>=0.14.0',
         'jedi>=0.10',
         'json-rpc',
