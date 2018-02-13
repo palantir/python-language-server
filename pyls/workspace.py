@@ -130,12 +130,10 @@ class Workspace(object):
         )
 
     def publish_diagnostics(self, doc_uri, diagnostics):
-        params = {'uri': doc_uri, 'diagnostics': diagnostics}
-        self._lang_server.notify(self.M_PUBLISH_DIAGNOSTICS, params)
+        self._lang_server.notify(self.M_PUBLISH_DIAGNOSTICS, params={'uri': doc_uri, 'diagnostics': diagnostics})
 
     def show_message(self, message, msg_type=lsp.MessageType.Info):
-        params = {'type': msg_type, 'message': message}
-        self._lang_server.notify(self.M_SHOW_MESSAGE, params)
+        self._lang_server.notify(self.M_SHOW_MESSAGE, params={'type': msg_type, 'message': message})
 
     def source_roots(self, document_path):
         """Return the source roots for the given document."""

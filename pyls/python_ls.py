@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import re
 from . import lsp, _utils
 from .config import config
 from .language_server import LanguageServer
@@ -7,38 +8,45 @@ from .workspace import Workspace
 
 log = logging.getLogger(__name__)
 
+_RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
+_RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
+
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
 class PythonLanguageServer(LanguageServer):
     # pylint: disable=too-many-public-methods,redefined-builtin
 
-    workspace = None
-    config = None
+    def __init__(self, rx, tx):
+        super(PythonLanguageServer, self).__init__(rx, tx)
+        self.workspace = None
+        self.config = None
+        self._dispatchers = []
 
-    # Set of method dispatchers to query
-    _dispatchers = []
+    def handle_notification(self, method, params):
+        handler = self.get_request_handler(method)
+        if handler is None:
+            log.error('could not find notification handler for %s', method)
+        else:
+            handler(**params)
 
-    def __getitem__(self, item):
-        """Override the method dispatcher to farm out any unknown messages to our plugins."""
-        try:
-            return super(PythonLanguageServer, self).__getitem__(item)
-        except KeyError:
-            log.debug("Checking dispatchers for %s: %s", item, self._dispatchers)
+    def get_request_handler(self, method):
+        method_call = 'm_{}'.format(_method_to_string(method))
+        if hasattr(self, method_call):
+            return getattr(self, method_call)
+        elif self._dispatchers:
             for dispatcher in self._dispatchers:
                 try:
-                    return dispatcher.__getitem__(item)
+                    return dispatcher.__getitem__(method_call)
                 except KeyError:
                     pass
-        raise KeyError("Unknown item %s" % item)
-
-    def _hook_caller(self, hook_name):
-        return self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+        return None
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
+        """Calls hook_name and returns a list of results from all registered handlers"""
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
-        hook = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+        hook_handlers = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+        return hook_handlers(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def capabilities(self):
         server_capabilities = {
@@ -66,7 +74,7 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL,
             'experimental': merge(self._hook('pyls_experimental_capabilities'))
         }
-        log.info("Server capabilities: %s", server_capabilities)
+        log.info('Server capabilities: %s', server_capabilities)
         return server_capabilities
 
     def initialize(self, root_uri, init_opts, _process_id):
@@ -92,7 +100,8 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_definitions', doc_uri, position=position))
 
     def document_symbols(self, doc_uri):
-        return flatten(self._hook('pyls_document_symbols', doc_uri))
+        def wrapper():
+            return flatten(self._hook('pyls_document_symbols', doc_uri))
 
     def execute_command(self, command, arguments):
         return self._hook('pyls_execute_command', command=command, arguments=arguments)
@@ -192,6 +201,15 @@ class PythonLanguageServer(LanguageServer):
 
     def m_workspace__execute_command(self, command=None, arguments=None):
         return self.execute_command(command, arguments)
+
+
+def _method_to_string(method):
+    return _camel_to_underscore(method.replace("/", "__").replace("$", ""))
+
+
+def _camel_to_underscore(string):
+    s1 = _RE_FIRST_CAP.sub(r'\1_\2', string)
+    return _RE_ALL_CAP.sub(r'\1_\2', s1).lower()
 
 
 def flatten(list_of_lists):
