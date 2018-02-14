@@ -1,9 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import re
-from . import lsp, _utils
+import socketserver
+
+from . import lsp, _utils, uris
 from .config import config
-from .language_server import LanguageServer
+from .rpc_manager import JSONRPCManager
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
@@ -14,33 +16,83 @@ _RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
-class PythonLanguageServer(LanguageServer):
+class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
+    """A wrapper class that is used to construct a custom handler class."""
+
+    delegate = None
+
+    def setup(self):
+        super(_StreamHandlerWrapper, self).setup()
+        # pylint: disable=no-member
+        self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
+
+    def handle(self):
+        self.delegate.handle()
+
+
+def start_tcp_lang_server(bind_addr, port, handler_class):
+    if not issubclass(handler_class, ):
+        raise ValueError('Handler class must be a subclass of JSONRPCServer')
+
+    # Construct a custom wrapper class around the user's handler_class
+    wrapper_class = type(
+        handler_class.__name__ + 'Handler',
+        (_StreamHandlerWrapper,),
+        {'DELEGATE_CLASS': handler_class}
+    )
+
+    server = socketserver.TCPServer((bind_addr, port), wrapper_class)
+    try:
+        log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
+        server.serve_forever()
+    finally:
+        log.info('Shutting down')
+        server.server_close()
+
+
+def start_io_lang_server(rfile, wfile, handler_class):
+    if not issubclass(handler_class, PythonLanguageServer):
+        raise ValueError('Handler class must be a subclass of JSONRPCServer')
+    log.info('Starting %s IO language server', handler_class.__name__)
+    server = handler_class(rfile, wfile)
+    server.start()
+
+
+class PythonLanguageServer(object):
     # pylint: disable=too-many-public-methods,redefined-builtin
 
     def __init__(self, rx, tx):
-        super(PythonLanguageServer, self).__init__(rx, tx)
+        self.rpc_manager = JSONRPCManager(rx, tx, self.handle_request)
         self.workspace = None
         self.config = None
         self._dispatchers = []
 
-    def handle_notification(self, method, params):
-        handler = self.get_request_handler(method)
-        if handler is None:
-            log.error('could not find notification handler for %s', method)
-        else:
-            handler(**params)
+    def start(self):
+        """Entry point for the server"""
+        self.rpc_manager.consume_requests()
 
-    def get_request_handler(self, method):
+    def handle_request(self, method, params):
+        """Provides calllables to handle message requests
+
+        Args:
+            method (str):
+
+        Returns:
+            Callable if method is to be handled
+
+        Raises:
+            KeyError:
+        """
+
         method_call = 'm_{}'.format(_method_to_string(method))
         if hasattr(self, method_call):
-            return getattr(self, method_call)
+            return getattr(self, method_call)(**params)
         elif self._dispatchers:
             for dispatcher in self._dispatchers:
-                try:
-                    return dispatcher.__getitem__(method_call)
-                except KeyError:
-                    pass
-        return None
+                if method_call in dispatcher:
+                    return dispatcher[method_call](**params)
+
+        raise KeyError
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""
@@ -77,11 +129,36 @@ class PythonLanguageServer(LanguageServer):
         log.info('Server capabilities: %s', server_capabilities)
         return server_capabilities
 
-    def initialize(self, root_uri, init_opts, _process_id):
-        self.workspace = Workspace(root_uri, lang_server=self)
+    def m_initialize(self, **kwargs):
+        log.debug('Language server initialized with %s', kwargs)
+        if 'rootUri' in kwargs:
+            root_uri = kwargs['rootUri']
+        elif 'rootPath' in kwargs:
+            root_path = kwargs['rootPath']
+            root_uri = uris.from_fs_path(root_path)
+        else:
+            root_uri = ''
+        init_opts = kwargs.get('initializationOptions')
+
+        self.workspace = Workspace(root_uri, rpc_manager=self.rpc_manager)
         self.config = config.Config(root_uri, init_opts)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
+
+        # Get our capabilities
+        return {'capabilities': self.capabilities()}
+
+    def m___cancel_request(self, **kwargs):
+        def handler():
+            self.rpc_manager.cancel(kwargs['id'])
+        return handler
+
+    def m_shutdown(self, **_kwargs):
+        self.rpc_manager.shutdown()
+        return None
+
+    def m_exit(self, **_kwargs):
+        self.rpc_manager.exit()
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook('pyls_code_actions', doc_uri, range=range, context=context))
@@ -100,8 +177,7 @@ class PythonLanguageServer(LanguageServer):
         return flatten(self._hook('pyls_definitions', doc_uri, position=position))
 
     def document_symbols(self, doc_uri):
-        def wrapper():
-            return flatten(self._hook('pyls_document_symbols', doc_uri))
+        return flatten(self._hook('pyls_document_symbols', doc_uri))
 
     def execute_command(self, command, arguments):
         return self._hook('pyls_execute_command', command=command, arguments=arguments)
@@ -132,6 +208,9 @@ class PythonLanguageServer(LanguageServer):
 
     def signature_help(self, doc_uri, position):
         return self._hook('pyls_signature_help', doc_uri, position=position)
+
+    def m__cancel_request(self, **kwargs):
+        self.rpc_manager.cancel(kwargs['id'])
 
     def m_text_document__did_close(self, textDocument=None, **_kwargs):
         self.workspace.rm_document(textDocument['uri'])

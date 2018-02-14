@@ -2,7 +2,7 @@
 import pytest
 import os
 from pyls import uris
-from pyls.rpc_manager import JSONRPCManager
+from pyls.message_manager import MessageManager
 from pyls.config.config import Config
 from pyls.python_ls import PythonLanguageServer
 from pyls.workspace import Workspace
@@ -10,14 +10,16 @@ from StringIO import StringIO
 
 
 @pytest.fixture
-def rpc_manager(tmpdir):
-    # JSONRPCManager rx
+def message_manager(tmpdir):
     manager_rx, tester_tx = os.pipe()
-    # Server to client pipe
     tester_rx, manager_tx = os.pipe()
 
-    yield JSONRPCManager(os.fdopen(manager_rx, tester_tx), tester_tx, tester_rx
+    rx, tx, = os.fdopen(tester_rx, 'rb'), os.fdopen(tester_tx, 'wb')
 
+    yield MessageManager(os.fdopen(manager_rx, 'rb'), os.fdopen(tester_tx, 'wb')), rx, tx
+
+    rx.close()
+    tx.close()
 
 
 @pytest.fixture
