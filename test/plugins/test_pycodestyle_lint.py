@@ -8,7 +8,7 @@ from pyls.plugins import pycodestyle_lint
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
 
-def hello():
+def hello( ):
 \tpass
 
 import json
@@ -40,6 +40,14 @@ def test_pycodestyle(config):
     assert mod_import['range']['start'] == {'line': 7, 'character': 0}
     assert mod_import['range']['end'] == {'line': 7, 'character': 1}
 
+    msg = "E201 whitespace after '('"
+    mod_import = [d for d in diags if d['message'] == msg][0]
+
+    assert mod_import['code'] == 'E201'
+    assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
+    assert mod_import['range']['start'] == {'line': 2, 'character': 10}
+    assert mod_import['range']['end'] == {'line': 2, 'character': 14}
+
 
 def test_pycodestyle_config(workspace):
     """ Test that we load config files properly.
@@ -66,7 +74,7 @@ def test_pycodestyle_config(workspace):
     assert [d for d in diags if d['code'] == 'W191']
 
     content = {
-        'setup.cfg': ('[pycodestyle]\nignore = W191', True),
+        'setup.cfg': ('[pycodestyle]\nignore = W191, E201', True),
         'tox.ini': ('', False)
     }
 
@@ -77,18 +85,16 @@ def test_pycodestyle_config(workspace):
 
         # And make sure we don't get any warnings
         diags = pycodestyle_lint.pyls_lint(config, doc)
-        assert len([d for d in diags if d['code'] == 'W191']) == 0 if working else 1
+        assert len([d for d in diags if d['code'] == 'W191']) == (0 if working else 1)
+        assert len([d for d in diags if d['code'] == 'E201']) == (0 if working else 1)
+        assert [d for d in diags if d['code'] == 'W391']
 
         os.unlink(os.path.join(workspace.root_path, conf_file))
 
     # Make sure we can ignore via the PYLS config as well
-    config.update({'plugins': {'pycodestyle': {'ignore': ['W191']}}})
+    config.update({'plugins': {'pycodestyle': {'ignore': ['W191', 'E201']}}})
     # And make sure we only get one warning
     diags = pycodestyle_lint.pyls_lint(config, doc)
     assert not [d for d in diags if d['code'] == 'W191']
-
-    # Ignore both warnings
-    config.update({'plugins': {'pycodestyle': {'ignore': ['W191', 'W391']}}})
-    # And make sure we get neither
-    assert not [d for d in diags if d['code'] == 'W191']
-    assert not [d for d in diags if d['code'] == 'W391']
+    assert not [d for d in diags if d['code'] == 'E201']
+    assert [d for d in diags if d['code'] == 'W391']

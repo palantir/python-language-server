@@ -1,5 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import contextlib
 import logging
+import sys
+
 import pydocstyle
 from pyls import hookimpl, lsp
 
@@ -19,8 +22,10 @@ def pyls_settings():
 @hookimpl
 def pyls_lint(document):
     conf = pydocstyle.config.ConfigurationParser()
-    conf.parse()
-    conf._arguments = [document.path]
+
+    with _patch_sys_argv([document.path]):
+        # TODO(gatesn): We can add more pydocstyle args here from our pyls config
+        conf.parse()
 
     # Will only yield a single filename, the document path
     diags = []
@@ -38,11 +43,11 @@ def pyls_lint(document):
             # In the case we cannot parse the Python file, just continue
             pass
 
+    log.debug("Got pydocstyle errors: %s", diags)
     return diags
 
 
 def _parse_diagnostic(document, error):
-    log.info("Got error: %s", error)
     lineno = error.definition.start - 1
     line = document.lines[0] if document.lines else ""
 
@@ -65,3 +70,16 @@ def _parse_diagnostic(document, error):
             }
         }
     }
+
+
+@contextlib.contextmanager
+def _patch_sys_argv(arguments):
+    old_args = sys.argv
+
+    # Preserve argv[0] since it's the executable
+    sys.argv = old_args[0:1] + arguments
+
+    try:
+        yield
+    finally:
+        sys.argv = old_args

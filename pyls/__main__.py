@@ -46,22 +46,7 @@ def main():
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args()
-
-    if args.log_config:
-        with open(args.log_config, 'r') as f:
-            logging.config.dictConfig(json.load(f))
-    elif args.log_file:
-        logging.basicConfig(filename=args.log_file, format=LOG_FORMAT)
-    else:
-        logging.basicConfig(format=LOG_FORMAT)
-
-    if args.verbose == 0:
-        level = logging.WARNING
-    elif args.verbose == 1:
-        level = logging.INFO
-    elif args.verbose >= 2:
-        level = logging.DEBUG
-    logging.getLogger().setLevel(level)
+    _configure_logger(args.verbose, args.log_config, args.log_file)
 
     if args.tcp:
         start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
@@ -94,3 +79,31 @@ def _binary_stdio():
         stdin, stdout = sys.stdin, sys.stdout
 
     return stdin, stdout
+
+
+def _configure_logger(verbose=0, log_config=None, log_file=None):
+    root_logger = logging.root
+
+    if log_config:
+        with open(log_config, 'r') as f:
+            logging.config.dictConfig(json.load(f))
+    else:
+        formatter = logging.Formatter(LOG_FORMAT)
+        if log_file:
+            log_handler = logging.handlers.RotatingFileHandler(
+                log_file, mode='a', maxBytes=50*1024*1024,
+                backupCount=10, encoding=None, delay=0
+            )
+        else:
+            log_handler = logging.StreamHandler()
+        log_handler.setFormatter(formatter)
+        root_logger.addHandler(log_handler)
+
+    if verbose == 0:
+        level = logging.WARNING
+    elif verbose == 1:
+        level = logging.INFO
+    elif verbose >= 2:
+        level = logging.DEBUG
+
+    root_logger.setLevel(level)
