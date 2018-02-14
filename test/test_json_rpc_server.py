@@ -2,15 +2,15 @@
 import pytest
 import os
 from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
-from pyls.message_manager import MessageManager
+from pyls.json_rpc_server import JSONRPCServer
 
 @pytest.fixture
-def message_manager(tmpdir):
+def json_rpc_server(tmpdir):
     manager_rx, tester_tx = os.pipe()
     tester_rx, manager_tx = os.pipe()
 
-    client = MessageManager(os.fdopen(manager_rx, 'rb'), os.fdopen(manager_tx, 'wb'))
-    server = MessageManager(os.fdopen(tester_rx, 'rb'), os.fdopen(tester_tx, 'wb'))
+    client = JSONRPCServer(os.fdopen(manager_rx, 'rb'), os.fdopen(manager_tx, 'wb'))
+    server = JSONRPCServer(os.fdopen(tester_rx, 'rb'), os.fdopen(tester_tx, 'wb'))
 
     yield client, server
 
@@ -18,8 +18,8 @@ def message_manager(tmpdir):
     server.close()
 
 
-def test_receive_request(message_manager):
-    client, server = message_manager
+def test_receive_request(json_rpc_server):
+    client, server = json_rpc_server
     request = {'jsonrpc': '2.0', 'id': 0, 'method': 'initialize', 'params': {}}
     client.write_message(request)
     message = server.get_messages().next()
@@ -28,8 +28,8 @@ def test_receive_request(message_manager):
     assert not message.is_notification
 
 
-def test_receive_notification(message_manager):
-    client, server = message_manager
+def test_receive_notification(json_rpc_server):
+    client, server = json_rpc_server
     notification = {'jsonrpc': '2.0', 'method': 'notify', 'params': {}}
     client.write_message(notification)
     message = server.get_messages().next()
@@ -38,8 +38,8 @@ def test_receive_notification(message_manager):
     assert message.is_notification
 
 
-def test_receive_response(message_manager):
-    client, server = message_manager
+def test_receive_response(json_rpc_server):
+    client, server = json_rpc_server
     response = {'jsonrpc': '2.0', 'id': 0, 'result': {}}
     client.write_message(response)
     message = server.get_messages().next()
@@ -47,8 +47,8 @@ def test_receive_response(message_manager):
     assert response == message.data
 
 
-def test_drop_bad_message(message_manager):
-    client, server = message_manager
+def test_drop_bad_message(json_rpc_server):
+    client, server = json_rpc_server
     response = {'jsonrpc': '2.0', 'id': 0, 'result': {}}
     client.write_message(response)
     server.close()

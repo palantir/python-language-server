@@ -3,7 +3,7 @@ import pytest
 import time
 from StringIO import StringIO
 from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
-from pyls.message_manager import MessageManager
+from pyls.json_rpc_server import JSONRPCServer
 from pyls.rpc_manager import JSONRPCManager
 from mock import Mock
 
@@ -13,7 +13,7 @@ BASE_HANDLED_RESPONSE = JSONRPC20Response(_id=1, result=BASE_HANDLED_RESPONSE_CO
 
 @pytest.fixture
 def rpc_management():
-    message_manager = MessageManager(StringIO(), StringIO())
+    message_manager = JSONRPCServer(StringIO(), StringIO())
     message_manager.get_messages = Mock(return_value=[JSONRPC20Request(_id=1, method='test', params={})])
     message_manager.write_message = Mock()
     message_handler = Mock(return_value=BASE_HANDLED_RESPONSE_CONTENT)
@@ -44,8 +44,10 @@ def test_handle_request_async(rpc_management):
     rpc_manager.start()
     message_manager.get_messages.assert_any_call()
     message_handler.assert_called_once_with('test', {})
-    time.sleep(1)
-    message_manager.write_message.assert_called_once_with(response.data)
+
+    if rpc_manager._sent_requests:
+        rpc_manager._sent_requests.values()[0].result(timeout=1)
+        message_manager.write_message.assert_called_once_with(response.data)
 
 
 def test_handle_notification_sync(rpc_management):

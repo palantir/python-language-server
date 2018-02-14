@@ -17,9 +17,6 @@ RESPONSE_CLASS_MAP = {
 
 
 class JSONRPCManager(object):
-    """ Implementation of the Microsoft VSCode Language Server Protocol
-    https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
-    """
 
     def __init__(self, message_manager, message_handler):
         self._message_manager = message_manager
@@ -121,34 +118,32 @@ class JSONRPCManager(object):
         elif callable(maybe_handler):
             self._handle_async_request(request, maybe_handler)
         elif not request.is_notification:
-            log.debug("sync request %s", request._id)
+            log.debug('Sync request %s', request._id)
             response = _make_response(request, result=maybe_handler)
             self._message_manager.write_message(response.data)
 
     def _handle_async_request(self, request, handler):
-        log.debug("async request %s", request._id)
+        log.debug('Async request %s', request._id)
         future = self._executor_service.submit(handler)
 
         if request.is_notification:
             return
 
-        self._received_requests[request._id] = future
-
         def did_finish_callback(completed_future):
+            del self._received_requests[request._id]
             if completed_future.cancelled():
                 log.debug('Cleared cancelled request %d', request._id)
-                del self._received_requests[request._id]
                 return
 
             error, trace = completed_future.exception_info()
-            del self._received_requests[request._id]
             if error is not None:
-                log.error("Failed to handle request %s with error %s %s", request._id, error, trace)
+                log.error('Failed to handle request %s with error %s %s', request._id, error, trace)
                 # TODO(forozco): add more descriptive error
-                response = _make_response(request, errror=JSONRPCInternalError()._data)
+                response = _make_response(request, error=JSONRPCInternalError()._data)
             else:
                 response = _make_response(request, result=completed_future.result())
             self._message_manager.write_message(response.data)
+        self._received_requests[request._id] = future
         future.add_done_callback(did_finish_callback)
 
     def _handle_response(self, response):

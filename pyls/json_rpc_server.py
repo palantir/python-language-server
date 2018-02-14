@@ -13,7 +13,7 @@ from jsonrpc.exceptions import (
 log = logging.getLogger(__name__)
 
 
-class MessageManager(object):
+class JSONRPCServer(object):
     """ Read/Write JSON RPC messages """
 
     def __init__(self, rfile, wfile):
@@ -28,8 +28,7 @@ class MessageManager(object):
             self.rfile.close()
 
     def get_messages(self):
-        """
-        Generator that produces well structured JSON RPC message.
+        """Generator that produces well structured JSON RPC message.
 
         Returns:
             message: received message
@@ -41,8 +40,7 @@ class MessageManager(object):
             request_str = self._read_message()
 
             if request_str is None:
-                # log.error("failed to read message")
-                continue
+                break
             if isinstance(request_str, bytes):
                 request_str = request_str.decode("utf-8")
 
@@ -83,7 +81,8 @@ class MessageManager(object):
     def _read_message(self):
         """Reads the contents of a message
 
-        :return body of message if parsable else None
+        Returns:
+            body of message if parsable else None
         """
         line = self.rfile.readline()
 

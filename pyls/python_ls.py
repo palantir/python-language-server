@@ -1,11 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import re
 import socketserver
+import re
 
 from . import lsp, _utils, uris
 from .config import config
-from .message_manager import MessageManager
+from .json_rpc_server import JSONRPCServer
 from .rpc_manager import JSONRPCManager
 from .workspace import Workspace
 
@@ -32,8 +32,8 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
 
 
 def start_tcp_lang_server(bind_addr, port, handler_class):
-    if not issubclass(handler_class, ):
-        raise ValueError('Handler class must be a subclass of JSONRPCServer')
+    if not isinstance(handler_class, PythonLanguageServer):
+        raise ValueError('Handler class must be an instance of PythonLanguageServer')
 
     # Construct a custom wrapper class around the user's handler_class
     wrapper_class = type(
@@ -53,36 +53,41 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
 
 def start_io_lang_server(rfile, wfile, handler_class):
     if not issubclass(handler_class, PythonLanguageServer):
-        raise ValueError('Handler class must be a subclass of JSONRPCServer')
+        raise ValueError('Handler class must be an instance of PythonLanguageServer')
     log.info('Starting %s IO language server', handler_class.__name__)
     server = handler_class(rfile, wfile)
     server.start()
 
 
 class PythonLanguageServer(object):
+    """ Implementation of the Microsoft VSCode Language Server Protocol
+    https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
+    """
+
     # pylint: disable=too-many-public-methods,redefined-builtin
 
     def __init__(self, rx, tx):
-        self.rpc_manager = JSONRPCManager(MessageManager(rx, tx), self.handle_request)
+        self.rpc_manager = JSONRPCManager(JSONRPCServer(rx, tx), self.handle_request)
         self.workspace = None
         self.config = None
         self._dispatchers = []
 
     def start(self):
         """Entry point for the server"""
-        self.rpc_manager.consume_requests()
+        self.rpc_manager.start()
 
     def handle_request(self, method, params):
-        """Provides calllables to handle message requests
+        """Provides callables to handle requests or responses to those reqeuests
 
         Args:
-            method (str):
+            method (str): name of the message
+            params (dict): body of the message
 
         Returns:
             Callable if method is to be handled
 
         Raises:
-            KeyError:
+            KeyError: Handler for method is not found
         """
 
         method_call = 'm_{}'.format(_method_to_string(method))
@@ -93,7 +98,7 @@ class PythonLanguageServer(object):
                 if method_call in dispatcher:
                     return dispatcher[method_call](**params)
 
-        raise KeyError
+        raise KeyError('Handler for method {} not found'.format(method))
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""
@@ -130,26 +135,20 @@ class PythonLanguageServer(object):
         log.info('Server capabilities: %s', server_capabilities)
         return server_capabilities
 
-    def m_initialize(self, **kwargs):
-        log.debug('Language server initialized with %s', kwargs)
-        if 'rootUri' in kwargs:
-            root_uri = kwargs['rootUri']
-        elif 'rootPath' in kwargs:
-            root_path = kwargs['rootPath']
-            root_uri = uris.from_fs_path(root_path)
-        else:
-            root_uri = ''
-        init_opts = kwargs.get('initializationOptions')
+    def m_initialize(self, processId=None, rootUri=None, rootPath=None, initializationOptions={}):  # pylint: disable=dangerous-default-value
+        log.debug('Language server initialized with %s %s %s %s', processId, rootUri, rootPath, initializationOptions)
+        if rootUri is None:
+            rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
-        self.workspace = Workspace(root_uri, rpc_manager=self.rpc_manager)
-        self.config = config.Config(root_uri, init_opts)
+        self.workspace = Workspace(rootUri, rpc_manager=self.rpc_manager)
+        self.config = config.Config(rootUri, initializationOptions)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
 
-    def m___cancel_request(self, **kwargs):
+    def m__cancel_request(self, **kwargs):
         def handler():
             self.rpc_manager.cancel(kwargs['id'])
         return handler
@@ -209,9 +208,6 @@ class PythonLanguageServer(object):
 
     def signature_help(self, doc_uri, position):
         return self._hook('pyls_signature_help', doc_uri, position=position)
-
-    def m__cancel_request(self, **kwargs):
-        self.rpc_manager.cancel(kwargs['id'])
 
     def m_text_document__did_close(self, textDocument=None, **_kwargs):
         self.workspace.rm_document(textDocument['uri'])
