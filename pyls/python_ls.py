@@ -5,6 +5,7 @@ import socketserver
 
 from . import lsp, _utils, uris
 from .config import config
+from .message_manager import MessageManager
 from .rpc_manager import JSONRPCManager
 from .workspace import Workspace
 
@@ -62,7 +63,7 @@ class PythonLanguageServer(object):
     # pylint: disable=too-many-public-methods,redefined-builtin
 
     def __init__(self, rx, tx):
-        self.rpc_manager = JSONRPCManager(rx, tx, self.handle_request)
+        self.rpc_manager = JSONRPCManager(MessageManager(rx, tx), self.handle_request)
         self.workspace = None
         self.config = None
         self._dispatchers = []

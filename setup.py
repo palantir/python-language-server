@@ -51,7 +51,7 @@ setup(
     # for example:
     # $ pip install -e .[test]
     extras_require={
-        'test': ['tox', 'versioneer', 'pytest', 'pytest-cov', 'coverage'],
+        'test': ['tox', 'versioneer', 'pytest', 'mock', 'pytest-cov', 'coverage'],
     },
 
     # To provide executable scripts, use entry points in preference to the

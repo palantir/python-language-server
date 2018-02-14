@@ -2,24 +2,10 @@
 import pytest
 import os
 from pyls import uris
-from pyls.message_manager import MessageManager
 from pyls.config.config import Config
 from pyls.python_ls import PythonLanguageServer
 from pyls.workspace import Workspace
 from StringIO import StringIO
-
-
-@pytest.fixture
-def message_manager(tmpdir):
-    manager_rx, tester_tx = os.pipe()
-    tester_rx, manager_tx = os.pipe()
-
-    rx, tx, = os.fdopen(tester_rx, 'rb'), os.fdopen(tester_tx, 'wb')
-
-    yield MessageManager(os.fdopen(manager_rx, 'rb'), os.fdopen(tester_tx, 'wb')), rx, tx
-
-    rx.close()
-    tx.close()
 
 
 @pytest.fixture

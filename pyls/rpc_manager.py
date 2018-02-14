@@ -8,8 +8,6 @@ from jsonrpc.jsonrpc1 import JSONRPC10Response
 from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20Request
 from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCInternalError
 
-from .message_manager import MessageManager
-
 log = logging.getLogger(__name__)
 
 RESPONSE_CLASS_MAP = {
@@ -23,8 +21,8 @@ class JSONRPCManager(object):
     https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
     """
 
-    def __init__(self, rx, tx, message_handler):
-        self._message_manager = MessageManager(rx, tx)
+    def __init__(self, message_manager, message_handler):
+        self._message_manager = message_manager
         self._message_handler = message_handler
         self._shutdown = False
         self._sent_requests = {}
