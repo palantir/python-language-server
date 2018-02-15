@@ -1,10 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import pytest
+import os
 from pyls import uris
 from pyls.config.config import Config
 from pyls.python_ls import PythonLanguageServer
 from pyls.workspace import Workspace
-from io import StringIO
+from StringIO import StringIO
 
 
 @pytest.fixture

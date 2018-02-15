@@ -4,16 +4,13 @@ import json
 import logging
 import logging.config
 import sys
-
-from . import language_server
-from .python_ls import PythonLanguageServer
+from .python_ls import start_io_lang_server, start_tcp_lang_server, PythonLanguageServer
 
 LOG_FORMAT = "%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s"
 
 
 def add_arguments(parser):
     parser.description = "Python Language Server"
-
     parser.add_argument(
         "--tcp", action="store_true",
         help="Use TCP server instead of stdio"
@@ -51,10 +48,10 @@ def main():
     _configure_logger(args.verbose, args.log_config, args.log_file)
 
     if args.tcp:
-        language_server.start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
+        start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
     else:
         stdin, stdout = _binary_stdio()
-        language_server.start_io_lang_server(stdin, stdout, PythonLanguageServer)
+        start_io_lang_server(stdin, stdout, PythonLanguageServer)
 
 
 def _binary_stdio():

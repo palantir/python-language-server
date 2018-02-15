@@ -1,44 +1,110 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from . import lsp, _utils
+import socketserver
+import re
+
+from . import lsp, _utils, uris
 from .config import config
-from .language_server import LanguageServer
+from .json_rpc_server import JSONRPCServer
+from .rpc_manager import JSONRPCManager
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
 
+_RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
+_RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
+
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
-class PythonLanguageServer(LanguageServer):
+class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
+    """A wrapper class that is used to construct a custom handler class."""
+
+    delegate = None
+
+    def setup(self):
+        super(_StreamHandlerWrapper, self).setup()
+        # pylint: disable=no-member
+        self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
+
+    def handle(self):
+        self.delegate.handle()
+
+
+def start_tcp_lang_server(bind_addr, port, handler_class):
+    if not isinstance(handler_class, PythonLanguageServer):
+        raise ValueError('Handler class must be an instance of PythonLanguageServer')
+
+    # Construct a custom wrapper class around the user's handler_class
+    wrapper_class = type(
+        handler_class.__name__ + 'Handler',
+        (_StreamHandlerWrapper,),
+        {'DELEGATE_CLASS': handler_class}
+    )
+
+    server = socketserver.TCPServer((bind_addr, port), wrapper_class)
+    try:
+        log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
+        server.serve_forever()
+    finally:
+        log.info('Shutting down')
+        server.server_close()
+
+
+def start_io_lang_server(rfile, wfile, handler_class):
+    if not issubclass(handler_class, PythonLanguageServer):
+        raise ValueError('Handler class must be an instance of PythonLanguageServer')
+    log.info('Starting %s IO language server', handler_class.__name__)
+    server = handler_class(rfile, wfile)
+    server.start()
+
+
+class PythonLanguageServer(object):
+    """ Implementation of the Microsoft VSCode Language Server Protocol
+    https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
+    """
+
     # pylint: disable=too-many-public-methods,redefined-builtin
 
-    workspace = None
-    config = None
+    def __init__(self, rx, tx):
+        self.rpc_manager = JSONRPCManager(JSONRPCServer(rx, tx), self.handle_request)
+        self.workspace = None
+        self.config = None
+        self._dispatchers = []
 
-    # Set of method dispatchers to query
-    _dispatchers = []
+    def start(self):
+        """Entry point for the server"""
+        self.rpc_manager.start()
 
-    def __getitem__(self, item):
-        """Override the method dispatcher to farm out any unknown messages to our plugins."""
-        try:
-            return super(PythonLanguageServer, self).__getitem__(item)
-        except KeyError:
-            log.debug("Checking dispatchers for %s: %s", item, self._dispatchers)
+    def handle_request(self, method, params):
+        """Provides callables to handle requests or responses to those reqeuests
+
+        Args:
+            method (str): name of the message
+            params (dict): body of the message
+
+        Returns:
+            Callable if method is to be handled
+
+        Raises:
+            KeyError: Handler for method is not found
+        """
+
+        method_call = 'm_{}'.format(_method_to_string(method))
+        if hasattr(self, method_call):
+            return getattr(self, method_call)(**params)
+        elif self._dispatchers:
             for dispatcher in self._dispatchers:
-                try:
-                    return dispatcher.__getitem__(item)
-                except KeyError:
-                    pass
-        raise KeyError("Unknown item %s" % item)
+                if method_call in dispatcher:
+                    return dispatcher[method_call](**params)
 
-    def _hook_caller(self, hook_name):
-        return self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+        raise KeyError('Handler for method {} not found'.format(method))
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
+        """Calls hook_name and returns a list of results from all registered handlers"""
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
-        hook = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+        hook_handlers = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+        return hook_handlers(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def capabilities(self):
         server_capabilities = {
@@ -66,14 +132,33 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL,
             'experimental': merge(self._hook('pyls_experimental_capabilities'))
         }
-        log.info("Server capabilities: %s", server_capabilities)
+        log.info('Server capabilities: %s', server_capabilities)
         return server_capabilities
 
-    def initialize(self, root_uri, init_opts, _process_id):
-        self.workspace = Workspace(root_uri, lang_server=self)
-        self.config = config.Config(root_uri, init_opts)
+    def m_initialize(self, processId=None, rootUri=None, rootPath=None, initializationOptions={}):  # pylint: disable=dangerous-default-value
+        log.debug('Language server initialized with %s %s %s %s', processId, rootUri, rootPath, initializationOptions)
+        if rootUri is None:
+            rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
+
+        self.workspace = Workspace(rootUri, rpc_manager=self.rpc_manager)
+        self.config = config.Config(rootUri, initializationOptions)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
+
+        # Get our capabilities
+        return {'capabilities': self.capabilities()}
+
+    def m__cancel_request(self, **kwargs):
+        def handler():
+            self.rpc_manager.cancel(kwargs['id'])
+        return handler
+
+    def m_shutdown(self, **_kwargs):
+        self.rpc_manager.shutdown()
+        return None
+
+    def m_exit(self, **_kwargs):
+        self.rpc_manager.exit()
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook('pyls_code_actions', doc_uri, range=range, context=context))
@@ -192,6 +277,15 @@ class PythonLanguageServer(LanguageServer):
 
     def m_workspace__execute_command(self, command=None, arguments=None):
         return self.execute_command(command, arguments)
+
+
+def _method_to_string(method):
+    return _camel_to_underscore(method.replace("/", "__").replace("$", ""))
+
+
+def _camel_to_underscore(string):
+    s1 = _RE_FIRST_CAP.sub(r'\1_\2', string)
+    return _RE_ALL_CAP.sub(r'\1_\2', s1).lower()
 
 
 def flatten(list_of_lists):
