@@ -87,7 +87,7 @@ def test_send_request(rpc_management):
     response_future = rpc_manager.call('request', {})
     message_manager.write_message.assert_called_once()
     assert len(rpc_manager._sent_requests) == 1
-    request_id = rpc_manager._sent_requests.keys()[0]
+    request_id = list(rpc_manager._sent_requests.keys())[0]
 
     response = JSONRPC20Response(_id=request_id, result={})
     message_manager.get_messages.configure_mock(return_value=[response])

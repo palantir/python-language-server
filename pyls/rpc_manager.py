@@ -24,7 +24,7 @@ class JSONRPCManager(object):
         self._shutdown = False
         self._sent_requests = {}
         self._received_requests = {}
-        self._executor_service = ThreadPoolExecutor()
+        self._executor_service = ThreadPoolExecutor(max_workers=5)
 
     def start(self):
         """Start reading JSONRPC messages off of rx"""
@@ -135,9 +135,9 @@ class JSONRPCManager(object):
                 log.debug('Cleared cancelled request %d', request._id)
                 return
 
-            error, trace = completed_future.exception_info()
+            error = completed_future.exception()
             if error is not None:
-                log.error('Failed to handle request %s with error %s %s', request._id, error, trace)
+                log.error('Failed to handle request %s with error %s', request._id, error)
                 # TODO(forozco): add more descriptive error
                 response = _make_response(request, error=JSONRPCInternalError()._data)
             else:
