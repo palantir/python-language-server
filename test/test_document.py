@@ -1,20 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import sys
-import pytest
-from pyls import uris
+from test.fixtures import DOC_URI, DOC
 from pyls.workspace import Document
-
-DOC_URI = uris.from_fs_path(__file__)
-DOC = """import sys
-
-def main():
-    print sys.stdin.read()
-"""
-
-
-@pytest.fixture
-def doc():
-    return Document(DOC_URI, DOC)
 
 
 def test_document_props(doc):

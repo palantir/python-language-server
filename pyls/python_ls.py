@@ -135,13 +135,13 @@ class PythonLanguageServer(object):
         log.info('Server capabilities: %s', server_capabilities)
         return server_capabilities
 
-    def m_initialize(self, processId=None, rootUri=None, rootPath=None, initializationOptions={}):  # pylint: disable=dangerous-default-value
+    def m_initialize(self, processId=None, rootUri=None, rootPath=None, initializationOptions=None):
         log.debug('Language server initialized with %s %s %s %s', processId, rootUri, rootPath, initializationOptions)
         if rootUri is None:
             rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
         self.workspace = Workspace(rootUri, rpc_manager=self.rpc_manager)
-        self.config = config.Config(rootUri, initializationOptions)
+        self.config = config.Config(rootUri, initializationOptions or {})
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 

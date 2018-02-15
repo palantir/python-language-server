@@ -1,11 +1,26 @@
 # Copyright 2017 Palantir Technologies, Inc.
-import pytest
 import os
+from StringIO import StringIO
+from mock import Mock
+import pytest
+from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20Request
+
 from pyls import uris
 from pyls.config.config import Config
 from pyls.python_ls import PythonLanguageServer
-from pyls.workspace import Workspace
-from StringIO import StringIO
+from pyls.rpc_manager import JSONRPCManager
+from pyls.workspace import Workspace, Document
+from pyls.json_rpc_server import JSONRPCServer
+
+BASE_HANDLED_RESPONSE_CONTENT = 'handled'
+BASE_HANDLED_RESPONSE = JSONRPC20Response(_id=1, result=BASE_HANDLED_RESPONSE_CONTENT)
+
+DOC_URI = uris.from_fs_path(__file__)
+DOC = """import sys
+
+def main():
+    print sys.stdin.read()
+"""
 
 
 @pytest.fixture
@@ -31,6 +46,38 @@ def workspace(tmpdir):
 
 
 @pytest.fixture
-def config(workspace):
+def rpc_management():
+    message_manager = JSONRPCServer(StringIO(), StringIO())
+    message_manager.get_messages = Mock(return_value=[JSONRPC20Request(_id=1, method='test', params={})])
+    message_manager.write_message = Mock()
+    message_handler = Mock(return_value=BASE_HANDLED_RESPONSE_CONTENT)
+    rpc_manager = JSONRPCManager(message_manager, message_handler)
+
+    yield rpc_manager, message_manager, message_handler,
+
+    rpc_manager.exit()
+
+
+@pytest.fixture
+def json_rpc_server():
+    manager_rx, tester_tx = os.pipe()
+    tester_rx, manager_tx = os.pipe()
+
+    client = JSONRPCServer(os.fdopen(manager_rx, 'rb'), os.fdopen(manager_tx, 'wb'))
+    server = JSONRPCServer(os.fdopen(tester_rx, 'rb'), os.fdopen(tester_tx, 'wb'))
+
+    yield client, server
+
+    client.close()
+    server.close()
+
+
+@pytest.fixture
+def config(workspace):  # pylint: disable=redefined-outer-name
     """Return a config object."""
     return Config(workspace.root_uri, {})
+
+
+@pytest.fixture
+def doc():
+    return Document(DOC_URI, DOC)

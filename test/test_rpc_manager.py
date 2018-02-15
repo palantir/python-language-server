@@ -1,27 +1,6 @@
 # Copyright 2018 Palantir Technologies, Inc.
-import pytest
-import time
-from StringIO import StringIO
+from test.fixtures import BASE_HANDLED_RESPONSE
 from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
-from pyls.json_rpc_server import JSONRPCServer
-from pyls.rpc_manager import JSONRPCManager
-from mock import Mock
-
-
-BASE_HANDLED_RESPONSE_CONTENT = 'handled'
-BASE_HANDLED_RESPONSE = JSONRPC20Response(_id=1, result=BASE_HANDLED_RESPONSE_CONTENT)
-
-@pytest.fixture
-def rpc_management():
-    message_manager = JSONRPCServer(StringIO(), StringIO())
-    message_manager.get_messages = Mock(return_value=[JSONRPC20Request(_id=1, method='test', params={})])
-    message_manager.write_message = Mock()
-    message_handler = Mock(return_value=BASE_HANDLED_RESPONSE_CONTENT)
-    rpc_manager = JSONRPCManager(message_manager, message_handler)
-
-    yield rpc_manager, message_manager, message_handler,
-
-    rpc_manager.exit()
 
 
 def test_handle_request_sync(rpc_management):
@@ -75,6 +54,7 @@ def test_handle_notification_sync_empty(rpc_management):
 def test_handle_notification_async(rpc_management):
     rpc_manager, message_manager, message_handler = rpc_management
     notification = JSONRPC20Request(method='notification', params={}, is_notification=True)
+
     def wrapper():
         pass
     message_handler.configure_mock(return_value=wrapper)
@@ -89,6 +69,7 @@ def test_handle_notification_async(rpc_management):
 def test_handle_notification_async_empty(rpc_management):
     rpc_manager, message_manager, message_handler = rpc_management
     notification = JSONRPC20Request(method='notification', params=None, is_notification=True)
+
     def wrapper():
         pass
     message_handler.configure_mock(return_value=wrapper)
@@ -101,7 +82,7 @@ def test_handle_notification_async_empty(rpc_management):
 
 
 def test_send_request(rpc_management):
-    rpc_manager, message_manager, message_handler = rpc_management
+    rpc_manager, message_manager, _ = rpc_management
 
     response_future = rpc_manager.call('request', {})
     message_manager.write_message.assert_called_once()
@@ -118,8 +99,7 @@ def test_send_request(rpc_management):
 
 
 def test_send_notification(rpc_management):
-    rpc_manager, message_manager, message_handler = rpc_management
+    rpc_manager, message_manager, _ = rpc_management
 
     rpc_manager.notify('notify', {})
     message_manager.write_message.assert_called_once_with(JSONRPC20Request(method='notify', params={}).data)
-

@@ -25,7 +25,7 @@ def test_no_signature():
     doc = Document(DOC_URI, DOC)
 
     sigs = signature.pyls_signature_help(doc, sig_position)['signatures']
-    assert len(sigs) == 0
+    assert not sigs
 
 
 def test_signature():

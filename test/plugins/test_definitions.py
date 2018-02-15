@@ -24,13 +24,13 @@ def test_definitions():
     cursor_pos = {'line': 3, 'character': 6}
 
     # The definition of 'a'
-    range = {
+    def_range = {
         'start': {'line': 0, 'character': 4},
         'end': {'line': 0, 'character': 5}
     }
 
     doc = Document(DOC_URI, DOC)
-    assert [{'uri': DOC_URI, 'range': range}] == pyls_definitions(doc, cursor_pos)
+    assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(doc, cursor_pos)
 
 
 def test_builtin_definition():
@@ -47,10 +47,10 @@ def test_assignment():
     cursor_pos = {'line': 11, 'character': 19}
 
     # The assignment of 'self.members'
-    range = {
+    def_range = {
         'start': {'line': 8, 'character': 13},
         'end': {'line': 8, 'character': 20}
     }
 
     doc = Document(DOC_URI, DOC)
-    assert [{'uri': DOC_URI, 'range': range}] == pyls_definitions(doc, cursor_pos)
+    assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(doc, cursor_pos)

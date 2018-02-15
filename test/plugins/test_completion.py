@@ -37,7 +37,7 @@ def test_jedi_completion():
     doc = Document(DOC_URI, DOC)
     items = pyls_jedi_completions(doc, com_position)
 
-    assert len(items) > 0
+    assert items
     assert items[0]['label'] == 'isabs(s)'
 
     # Test we don't throw with big character
@@ -52,7 +52,7 @@ def test_rope_completion():
     doc = Document(DOC_URI, DOC, rope=rope)
     items = pyls_rope_completions(doc, com_position)
 
-    assert len(items) > 0
+    assert items
     assert items[0]['label'] == 'isabs'
 
 

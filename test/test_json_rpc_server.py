@@ -1,21 +1,5 @@
 # Copyright 2018 Palantir Technologies, Inc.
-import pytest
-import os
 from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
-from pyls.json_rpc_server import JSONRPCServer
-
-@pytest.fixture
-def json_rpc_server(tmpdir):
-    manager_rx, tester_tx = os.pipe()
-    tester_rx, manager_tx = os.pipe()
-
-    client = JSONRPCServer(os.fdopen(manager_rx, 'rb'), os.fdopen(manager_tx, 'wb'))
-    server = JSONRPCServer(os.fdopen(tester_rx, 'rb'), os.fdopen(tester_tx, 'wb'))
-
-    yield client, server
-
-    client.close()
-    server.close()
 
 
 def test_receive_request(json_rpc_server):
@@ -43,7 +27,7 @@ def test_receive_response(json_rpc_server):
     response = {'jsonrpc': '2.0', 'id': 0, 'result': {}}
     client.write_message(response)
     message = server.get_messages().next()
-    assert isinstance(message, JSONRPC20Response )
+    assert isinstance(message, JSONRPC20Response)
     assert response == message.data
 
 
