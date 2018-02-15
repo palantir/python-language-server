@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-from StringIO import StringIO
+import sys
 from mock import Mock
 import pytest
 from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20Request
@@ -11,6 +11,11 @@ from pyls.python_ls import PythonLanguageServer
 from pyls.rpc_manager import JSONRPCManager
 from pyls.workspace import Workspace, Document
 from pyls.json_rpc_server import JSONRPCServer
+
+if sys.version_info[0] < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 
 BASE_HANDLED_RESPONSE_CONTENT = 'handled'
 BASE_HANDLED_RESPONSE = JSONRPC20Response(_id=1, result=BASE_HANDLED_RESPONSE_CONTENT)
@@ -26,9 +31,7 @@ def main():
 @pytest.fixture
 def pyls(tmpdir):
     """ Return an initialized python LS """
-    rfile = StringIO()
-    wfile = StringIO()
-    ls = PythonLanguageServer(rfile, wfile)
+    ls = PythonLanguageServer(StringIO, StringIO)
 
     ls.m_initialize(
         processId=1,
