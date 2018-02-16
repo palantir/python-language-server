@@ -3,7 +3,7 @@ import json
 import logging
 import threading
 
-from jsonrpc.jsonrpc2 import JSONRPC20Response
+from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20BatchRequest, JSONRPC20BatchResponse
 from jsonrpc.jsonrpc import JSONRPCRequest
 from jsonrpc.exceptions import (
     JSONRPCInvalidRequestException,
@@ -17,7 +17,7 @@ class JSONRPCServer(object):
     """ Read/Write JSON RPC messages """
 
     def __init__(self, rfile, wfile):
-        self.batch_messages = {}
+        self.pending_request = {}
         self.rfile = rfile
         self.wfile = wfile
         self.write_lock = threading.Lock()
@@ -47,28 +47,40 @@ class JSONRPCServer(object):
             try:
                 try:
                     message_blob = json.loads(request_str)
-                    message = JSONRPCRequest.from_data(message_blob)
+                    request = JSONRPCRequest.from_data(message_blob)
+                    if isinstance(request, JSONRPC20BatchRequest):
+                        self._add_batch_request(request)
+                        messages = request
+                    else:
+                        messages = [request]
                 except JSONRPCInvalidRequestException:
                     # work around where JSONRPC20Reponse expects _id key
                     message_blob['_id'] = message_blob['id']
-                    message = JSONRPC20Response(**message_blob)
+                    # we do not send out batch requests so no need to support batch responses
+                    messages = [JSONRPC20Response(**message_blob)]
             except (KeyError, ValueError):
                 log.error("Could not parse message %s", request_str)
                 continue
 
-            yield message
+            for message in messages:
+                yield message
 
     def write_message(self, message):
         """ Write message to out file descriptor
 
         Args:
-            message (dict): body of the message to send
+            message (JSONRPCRequest, JSONRPCResponse): body of the message to send
         """
         with self.write_lock:
             if self.wfile.closed:
                 return
+            elif isinstance(message, JSONRPC20Response) and message._id in self.pending_request:
+                batch_response = self.pending_request[message._id](message)
+                if batch_response is not None:
+                    message = batch_response
+
             log.debug("Sending %s", message)
-            body = json.dumps(message, separators=(",", ":"))
+            body = message.json
             content_length = len(body)
             response = (
                 "Content-Length: {}\r\n"
@@ -100,6 +112,20 @@ class JSONRPCServer(object):
 
         # Grab the body
         return self.rfile.read(content_length)
+
+    def _add_batch_request(self, requests):
+        pending_requests = [request for request in requests if not request.is_notification]
+        if not pending_requests:
+            return
+
+        batch_request = {'pending': len(pending_requests), 'resolved': []}
+        for request in pending_requests:
+            def cleanup_message(response):
+                batch_request['pending'] -= 1
+                batch_request['resolved'].append(response)
+                del self.pending_request[request._id]
+                return JSONRPC20BatchResponse(batch_request['resolved']) if batch_request['pending'] == 0 else None
+            self.pending_request[request._id] = cleanup_message
 
 
 def _content_length(line):

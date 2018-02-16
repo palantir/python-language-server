@@ -7,9 +7,10 @@ def test_handle_request_sync(rpc_management):
     rpc_manager, message_manager, message_handler = rpc_management
 
     rpc_manager.start()
-    message_manager.get_messages.assert_any_call()
-    message_manager.write_message.assert_called_once_with(BASE_HANDLED_RESPONSE.data)
+    message_manager.write_message.assert_called_once()
     message_handler.assert_called_once_with('test', {})
+    (sent_message, ), _ = message_manager.write_message.call_args
+    assert sent_message.data == BASE_HANDLED_RESPONSE.data
 
 
 def test_handle_request_async(rpc_management):
@@ -102,4 +103,6 @@ def test_send_notification(rpc_management):
     rpc_manager, message_manager, _ = rpc_management
 
     rpc_manager.notify('notify', {})
-    message_manager.write_message.assert_called_once_with(JSONRPC20Request(method='notify', params={}).data)
+    message_manager.write_message.assert_called_once()
+    (sent_message, ), _ = message_manager.write_message.call_args
+    assert sent_message.data == (JSONRPC20Request(_id=None, method='notify', params={})).data
