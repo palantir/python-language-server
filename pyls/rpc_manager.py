@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from uuid import uuid1
+from uuid import uuid4
 
 from concurrent.futures import ThreadPoolExecutor, Future
 from jsonrpc.base import JSONRPCBaseResponse
@@ -51,7 +51,7 @@ class JSONRPCManager(object):
 
         """
         log.debug('Calling %s %s', method, params)
-        request = JSONRPC20Request(_id=uuid1().int, method=method, params=params)
+        request = JSONRPC20Request(_id=uuid4().int, method=method, params=params)
         request_future = Future()
         self._sent_requests[request._id] = request_future
         self._message_manager.write_message(request.data)
