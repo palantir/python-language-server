@@ -65,7 +65,7 @@ class JSONRPCManager(object):
              params (dict): The payload of the notification
          """
         log.debug('Notify %s %s', method, params)
-        notification = JSONRPC20Request(method=method, params=params)
+        notification = JSONRPC20Request(method=method, params=params, is_notification=True)
         self._message_manager.write_message(notification)
 
     def cancel(self, request_id):
