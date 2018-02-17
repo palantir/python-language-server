@@ -105,4 +105,4 @@ def test_send_notification(rpc_management):
     rpc_manager.notify('notify', {})
     message_manager.write_message.assert_called_once()
     (sent_message, ), _ = message_manager.write_message.call_args
-    assert sent_message.data == (JSONRPC20Request(_id=None, method='notify', params={})).data
+    assert sent_message.data == (JSONRPC20Request(method='notify', params={}, is_notification=True)).data
