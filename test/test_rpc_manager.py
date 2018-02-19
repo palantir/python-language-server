@@ -1,4 +1,5 @@
 # Copyright 2018 Palantir Technologies, Inc.
+from time import sleep
 from test.fixtures import BASE_HANDLED_RESPONSE
 from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
 from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCServerError, JSONRPCDispatchException
@@ -27,6 +28,7 @@ def test_handle_request_async(rpc_management):
     message_handler.assert_called_once_with('test', {})
 
     # block until request has been handled
+    sleep(0)
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
     message_manager.write_message.assert_called_once()
@@ -46,6 +48,7 @@ def test_handle_request_async_exception(rpc_management):
     message_handler.assert_called_once_with('test', {})
 
     # block until request has been handled
+    sleep(0)
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
     message_manager.write_message.assert_called_once()
@@ -66,6 +69,7 @@ def test_handle_request_async_error(rpc_management):
     message_handler.assert_called_once_with('test', {})
 
     # block until request has been handled
+    sleep(0)
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
     message_manager.write_message.assert_called_once()
