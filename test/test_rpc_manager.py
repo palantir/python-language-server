@@ -1,6 +1,7 @@
 # Copyright 2018 Palantir Technologies, Inc.
 from test.fixtures import BASE_HANDLED_RESPONSE
 from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
+from jsonrpc.exceptions import JSONRPCMethodNotFound
 
 
 def test_handle_request_sync(rpc_management):
@@ -28,6 +29,17 @@ def test_handle_request_async(rpc_management):
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
         message_manager.write_message.assert_called_once_with(response.data)
+
+
+def test_handle_request_unknown_method(rpc_management):
+    rpc_manager, message_manager, message_handler = rpc_management
+    message_handler.configure_mock(side_effect=KeyError)
+
+    rpc_manager.start()
+    message_manager.get_messages.assert_any_call()
+    message_handler.assert_called_once_with('test', {})
+    (sent_message, ), _ = message_manager.write_message.call_args
+    assert sent_message.data == JSONRPC20Response(_id=1, error=JSONRPCMethodNotFound()._data).data
 
 
 def test_handle_notification_sync(rpc_management):
@@ -75,6 +87,18 @@ def test_handle_notification_async_empty(rpc_management):
         pass
     message_handler.configure_mock(return_value=wrapper)
     message_manager.get_messages.configure_mock(return_value=[notification])
+
+    rpc_manager.start()
+    message_manager.get_messages.assert_any_call()
+    message_handler.assert_called_once_with('notification', {})
+    message_manager.write_message.assert_not_called()
+
+
+def test_handle_notification_unknown_method(rpc_management):
+    rpc_manager, message_manager, message_handler = rpc_management
+    notification = JSONRPC20Request(method='notification', params=None, is_notification=True)
+    message_manager.get_messages.configure_mock(return_value=[notification])
+    message_handler.configure_mock(side_effect=KeyError)
 
     rpc_manager.start()
     message_manager.get_messages.assert_any_call()

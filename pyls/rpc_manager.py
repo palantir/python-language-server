@@ -109,7 +109,10 @@ class JSONRPCManager(object):
             maybe_handler = self._message_handler(request.method, params)
         except KeyError:
             log.debug("No handler found for %s", request.method)
-            self._message_manager.write_message(JSONRPC20Response(_id=request._id, error=JSONRPCMethodNotFound()._data))
+            # Do not need to notify client of failure with notifications
+            if not request.is_notification:
+                self._message_manager.write_message(
+                    JSONRPC20Response(_id=request._id, error=JSONRPCMethodNotFound()._data))
             return
 
         if request._id in self._received_requests:
