@@ -8,6 +8,7 @@ from .config import config
 from .json_rpc_server import JSONRPCServer
 from .rpc_manager import JSONRPCManager
 from .workspace import Workspace
+from .rpc_manager import MissingMethodException
 
 log = logging.getLogger(__name__)
 
@@ -98,7 +99,7 @@ class PythonLanguageServer(object):
                 if method_call in dispatcher:
                     return dispatcher[method_call](**params)
 
-        raise KeyError('Handler for method {} not found'.format(method))
+        raise MissingMethodException('No handler for for method {}'.format(method))
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""

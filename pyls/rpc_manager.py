@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 from jsonrpc.base import JSONRPCBaseResponse
 from jsonrpc.jsonrpc1 import JSONRPC10Response
 from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20Request
-from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCInternalError
+from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCDispatchException, JSONRPCServerError
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +14,10 @@ RESPONSE_CLASS_MAP = {
     "1.0": JSONRPC10Response,
     "2.0": JSONRPC20Response
 }
+
+
+class MissingMethodException(Exception):
+    pass
 
 
 class JSONRPCManager(object):
@@ -40,14 +44,14 @@ class JSONRPCManager(object):
         self._message_manager.close()
 
     def call(self, method, params=None):
-        """Send a JSONRPC message with an expected response.
+        """Send a JSONRPC request.
 
         Args:
             method (str): The method name of the message to send
             params (dict): The payload of the message
 
         Returns:
-            Future that will resolve once a response has been recieved
+            Future that will resolve once a response has been received
 
         """
         log.debug('Calling %s %s', method, params)
@@ -95,33 +99,39 @@ class JSONRPCManager(object):
         """Execute corresponding handler for the recieved request
 
         Args:
-            request (JSONRPCBaseRequest): request to act upon
+            request (JSONRPCBaseRequest): Request to act upon
 
         Note:
-            requests are handled asynchronously if the handler returns a callable, otherwise they are handle
+            Requests are handled asynchronously if the handler returns a callable, otherwise they are handle
             synchronously by the main thread
         """
         if self._shutdown and request.method != 'exit':
             return
 
-        params = request.params if request.params is not None else {}
+        output = None
         try:
-            maybe_handler = self._message_handler(request.method, params)
-        except KeyError:
-            log.debug("No handler found for %s", request.method)
+            maybe_handler = self._message_handler(request.method, request.params if request.params is not None else {})
+        except MissingMethodException as e:
+            log.debug(e.message)
             # Do not need to notify client of failure with notifications
-            if not request.is_notification:
-                self._message_manager.write_message(
-                    JSONRPC20Response(_id=request._id, error=JSONRPCMethodNotFound()._data))
-            return
-
-        if request._id in self._received_requests:
-            log.error('Received request %s with duplicate id', request.data)
-        elif callable(maybe_handler):
-            self._handle_async_request(request, maybe_handler)
-        elif not request.is_notification:
-            log.debug('Sync request %s', request._id)
-            self._message_manager.write_message(_make_response(request, result=maybe_handler))
+            output = JSONRPC20Response(_id=request._id, error=JSONRPCMethodNotFound()._data)
+        except JSONRPCDispatchException as e:
+            output = _make_response(request, error=e.error._data)
+        except Exception as e:  # pylint: disable=broad-except
+            log.error('endpoint exception %s %s %s', e.__class__.__name__, e.args, str(e))
+            output = _make_response(request, error=JSONRPCServerError()._data)
+        else:
+            if request._id in self._received_requests:
+                log.error('Received request %s with duplicate id', request.data)
+            elif callable(maybe_handler):
+                log.debug('Async request %s', request._id)
+                self._handle_async_request(request, maybe_handler)
+            else:
+                output = _make_response(request, result=maybe_handler)
+        finally:
+            if not request.is_notification and output is not None:
+                log.debug('Sync request %s', request._id)
+                self._message_manager.write_message(output)
 
     def _handle_async_request(self, request, handler):
         log.debug('Async request %s', request._id)
@@ -134,31 +144,45 @@ class JSONRPCManager(object):
             del self._received_requests[request._id]
             if completed_future.cancelled():
                 log.debug('Cleared cancelled request %d', request._id)
-                return
-
-            error = completed_future.exception()
-            if error is not None:
-                log.error('Failed to handle request %s with error %s', request._id, error)
-                # TODO(forozco): add more descriptive error
-                response = _make_response(request, error=JSONRPCInternalError()._data)
             else:
-                response = _make_response(request, result=completed_future.result())
-            self._message_manager.write_message(response)
+                try:
+                    result = completed_future.result()
+                except JSONRPCDispatchException as e:
+                    output = _make_response(request, error=e.error._data)
+                except Exception as e:  # pylint: disable=broad-except
+                    # TODO(forozco): add more descriptive error
+                    log.error('endpoint exception %s %s %s', e.__class__.__name__, e.args, str(e))
+                    output = _make_response(request, error=JSONRPCServerError()._data)
+                else:
+                    output = _make_response(request, result=result)
+                finally:
+                    self._message_manager.write_message(output)
+
         self._received_requests[request._id] = future
         future.add_done_callback(did_finish_callback)
 
     def _handle_response(self, response):
+        """Handle the response to requests sent from the server to the client.
+
+        Args:
+            response: (JSONRPC20Response): Received response
+
+        """
         try:
             request = self._sent_requests[response._id]
+        except KeyError:
+            log.error('Received unexpected response %s', response.data)
+        else:
             log.debug("Received response %s", response.data)
 
             def cleanup(_):
                 del self._sent_requests[response._id]
             request.add_done_callback(cleanup)
-            request.set_result(response.data)
 
-        except KeyError:
-            log.error('Received unexpected response %s', response.data)
+            if 'result' in response.data:
+                request.set_result(response.result)
+            else:
+                request.set_exception(JSONRPCDispatchException(**response.error))
 
 
 def _make_response(request, **kwargs):

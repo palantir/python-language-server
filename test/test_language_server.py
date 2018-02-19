@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 from threading import Thread
-from jsonrpc.exceptions import JSONRPCMethodNotFound
+from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCDispatchException
 import pytest
 from pyls.python_ls import start_io_lang_server, PythonLanguageServer
 
@@ -35,7 +35,7 @@ def client_server():
     yield client
 
     shutdown_response = client.rpc_manager.call('shutdown').result(timeout=CALL_TIMEOUT)
-    assert shutdown_response['result'] is None
+    assert shutdown_response is None
     client.rpc_manager.notify('exit')
 
 
@@ -45,9 +45,13 @@ def test_initialize(client_server):  # pylint: disable=redefined-outer-name
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
     }).result(timeout=CALL_TIMEOUT)
-    assert 'capabilities' in response['result']
+    assert 'capabilities' in response
 
 
 def test_missing_message(client_server):  # pylint: disable=redefined-outer-name
-    response = client_server.rpc_manager.call('unknown_method').result(timeout=CALL_TIMEOUT)
-    assert response['error']['code'] == JSONRPCMethodNotFound.CODE
+    try:
+        client_server.rpc_manager.call('unknown_method').result(timeout=CALL_TIMEOUT)
+    except JSONRPCDispatchException as e:
+        assert e.error.code == JSONRPCMethodNotFound.CODE
+    else:
+        assert False

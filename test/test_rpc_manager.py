@@ -1,7 +1,8 @@
 # Copyright 2018 Palantir Technologies, Inc.
 from test.fixtures import BASE_HANDLED_RESPONSE
 from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
-from jsonrpc.exceptions import JSONRPCMethodNotFound
+from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCServerError, JSONRPCDispatchException
+from pyls.rpc_manager import MissingMethodException
 
 
 def test_handle_request_sync(rpc_management):
@@ -16,7 +17,6 @@ def test_handle_request_sync(rpc_management):
 
 def test_handle_request_async(rpc_management):
     rpc_manager, message_manager, message_handler = rpc_management
-    response = JSONRPC20Response(_id=1, result="async")
 
     def wrapper():
         return 'async'
@@ -26,14 +26,56 @@ def test_handle_request_async(rpc_management):
     message_manager.get_messages.assert_any_call()
     message_handler.assert_called_once_with('test', {})
 
+    # block until request has been handled
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
-        message_manager.write_message.assert_called_once_with(response.data)
+    message_manager.write_message.assert_called_once()
+    (sent_message, ), _ = message_manager.write_message.call_args
+    assert sent_message.data == JSONRPC20Response(_id=1, result="async").data
+
+
+def test_handle_request_async_exception(rpc_management):
+    rpc_manager, message_manager, message_handler = rpc_management
+
+    def wrapper():
+        raise RuntimeError("something bad happened")
+    message_handler.configure_mock(return_value=wrapper)
+
+    rpc_manager.start()
+    message_manager.get_messages.assert_any_call()
+    message_handler.assert_called_once_with('test', {})
+
+    # block until request has been handled
+    if rpc_manager._sent_requests:
+        rpc_manager._sent_requests.values()[0].result(timeout=1)
+    message_manager.write_message.assert_called_once()
+    (sent_message, ), _ = message_manager.write_message.call_args
+    assert sent_message.data == JSONRPC20Response(_id=1, error=JSONRPCServerError()._data).data
+
+
+def test_handle_request_async_error(rpc_management):
+    rpc_manager, message_manager, message_handler = rpc_management
+    error_response = JSONRPCDispatchException(code=123, message="something bad happened", data={})
+
+    def wrapper():
+        raise error_response
+    message_handler.configure_mock(return_value=wrapper)
+
+    rpc_manager.start()
+    message_manager.get_messages.assert_any_call()
+    message_handler.assert_called_once_with('test', {})
+
+    # block until request has been handled
+    if rpc_manager._sent_requests:
+        rpc_manager._sent_requests.values()[0].result(timeout=1)
+    message_manager.write_message.assert_called_once()
+    (sent_message, ), _ = message_manager.write_message.call_args
+    assert sent_message.error == error_response.error._data
 
 
 def test_handle_request_unknown_method(rpc_management):
     rpc_manager, message_manager, message_handler = rpc_management
-    message_handler.configure_mock(side_effect=KeyError)
+    message_handler.configure_mock(side_effect=MissingMethodException)
 
     rpc_manager.start()
     message_manager.get_messages.assert_any_call()
@@ -120,7 +162,7 @@ def test_send_request(rpc_management):
     rpc_manager.start()
     message_manager.get_messages.assert_any_call()
     assert not rpc_manager._sent_requests
-    assert response_future.result() == response.data
+    assert response_future.result() == {}
 
 
 def test_send_notification(rpc_management):

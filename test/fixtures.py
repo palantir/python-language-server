@@ -50,9 +50,7 @@ def workspace(tmpdir):
 
 @pytest.fixture
 def rpc_management():
-    message_manager = JSONRPCServer(StringIO(), StringIO())
-    message_manager.get_messages = Mock(return_value=[JSONRPC20Request(_id=1, method='test', params={})])
-    message_manager.write_message = Mock()
+    message_manager = Mock(**{'get_messages.return_value': [JSONRPC20Request(_id=1, method='test', params={})]})
     message_handler = Mock(return_value=BASE_HANDLED_RESPONSE_CONTENT)
     rpc_manager = JSONRPCManager(message_manager, message_handler)
 
