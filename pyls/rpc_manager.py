@@ -112,7 +112,7 @@ class JSONRPCManager(object):
         try:
             maybe_handler = self._message_handler(request.method, request.params if request.params is not None else {})
         except MissingMethodException as e:
-            log.debug(e.message)
+            log.debug(e)
             # Do not need to notify client of failure with notifications
             output = JSONRPC20Response(_id=request._id, error=JSONRPCMethodNotFound()._data)
         except JSONRPCDispatchException as e:
@@ -134,7 +134,6 @@ class JSONRPCManager(object):
                 self._message_manager.write_message(output)
 
     def _handle_async_request(self, request, handler):
-        log.debug('Async request %s', request._id)
         future = self._executor_service.submit(handler)
 
         if request.is_notification:
