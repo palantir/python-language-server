@@ -28,7 +28,7 @@ def test_handle_request_async(rpc_management):
     message_handler.assert_called_once_with('test', {})
 
     # block until request has been handled
-    sleep(0)
+    sleep(0.25)
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
     message_manager.write_message.assert_called_once()
@@ -48,7 +48,7 @@ def test_handle_request_async_exception(rpc_management):
     message_handler.assert_called_once_with('test', {})
 
     # block until request has been handled
-    sleep(0)
+    sleep(0.25)
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
     message_manager.write_message.assert_called_once()
@@ -69,7 +69,7 @@ def test_handle_request_async_error(rpc_management):
     message_handler.assert_called_once_with('test', {})
 
     # block until request has been handled
-    sleep(0)
+    sleep(0.25)
     if rpc_manager._sent_requests:
         rpc_manager._sent_requests.values()[0].result(timeout=1)
     message_manager.write_message.assert_called_once()
