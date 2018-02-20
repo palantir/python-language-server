@@ -28,7 +28,7 @@ class JSONRPCManager(object):
         self._shutdown = False
         self._sent_requests = {}
         self._received_requests = {}
-        self._executor_service = ThreadPoolExecutor(max_workers=5)
+        self._executor_service = ThreadPoolExecutor(max_workers=5)  # arbitrary pool size
 
     def start(self):
         """Start reading JSONRPC messages off of rx"""
@@ -52,7 +52,6 @@ class JSONRPCManager(object):
 
         Returns:
             Future that will resolve once a response has been received
-
         """
         log.debug('Calling %s %s', method, params)
         request = JSONRPC20Request(_id=uuid4().int, method=method, params=params)
@@ -85,7 +84,7 @@ class JSONRPCManager(object):
         try:
             self._received_requests[request_id].cancel()
         except KeyError:
-            log.error('Received cancel for finished/nonexistent request %d', request_id)
+            log.debug('Received cancel for finished/nonexistent request %d', request_id)
 
     def consume_requests(self):
         """ Infinite loop watching for messages from the client."""
@@ -118,7 +117,7 @@ class JSONRPCManager(object):
         except JSONRPCDispatchException as e:
             output = _make_response(request, error=e.error._data)
         except Exception as e:  # pylint: disable=broad-except
-            log.error('endpoint exception %s %s %s', e.__class__.__name__, e.args, str(e))
+            log.exception('synchronous method handler exception')
             output = _make_response(request, error=JSONRPCServerError()._data)
         else:
             if request._id in self._received_requests:
@@ -150,7 +149,7 @@ class JSONRPCManager(object):
                     output = _make_response(request, error=e.error._data)
                 except Exception as e:  # pylint: disable=broad-except
                     # TODO(forozco): add more descriptive error
-                    log.error('endpoint exception %s %s %s', e.__class__.__name__, e.args, str(e))
+                    log.exception('asynchronous method handler exception')
                     output = _make_response(request, error=JSONRPCServerError()._data)
                 else:
                     output = _make_response(request, result=result)

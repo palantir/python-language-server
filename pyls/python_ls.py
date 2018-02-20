@@ -100,6 +100,16 @@ class PythonLanguageServer(object):
 
         raise MissingMethodException('No handler for for method {}'.format(method))
 
+    def m__cancel_request(self, **kwargs):
+        self.rpc_manager.cancel(kwargs['id'])
+
+    def m_shutdown(self, **_kwargs):
+        self.rpc_manager.shutdown()
+        return None
+
+    def m_exit(self, **_kwargs):
+        self.rpc_manager.exit()
+
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
@@ -147,18 +157,6 @@ class PythonLanguageServer(object):
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
-
-    def m__cancel_request(self, **kwargs):
-        def handler():
-            self.rpc_manager.cancel(kwargs['id'])
-        return handler
-
-    def m_shutdown(self, **_kwargs):
-        self.rpc_manager.shutdown()
-        return None
-
-    def m_exit(self, **_kwargs):
-        self.rpc_manager.exit()
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook('pyls_code_actions', doc_uri, range=range, context=context))
