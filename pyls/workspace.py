@@ -74,12 +74,12 @@ class Workspace(object):
     M_SHOW_MESSAGE = 'window/showMessage'
     PRELOADED_MODULES = get_preferred_submodules()
 
-    def __init__(self, root_uri, lang_server=None):
+    def __init__(self, root_uri, rpc_manager):
         self._root_uri = root_uri
+        self._rpc_manager = rpc_manager
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
-        self._lang_server = lang_server
 
         # Whilst incubating, keep private
         self.__rope = Project(self._root_path)
@@ -124,18 +124,16 @@ class Workspace(object):
         self._docs[doc_uri].version = version
 
     def apply_edit(self, edit, on_result=None, on_error=None):
-        return self._lang_server.call(
+        return self._rpc_manager.call(
             self.M_APPLY_EDIT, {'edit': edit},
             on_result=on_result, on_error=on_error
         )
 
     def publish_diagnostics(self, doc_uri, diagnostics):
-        params = {'uri': doc_uri, 'diagnostics': diagnostics}
-        self._lang_server.notify(self.M_PUBLISH_DIAGNOSTICS, params)
+        self._rpc_manager.notify(self.M_PUBLISH_DIAGNOSTICS, params={'uri': doc_uri, 'diagnostics': diagnostics})
 
     def show_message(self, message, msg_type=lsp.MessageType.Info):
-        params = {'type': msg_type, 'message': message}
-        self._lang_server.notify(self.M_SHOW_MESSAGE, params)
+        self._rpc_manager.notify(self.M_SHOW_MESSAGE, params={'type': msg_type, 'message': message})
 
     def source_roots(self, document_path):
         """Return the source roots for the given document."""
