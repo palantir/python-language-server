@@ -74,7 +74,7 @@ class Workspace(object):
     M_SHOW_MESSAGE = 'window/showMessage'
     PRELOADED_MODULES = get_preferred_submodules()
 
-    def __init__(self, root_uri, rpc_manager=None):
+    def __init__(self, root_uri, rpc_manager):
         self._root_uri = root_uri
         self._rpc_manager = rpc_manager
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]

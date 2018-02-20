@@ -5,10 +5,7 @@ import threading
 
 from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20BatchRequest, JSONRPC20BatchResponse
 from jsonrpc.jsonrpc import JSONRPCRequest
-from jsonrpc.exceptions import (
-    JSONRPCInvalidRequestException,
-)
-
+from jsonrpc.exceptions import JSONRPCInvalidRequestException
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +27,7 @@ class JSONRPCServer(object):
     def get_messages(self):
         """Generator that produces well structured JSON RPC message.
 
-        Returns:
+        Yields:
             message: received message
 
         Note:
@@ -59,14 +56,14 @@ class JSONRPCServer(object):
                     # we do not send out batch requests so no need to support batch responses
                     messages = [JSONRPC20Response(**message_blob)]
             except (KeyError, ValueError):
-                log.error("Could not parse message %s", request_str)
+                log.exception("Could not parse message %s", request_str)
                 continue
 
             for message in messages:
                 yield message
 
     def write_message(self, message):
-        """ Write message to out file descriptor
+        """ Write message to out file descriptor.
 
         Args:
             message (JSONRPCRequest, JSONRPCResponse): body of the message to send
@@ -91,7 +88,7 @@ class JSONRPCServer(object):
             self.wfile.flush()
 
     def _read_message(self):
-        """Reads the contents of a message
+        """Reads the contents of a message.
 
         Returns:
             body of message if parsable else None

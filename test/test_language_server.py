@@ -54,4 +54,4 @@ def test_missing_message(client_server):  # pylint: disable=redefined-outer-name
     except JSONRPCDispatchException as e:
         assert e.error.code == JSONRPCMethodNotFound.CODE
     else:
-        assert False
+        assert False, "expected JSONRPCDispatchException"

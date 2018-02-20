@@ -6,9 +6,8 @@ import re
 from . import lsp, _utils, uris
 from .config import config
 from .json_rpc_server import JSONRPCServer
-from .rpc_manager import JSONRPCManager
+from .rpc_manager import JSONRPCManager, MissingMethodException
 from .workspace import Workspace
-from .rpc_manager import MissingMethodException
 
 log = logging.getLogger(__name__)
 
@@ -141,7 +140,7 @@ class PythonLanguageServer(object):
         if rootUri is None:
             rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
-        self.workspace = Workspace(rootUri, rpc_manager=self.rpc_manager)
+        self.workspace = Workspace(rootUri, self.rpc_manager)
         self.config = config.Config(rootUri, initializationOptions or {})
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
