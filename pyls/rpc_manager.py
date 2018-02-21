@@ -54,7 +54,7 @@ class JSONRPCManager(object):
             Future that will resolve once a response has been received
         """
         log.debug('Calling %s %s', method, params)
-        request = JSONRPC20Request(_id=uuid4().int, method=method, params=params)
+        request = JSONRPC20Request(_id=str(uuid4()), method=method, params=params)
         request_future = Future()
         self._sent_requests[request._id] = request_future
         self._message_manager.write_message(request)
