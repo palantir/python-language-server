@@ -76,7 +76,12 @@ class JSONRPCServer(object):
                 if batch_response is not None:
                     message = batch_response
 
-            log.debug("Sending %s", message)
+            if isinstance(message, (JSONRPC20BatchResponse, JSONRPC20BatchRequest)):
+                for msg in message:
+                    log.debug('Sending %s', msg._data)
+            else:
+                log.debug('Sending %s', message._data)
+
             body = message.json
             content_length = len(body)
             response = (
