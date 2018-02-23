@@ -258,8 +258,12 @@ class Document(object):
         # Copy our extra sys path
         path = list(self._extra_sys_path)
 
+        # Check if JEDI_SYS_PATH is available and use it if yes
+        if 'JEDI_SYS_PATH' in os.environ:
+            log.info("Using JEDI_SYS_PATH %s", os.environ['JEDI_SYS_PATH'])
+            path.extend(os.environ['JEDI_SYS_PATH'].split(os.pathsep))
         # Check to see if we're in a virtualenv
-        if 'VIRTUAL_ENV' in os.environ:
+        elif 'VIRTUAL_ENV' in os.environ:
             log.info("Using virtualenv %s", os.environ['VIRTUAL_ENV'])
             path.extend(jedi.evaluate.sys_path.get_venv_path(os.environ['VIRTUAL_ENV']))
         else:
