@@ -32,7 +32,7 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
 
 
 def start_tcp_lang_server(bind_addr, port, handler_class):
-    if not isinstance(handler_class, PythonLanguageServer):
+    if not issubclass(handler_class, PythonLanguageServer):
         raise ValueError('Handler class must be an instance of PythonLanguageServer')
 
     # Construct a custom wrapper class around the user's handler_class
