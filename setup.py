@@ -34,7 +34,7 @@ setup(
     install_requires=[
         'configparser',
         'future>=0.14.0',
-        'futures; python_version == "2.7"',
+        'futures; python_version<"3.2"',
         'jedi>=0.10',
         'json-rpc==1.10.8',
         'mccabe',
