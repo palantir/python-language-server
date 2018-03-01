@@ -52,6 +52,12 @@ def test_merge_dicts():
 
 
 def test_clip_column():
-    assert _utils.clip_column(5, ['123'], 0) == 2
-    assert _utils.clip_column(2, ['\n', '123'], 1) == 2
     assert _utils.clip_column(0, [], 0) == 0
+    assert _utils.clip_column(2, ['123'], 0) == 2
+    assert _utils.clip_column(3, ['123'], 0) == 3
+    assert _utils.clip_column(5, ['123'], 0) == 3
+    assert _utils.clip_column(0, ['\n', '123'], 0) == 0
+    assert _utils.clip_column(1, ['\n', '123'], 0) == 0
+    assert _utils.clip_column(2, ['123\n', '123'], 0) == 2
+    assert _utils.clip_column(3, ['123\n', '123'], 0) == 3
+    assert _utils.clip_column(4, ['123\n', '123'], 1) == 3
