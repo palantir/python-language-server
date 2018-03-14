@@ -149,9 +149,10 @@ class JSONRPCManager(object):
                 except JSONRPCDispatchException as e:
                     output = _make_response(request, error=e.error._data)
                 except Exception:  # pylint: disable=broad-except
-                    # TODO(forozco): add more descriptive error
                     log.exception('asynchronous method handler exception for request: %s', request)
-                    output = _make_response(request, error={'message': traceback.format_exc()})
+                    output = _make_response(request, error={
+                        'code': JSONRPCServerError.CODE, 'message': traceback.format_exc()
+                    })
                 else:
                     output = _make_response(request, result=result)
                 finally:
