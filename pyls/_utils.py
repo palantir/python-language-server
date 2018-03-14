@@ -9,19 +9,34 @@ log = logging.getLogger(__name__)
 
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
 ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
+KWD_MARK = object()
 
 
 def debounce(interval_s):
     """Debounce calls to this function until interval_s seconds have passed."""
     def wrapper(func):
+        arg_cache = {}
+
+        @functools.wraps(func)
+        def cleanup(*args, **kwargs):
+            input_hash = _hash_input(*args, **kwargs)
+            del arg_cache[input_hash]
+            return func(*args, **kwargs)
+
         @functools.wraps(func)
         def debounced(*args, **kwargs):
-            if hasattr(debounced, '_timer'):
-                debounced._timer.cancel()
-            debounced._timer = threading.Timer(interval_s, func, args, kwargs)
-            debounced._timer.start()
+            input_hash = _hash_input(*args, **kwargs)
+            if input_hash in arg_cache:
+                arg_cache[input_hash].cancel()
+            timer = threading.Timer(interval_s, cleanup, args, kwargs)
+            arg_cache[input_hash] = timer
+            timer.start()
         return debounced
     return wrapper
+
+
+def _hash_input(*args, **kwargs):
+    return args + (KWD_MARK, ) + tuple(sorted(kwargs.items()))
 
 
 def camel_to_underscore(string):

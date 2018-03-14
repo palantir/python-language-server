@@ -26,6 +26,29 @@ def test_debounce():
     assert call_m._count == 2
 
 
+def test_debounce_multi_input():
+    interval = 0.1
+
+    @_utils.debounce(0.1)
+    def call_m(_i):
+        call_m._count += 1
+
+    call_m._count = 0
+
+    call_m(0)
+    call_m(1)
+    time.sleep(2 * interval)
+    assert call_m._count == 2
+
+    call_m._count = 0
+    call_m(0)
+    call_m(0)
+    call_m(0)
+    call_m(1)
+    time.sleep(2 * interval)
+    assert call_m._count == 2
+
+
 def test_list_to_string():
     assert _utils.list_to_string("string") == "string"
     assert _utils.list_to_string(["a", "r", "r", "a", "y"]) == "a,r,r,a,y"
