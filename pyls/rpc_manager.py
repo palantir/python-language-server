@@ -9,11 +9,12 @@ from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20Request
 from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCDispatchException, JSONRPCServerError
 
 log = logging.getLogger(__name__)
-
 RESPONSE_CLASS_MAP = {
     "1.0": JSONRPC10Response,
     "2.0": JSONRPC20Response
 }
+# as defined in https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md
+LSP_CANCEL_CODE = -32800
 
 
 class MissingMethodException(Exception):
@@ -82,7 +83,8 @@ class JSONRPCManager(object):
         """
         log.debug('Cancel request %d', request_id)
         try:
-            self._received_requests[request_id].cancel()
+            self._received_requests[request_id].set_exception(
+                JSONRPCDispatchException(code=LSP_CANCEL_CODE, message="Request cancelled"))
         except KeyError:
             log.debug('Received cancel for finished/nonexistent request %d', request_id)
 
