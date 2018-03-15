@@ -16,21 +16,24 @@ def debounce(interval_s, keys=None):
     """Debounce calls to this function until interval_s seconds have passed."""
     def wrapper(func):
         arg_cache = {}
+        lock = threading.Lock()
 
         @functools.wraps(func)
         def cleanup(*args, **kwargs):
             input_hash = _hash_input(keys, *args, **kwargs)
-            del arg_cache[input_hash]
+            with lock:
+                del arg_cache[input_hash]
             return func(*args, **kwargs)
 
         @functools.wraps(func)
         def debounced(*args, **kwargs):
             input_hash = _hash_input(keys, *args, **kwargs)
-            if input_hash in arg_cache:
-                arg_cache[input_hash].cancel()
-            timer = threading.Timer(interval_s, cleanup, args, kwargs)
-            arg_cache[input_hash] = timer
-            timer.start()
+            with lock:
+                if input_hash in arg_cache:
+                    arg_cache[input_hash].cancel()
+                timer = threading.Timer(interval_s, cleanup, args, kwargs)
+                arg_cache[input_hash] = timer
+                timer.start()
         return debounced
     return wrapper
 
