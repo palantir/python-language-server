@@ -84,7 +84,8 @@ class JSONRPCManager(object):
         log.debug('Cancel request %d', request_id)
         try:
             self._received_requests[request_id].set_exception(
-                JSONRPCDispatchException(code=LSP_CANCEL_CODE, message="Request cancelled"))
+                JSONRPCDispatchException(code=LSP_CANCEL_CODE, message="Request cancelled")
+            )
         except KeyError:
             log.debug('Received cancel for finished/nonexistent request %d', request_id)
 
