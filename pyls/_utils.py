@@ -12,20 +12,20 @@ ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 KWD_MARK = object()
 
 
-def debounce(interval_s):
+def debounce(interval_s, keys=None):
     """Debounce calls to this function until interval_s seconds have passed."""
     def wrapper(func):
         arg_cache = {}
 
         @functools.wraps(func)
         def cleanup(*args, **kwargs):
-            input_hash = _hash_input(*args, **kwargs)
+            input_hash = _hash_input(keys, *args, **kwargs)
             del arg_cache[input_hash]
             return func(*args, **kwargs)
 
         @functools.wraps(func)
         def debounced(*args, **kwargs):
-            input_hash = _hash_input(*args, **kwargs)
+            input_hash = _hash_input(keys, *args, **kwargs)
             if input_hash in arg_cache:
                 arg_cache[input_hash].cancel()
             timer = threading.Timer(interval_s, cleanup, args, kwargs)
@@ -35,8 +35,18 @@ def debounce(interval_s):
     return wrapper
 
 
-def _hash_input(*args, **kwargs):
-    return args + (KWD_MARK, ) + tuple(sorted(kwargs.items()))
+def _hash_input(keys, *args, **kwargs):
+    if not keys:
+        return args + (KWD_MARK, ) + tuple(sorted(kwargs.items()))
+    filtered_args = []
+    filtered_kwargs = {}
+    for key in keys:
+        if isinstance(key, (int, long)):
+            filtered_args.append(args[key])
+        elif isinstance(key, str):
+            filtered_kwargs[key] = kwargs[key]
+    print(filtered_args, filtered_kwargs)
+    return tuple(filtered_args) + (KWD_MARK, ) + tuple(sorted(filtered_kwargs.items()))
 
 
 def camel_to_underscore(string):

@@ -49,6 +49,52 @@ def test_debounce_multi_input():
     assert call_m._count == 2
 
 
+def test_debounce_keyed_multi_input():
+    interval = 0.1
+
+    @_utils.debounce(interval, keys=[0])
+    def call_m(_i, _j):
+        call_m._count += 1
+
+    call_m._count = 0
+
+    call_m(0, 1)
+    call_m(0, 1)
+    time.sleep(2 * interval)
+    assert call_m._count == 1
+
+    call_m._count = 0
+    call_m(0, 1)
+    call_m(0, 2)
+    call_m(1, 1)
+    call_m(1, 2)
+    time.sleep(2 * interval)
+    assert call_m._count == 2
+
+
+def test_debounced_keyed_kwargs():
+    interval = 0.1
+
+    @_utils.debounce(interval, keys=['_x'])
+    def call_m(_x=None, _y=None):
+        call_m._count += 1
+
+    call_m._count = 0
+
+    call_m(_x=0, _y=1)
+    call_m(_x=0, _y=1)
+    time.sleep(2 * interval)
+    assert call_m._count == 1
+
+    call_m._count = 0
+    call_m(_x=0, _y=1)
+    call_m(_x=0, _y=2)
+    call_m(_x=1, _y=1)
+    call_m(_x=1, _y=2)
+    time.sleep(2 * interval)
+    assert call_m._count == 2
+
+
 def test_list_to_string():
     assert _utils.list_to_string("string") == "string"
     assert _utils.list_to_string(["a", "r", "r", "a", "y"]) == "a,r,r,a,y"
