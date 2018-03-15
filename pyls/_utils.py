@@ -43,7 +43,7 @@ def _hash_input(keys, *args, **kwargs):
     filtered_args = []
     filtered_kwargs = {}
     for key in keys:
-        if isinstance(key, (int, long)):
+        if isinstance(key, int):
             filtered_args.append(args[key])
         elif isinstance(key, str):
             filtered_kwargs[key] = kwargs[key]
