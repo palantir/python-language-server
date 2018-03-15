@@ -48,7 +48,6 @@ def _hash_input(keys, *args, **kwargs):
             filtered_args.append(args[key])
         elif isinstance(key, str):
             filtered_kwargs[key] = kwargs[key]
-    print(filtered_args, filtered_kwargs)
     return tuple(filtered_args) + (KWD_MARK, ) + tuple(sorted(filtered_kwargs.items()))
 
 
