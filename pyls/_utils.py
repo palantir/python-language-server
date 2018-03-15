@@ -15,24 +15,23 @@ KWD_MARK = object()
 def debounce(interval_s, keys=None):
     """Debounce calls to this function until interval_s seconds have passed."""
     def wrapper(func):
-        arg_cache = {}
+        timers = {}
         lock = threading.Lock()
 
         @functools.wraps(func)
-        def cleanup(*args, **kwargs):
+        def cleanup_run(*args, **kwargs):
             input_hash = _hash_input(keys, *args, **kwargs)
             with lock:
-                del arg_cache[input_hash]
+                del timers[input_hash]
             return func(*args, **kwargs)
 
-        @functools.wraps(func)
         def debounced(*args, **kwargs):
             input_hash = _hash_input(keys, *args, **kwargs)
             with lock:
-                if input_hash in arg_cache:
-                    arg_cache[input_hash].cancel()
-                timer = threading.Timer(interval_s, cleanup, args, kwargs)
-                arg_cache[input_hash] = timer
+                if input_hash in timers:
+                    timers[input_hash].cancel()
+                timer = threading.Timer(interval_s, cleanup_run, args, kwargs)
+                timers[input_hash] = timer
                 timer.start()
         return debounced
     return wrapper
