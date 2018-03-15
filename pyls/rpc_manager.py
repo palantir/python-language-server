@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import traceback
 from uuid import uuid4
 
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -121,7 +122,7 @@ class JSONRPCManager(object):
             output = _make_response(request, error=e.error._data)
         except Exception as e:  # pylint: disable=broad-except
             log.exception('synchronous method handler exception for request: %s', request)
-            output = _make_response(request, error=JSONRPCServerError()._data)
+            output = _make_response(request, error={'code': JSONRPCServerError.CODE, 'message': traceback.format_exc()})
         else:
             if request._id in self._received_requests:
                 log.error('Received request %s with duplicate id', request.data)
@@ -150,10 +151,11 @@ class JSONRPCManager(object):
                     result = completed_future.result()
                 except JSONRPCDispatchException as e:
                     output = _make_response(request, error=e.error._data)
-                except Exception as e:  # pylint: disable=broad-except
-                    # TODO(forozco): add more descriptive error
+                except Exception:  # pylint: disable=broad-except
                     log.exception('asynchronous method handler exception for request: %s', request)
-                    output = _make_response(request, error=JSONRPCServerError()._data)
+                    output = _make_response(request, error={
+                        'code': JSONRPCServerError.CODE, 'message': traceback.format_exc()
+                    })
                 else:
                     output = _make_response(request, result=result)
                 finally:

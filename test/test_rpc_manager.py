@@ -53,7 +53,10 @@ def test_handle_request_async_exception(rpc_management):
         rpc_manager._sent_requests.values()[0].result(timeout=1)
     message_manager.write_message.assert_called_once()
     (sent_message, ), _ = message_manager.write_message.call_args
-    assert sent_message.data == JSONRPC20Response(_id=1, error=JSONRPCServerError()._data).data
+    data = sent_message.data
+    assert data['id'] == 1
+    assert data['error']['code'] == JSONRPCServerError.CODE
+    assert 'something bad happened' in data['error']['message']
 
 
 def test_handle_request_async_error(rpc_management):
