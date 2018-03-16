@@ -19,7 +19,8 @@ LSP_CANCEL_CODE = -32800
 
 
 class MissingMethodException(Exception):
-    pass
+    def __init__(self, method):
+        super(MissingMethodException, self).__init__("No such method '%s'" % method)
 
 
 class JSONRPCManager(object):
@@ -113,7 +114,7 @@ class JSONRPCManager(object):
 
         output = None
         try:
-            maybe_handler = self._message_handler(request.method, request.params if request.params is not None else {})
+            maybe_handler = self._message_handler(request.method, request.params or {})
         except MissingMethodException as e:
             log.debug(e)
             # Do not need to notify client of failure with notifications

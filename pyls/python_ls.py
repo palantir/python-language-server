@@ -1,18 +1,15 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import socketserver
-import re
 
 from . import lsp, _utils, uris
 from .config import config
+from .dispatcher import JSONRPCMethodDispatcher
 from .json_rpc_server import JSONRPCServer
 from .rpc_manager import JSONRPCManager, MissingMethodException
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
-
-_RE_FIRST_CAP = re.compile('(.)([A-Z][a-z]+)')
-_RE_ALL_CAP = re.compile('([a-z0-9])([A-Z])')
 
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
@@ -77,28 +74,13 @@ class PythonLanguageServer(object):
         self.rpc_manager.start()
 
     def handle_request(self, method, params):
-        """Provides callables to handle requests or responses to those reqeuests
-
-        Args:
-            method (str): name of the message
-            params (dict): body of the message
-
-        Returns:
-            Callable if method is to be handled
-
-        Raises:
-            KeyError: Handler for method is not found
-        """
-
-        method_call = 'm_{}'.format(_method_to_string(method))
-        if hasattr(self, method_call):
-            return getattr(self, method_call)(**params)
-        elif self._dispatchers:
-            for dispatcher in self._dispatchers:
-                if method_call in dispatcher:
-                    return dispatcher[method_call](**params)
-
-        raise MissingMethodException('No handler for for method {}'.format(method))
+        """Handles a method request by calling ourselves then falling back through registered dispatchers."""
+        for dispatcher in [JSONRPCMethodDispatcher(self)] + self._dispatchers:
+            try:
+                return dispatcher(method, params)
+            except MissingMethodException:
+                pass
+        raise MissingMethodException(method)
 
     def m__cancel_request(self, **kwargs):
         self.rpc_manager.cancel(kwargs['id'])
@@ -275,15 +257,6 @@ class PythonLanguageServer(object):
 
     def m_workspace__execute_command(self, command=None, arguments=None):
         return self.execute_command(command, arguments)
-
-
-def _method_to_string(method):
-    return _camel_to_underscore(method.replace("/", "__").replace("$", ""))
-
-
-def _camel_to_underscore(string):
-    s1 = _RE_FIRST_CAP.sub(r'\1_\2', string)
-    return _RE_ALL_CAP.sub(r'\1_\2', s1).lower()
 
 
 def flatten(list_of_lists):

@@ -82,7 +82,7 @@ def test_handle_request_async_error(rpc_management):
 
 def test_handle_request_unknown_method(rpc_management):
     rpc_manager, message_manager, message_handler = rpc_management
-    message_handler.configure_mock(side_effect=MissingMethodException)
+    message_handler.configure_mock(side_effect=MissingMethodException('test'))
 
     rpc_manager.start()
     message_manager.get_messages.assert_any_call()
