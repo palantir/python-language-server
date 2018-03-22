@@ -26,7 +26,7 @@ def pyls_completions(config, workspace, document, position):
         return None
 
     offset = document.offset_at_position(position)
-    rope_config = config.settings(document_path=document.path).get('rope')
+    rope_config = config.settings(document_path=document.path).get('rope', {})
     rope_project = workspace._rope_project_builder(rope_config)
     document_rope = document._rope_resource(rope_config)
 
