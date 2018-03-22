@@ -54,8 +54,10 @@ class PyflakesDiagnosticReport(object):
         }
 
         severity = lsp.DiagnosticSeverity.Warning
-        if type(message) in PYFLAKES_ERROR_MESSAGES:
-            severity = lsp.DiagnosticSeverity.Error
+        for message_type in PYFLAKES_ERROR_MESSAGES:
+            if isinstance(message, message_type):
+                severity = lsp.DiagnosticSeverity.Error
+                break
 
         self.diagnostics.append({
             'source': 'pyflakes',
