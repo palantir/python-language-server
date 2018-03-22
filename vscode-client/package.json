@@ -146,7 +146,7 @@
                     "default": true,
                     "description": "Enable or disable the plugin."
                 },
-                "pyls.rope.ropefolder": {
+                "pyls.rope.ropeFolder": {
                     "type": "string",
                     "default": ".ropeproject",
                     "description": "The name of the folder in which rope stores project configurations and data.  Pass `null` for not using such a folder at all."
