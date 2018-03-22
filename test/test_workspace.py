@@ -21,17 +21,19 @@ def test_get_document(pyls):
     assert pyls.workspace.get_document(DOC_URI).source == 'TEXT'
 
 
+def test_get_missing_document(tmpdir, pyls):
+    source = 'TEXT'
+    doc_path = tmpdir.join("test_document.py")
+    doc_path.write(source)
+    doc_uri = uris.from_fs_path(str(doc_path))
+    assert pyls.workspace.get_document(doc_uri).source == 'TEXT'
+
+
 def test_rm_document(pyls):
     pyls.workspace.put_document(DOC_URI, 'TEXT')
     assert pyls.workspace.get_document(DOC_URI).source == 'TEXT'
     pyls.workspace.rm_document(DOC_URI)
-    with pytest.raises(KeyError):
-        pyls.workspace.get_document(DOC_URI)
-
-
-def test_bad_get_document(pyls):
-    with pytest.raises(KeyError):
-        pyls.workspace.get_document("BAD_URI")
+    assert pyls.workspace.get_document(DOC_URI)._source is None
 
 
 def test_non_root_project(pyls):

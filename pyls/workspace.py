@@ -107,14 +107,14 @@ class Workspace(object):
         return (self._root_uri_scheme == '' or self._root_uri_scheme == 'file') and os.path.exists(self._root_path)
 
     def get_document(self, doc_uri):
-        return self._docs[doc_uri]
+        """Return a managed document if-present, else create one pointing at disk.
 
-    def put_document(self, doc_uri, content, version=None):
-        path = uris.to_fs_path(doc_uri)
-        self._docs[doc_uri] = Document(
-            doc_uri, content,
-            extra_sys_path=self.source_roots(path), version=version, rope=self._rope
-        )
+        See https://github.com/Microsoft/language-server-protocol/issues/177
+        """
+        return self._docs.get(doc_uri) or self._create_document(doc_uri)
+
+    def put_document(self, doc_uri, source, version=None):
+        self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
 
     def rm_document(self, doc_uri):
         self._docs.pop(doc_uri)
@@ -139,6 +139,13 @@ class Workspace(object):
         """Return the source roots for the given document."""
         files = _utils.find_parents(self._root_path, document_path, ['setup.py']) or []
         return [os.path.dirname(setup_py) for setup_py in files]
+
+    def _create_document(self, doc_uri, source=None, version=None):
+        path = uris.to_fs_path(doc_uri)
+        return Document(
+            doc_uri, source=source,
+            extra_sys_path=self.source_roots(path), rope=self._rope, version=version
+        )
 
 
 class Document(object):
