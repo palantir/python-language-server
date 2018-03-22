@@ -28,7 +28,7 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
         self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
 
     def handle(self):
-        self.delegate.handle()
+        self.delegate.start()
 
 
 def start_tcp_lang_server(bind_addr, port, handler_class):
