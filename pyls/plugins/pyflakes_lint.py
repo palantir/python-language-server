@@ -1,6 +1,21 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyflakes import api as pyflakes_api
+from pyflakes import api as pyflakes_api, messages
 from pyls import hookimpl, lsp
+
+# Pyflakes messages that should be reported as Errors instead of Warns
+PYFLAKES_ERROR_MESSAGES = (
+    messages.UndefinedName,
+    messages.UndefinedExport,
+    messages.UndefinedLocal,
+    messages.DuplicateArgument,
+    messages.FutureFeatureNotDefined,
+    messages.ReturnOutsideFunction,
+    messages.YieldOutsideFunction,
+    messages.ContinueOutsideLoop,
+    messages.BreakOutsideLoop,
+    messages.ContinueInFinally,
+    messages.TwoStarredExpressions,
+)
 
 
 @hookimpl
@@ -37,9 +52,14 @@ class PyflakesDiagnosticReport(object):
             'start': {'line': message.lineno - 1, 'character': message.col},
             'end': {'line': message.lineno - 1, 'character': len(self.lines[message.lineno - 1])},
         }
+
+        severity = lsp.DiagnosticSeverity.Warning
+        if type(message) in PYFLAKES_ERROR_MESSAGES:
+            severity = lsp.DiagnosticSeverity.Error
+
         self.diagnostics.append({
             'source': 'pyflakes',
             'range': err_range,
             'message': message.message % message.message_args,
-            'severity': lsp.DiagnosticSeverity.Warning
+            'severity': severity
         })
