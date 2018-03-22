@@ -81,13 +81,15 @@ class Workspace(object):
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
 
-        # Whilst incubating, keep private
-        self.__rope = Project(self._root_path)
-        self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+        # Whilst incubating, keep rope private
+        self.__rope = None
+        self.__rope_config = None
 
-    @property
-    def _rope(self):
+    def _rope_project_builder(self, rope_config):
         # TODO: we could keep track of dirty files and validate only those
+        if self.__rope is None or self.__rope_config != rope_config:
+            self.__rope = Project(self._root_path, **rope_config)
+            self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
         self.__rope.validate()
         return self.__rope
 
@@ -144,13 +146,13 @@ class Workspace(object):
         path = uris.to_fs_path(doc_uri)
         return Document(
             doc_uri, source=source,
-            extra_sys_path=self.source_roots(path), rope=self._rope, version=version
+            extra_sys_path=self.source_roots(path), rope=self._rope_project_builder, version=version
         )
 
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope=None):
+    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -159,14 +161,13 @@ class Document(object):
         self._local = local
         self._source = source
         self._extra_sys_path = extra_sys_path or []
-        self._rope_project = rope
+        self._rope_project_builder = rope_project_builder
 
     def __str__(self):
         return str(self.uri)
 
-    @property
-    def _rope(self):
-        return libutils.path_to_resource(self._rope_project, self.path)
+    def _rope_resource(self, rope_config):
+        return libutils.path_to_resource(self._rope_project_builder(rope_config), self.path)
 
     @property
     def lines(self):
