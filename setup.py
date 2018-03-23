@@ -40,7 +40,7 @@ setup(
         'mccabe',
         'pycodestyle',
         'pydocstyle>=2.0.0',
-        'pyflakes',
+        'pyflakes>=1.6.0',
         'rope>=0.10.5',
         'yapf',
         'pluggy'
