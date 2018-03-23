@@ -12,10 +12,13 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_rename(workspace, document, position, new_name):
+def pyls_rename(config, workspace, document, position, new_name):
+    rope_config = config.settings(document_path=document.path).get('rope', {})
+    rope_project = workspace._rope_project_builder(rope_config)
+
     rename = Rename(
-        workspace._rope,
-        libutils.path_to_resource(workspace._rope, document.path),
+        rope_project,
+        libutils.path_to_resource(rope_project, document.path),
         document.offset_at_position(position)
     )
 

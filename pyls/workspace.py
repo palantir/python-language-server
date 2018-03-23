@@ -146,14 +146,15 @@ class Workspace(object):
     def _create_document(self, doc_uri, source=None, version=None):
         path = uris.to_fs_path(doc_uri)
         return Document(
-            doc_uri, source=source,
-            extra_sys_path=self.source_roots(path), rope=self._rope, version=version
+            doc_uri, source=source, version=version,
+            extra_sys_path=self.source_roots(path),
+            rope_project_builder=self._rope_project_builder,
         )
 
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope=None):
+    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -162,7 +163,7 @@ class Document(object):
         self._local = local
         self._source = source
         self._extra_sys_path = extra_sys_path or []
-        self._rope_project = rope
+        self._rope_project_builder = rope_project_builder
 
     def __str__(self):
         return str(self.uri)

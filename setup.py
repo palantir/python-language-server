@@ -48,7 +48,7 @@ setup(
         'mccabe': ['mccabe'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
-        'pyflakes': ['pyflakes'],
+        'pyflakes': ['pyflakes>=1.6.0'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
         'test': ['tox', 'versioneer', 'pytest', 'mock', 'pytest-cov', 'coverage'],
