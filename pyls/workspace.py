@@ -8,8 +8,6 @@ import imp
 import pkgutil
 
 import jedi
-from rope.base import libutils
-from rope.base.project import Project
 
 from . import lsp, uris, _utils
 
@@ -81,13 +79,18 @@ class Workspace(object):
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
 
-        # Whilst incubating, keep private
-        self.__rope = Project(self._root_path)
-        self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+        # Whilst incubating, keep rope private
+        self.__rope = None
+        self.__rope_config = None
 
-    @property
-    def _rope(self):
+    def _rope_project_builder(self, rope_config):
+        from rope.base.project import Project
+
         # TODO: we could keep track of dirty files and validate only those
+        if self.__rope is None or self.__rope_config != rope_config:
+            rope_folder = rope_config.get('ropeFolder')
+            self.__rope = Project(self._root_path, ropefolder=rope_folder)
+            self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
         self.__rope.validate()
         return self.__rope
 
@@ -164,9 +167,9 @@ class Document(object):
     def __str__(self):
         return str(self.uri)
 
-    @property
-    def _rope(self):
-        return libutils.path_to_resource(self._rope_project, self.path)
+    def _rope_resource(self, rope_config):
+        from rope.base import libutils
+        return libutils.path_to_resource(self._rope_project_builder(rope_config), self.path)
 
     @property
     def lines(self):
