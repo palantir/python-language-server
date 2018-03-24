@@ -25,11 +25,9 @@ class JsonRpcStreamReader(object):
 
             if request_str is None:
                 break
-            if isinstance(request_str, bytes):
-                request_str = request_str.decode("utf-8")
 
             try:
-                message_consumer(json.loads(request_str))
+                message_consumer(json.loads(request_str.decode('utf-8')))
             except ValueError:
                 log.exception("Failed to parse JSON message %s", request_str)
                 continue
@@ -88,17 +86,17 @@ class JsonRpcStreamWriter(object):
                 return
             try:
                 body = json.dumps(message, **self._json_dumps_args)
-                content_length = len(body)
+
+                # Ensure we get the byte length, not the character length
+                content_length = len(body) if isinstance(body, bytes) else len(body.encode('utf-8'))
+
                 response = (
                     "Content-Length: {}\r\n"
                     "Content-Type: application/vscode-jsonrpc; charset=utf8\r\n\r\n"
                     "{}".format(content_length, body)
                 )
 
-                if isinstance(response, unicode):
-                    response = response.encode("utf-8")
-
-                self._wfile.write(response)
+                self._wfile.write(response.encode('utf-8'))
                 self._wfile.flush()
             except Exception:  # pylint: disable=broad-except
                 log.exception("Failed to write message to output file %s", message)

@@ -1,24 +1,20 @@
 # Copyright 2018 Palantir Technologies, Inc.
 # pylint: disable=redefined-outer-name
+from io import BytesIO
 import mock
 import pytest
 
 from pyls.jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 
 @pytest.fixture()
 def rfile():
-    return StringIO()
+    return BytesIO()
 
 
 @pytest.fixture()
 def wfile():
-    return StringIO()
+    return BytesIO()
 
 
 @pytest.fixture()
@@ -33,10 +29,10 @@ def writer(wfile):
 
 def test_reader(rfile, reader):
     rfile.write(
-        'Content-Length: 49\r\n'
-        'Content-Type: application/vscode-jsonrpc; charset=utf8\r\n'
-        '\r\n'
-        '{"id": "hello", "method": "method", "params": {}}'
+        b'Content-Length: 49\r\n'
+        b'Content-Type: application/vscode-jsonrpc; charset=utf8\r\n'
+        b'\r\n'
+        b'{"id": "hello", "method": "method", "params": {}}'
     )
     rfile.seek(0)
 
@@ -51,7 +47,7 @@ def test_reader(rfile, reader):
 
 
 def test_reader_bad_message(rfile, reader):
-    rfile.write('Hello world')
+    rfile.write(b'Hello world')
     rfile.seek(0)
 
     # Ensure the listener doesn't throw
@@ -62,10 +58,10 @@ def test_reader_bad_message(rfile, reader):
 
 def test_reader_bad_json(rfile, reader):
     rfile.write(
-        'Content-Length: 8\r\n'
-        'Content-Type: application/vscode-jsonrpc; charset=utf8\r\n'
-        '\r\n'
-        '{hello}}'
+        b'Content-Length: 8\r\n'
+        b'Content-Type: application/vscode-jsonrpc; charset=utf8\r\n'
+        b'\r\n'
+        b'{hello}}'
     )
     rfile.seek(0)
 
@@ -82,10 +78,10 @@ def test_writer(wfile, writer):
         'params': {}
     })
     assert wfile.getvalue() == (
-        'Content-Length: 49\r\n'
-        'Content-Type: application/vscode-jsonrpc; charset=utf8\r\n'
-        '\r\n'
-        '{"id": "hello", "method": "method", "params": {}}'
+        b'Content-Length: 49\r\n'
+        b'Content-Type: application/vscode-jsonrpc; charset=utf8\r\n'
+        b'\r\n'
+        b'{"id": "hello", "method": "method", "params": {}}'
     )
 
 
@@ -93,4 +89,4 @@ def test_writer_bad_message(wfile, writer):
     # A datetime isn't serializable, ensure the write method doesn't throw
     import datetime
     writer.write(datetime.datetime.now())
-    assert wfile.getvalue() == ''
+    assert wfile.getvalue() == b''

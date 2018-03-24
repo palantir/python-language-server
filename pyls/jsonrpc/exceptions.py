@@ -26,6 +26,9 @@ class JsonRpcException(Exception):
             self.data == other.data
         )
 
+    def __hash__(self):
+        return hash((self.code, self.message, self.data))
+
     @staticmethod
     def from_dict(error):
         for exc_class in _EXCEPTIONS:
