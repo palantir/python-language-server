@@ -6,7 +6,7 @@ from . import lsp, _utils, uris
 from .config import config
 from .jsonrpc.dispatchers import MethodDispatcher
 from .jsonrpc.endpoint import Endpoint
-from .jsonrpc.server import JsonRpcServer
+from .jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
@@ -68,14 +68,15 @@ class PythonLanguageServer(MethodDispatcher):
         self.workspace = None
         self.config = None
 
-        self._jsonrpc_server = JsonRpcServer(rx, tx)
-        self._endpoint = Endpoint(self, self._jsonrpc_server.write)
+        self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
+        self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
+        self._endpoint = Endpoint(self, self._jsonrpc_stream_writer.write)
         self._dispatchers = []
         self._shutdown = False
 
     def start(self):
         """Entry point for the server."""
-        self._jsonrpc_server.listen(self._endpoint.consume)
+        self._jsonrpc_stream_reader.listen(self._endpoint.consume)
 
     def __getitem__(self, item):
         """Override getitem to fallback through multiple dispatchers."""
@@ -102,7 +103,8 @@ class PythonLanguageServer(MethodDispatcher):
 
     def m_exit(self, **_kwargs):
         self._endpoint.shutdown()
-        self._jsonrpc_server.shutdown()
+        self._jsonrpc_stream_reader.close()
+        self._jsonrpc_stream_writer.close()
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""
