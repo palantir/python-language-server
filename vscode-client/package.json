@@ -131,6 +131,61 @@
                     "default": false,
                     "description": "Enable or disable the plugin."
                 },
+                "pyls.plugins.pydocstyle.convention": {
+                    "type": "string",
+                    "default": null,
+                    "enum": [
+                        "pep257",
+                        "numpy"
+                    ],
+                    "description": "Choose the basic list of checked errors by specifying an existing convention."
+                },
+                "pyls.plugins.pydocstyle.addIgnore": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Ignore errors and warnings in addition to the specified convention."
+                },
+                "pyls.plugins.pydocstyle.addSelect": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Select errors and warnings in addition to the specified convention."
+                },
+                "pyls.plugins.pydocstyle.ignore": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Ignore errors and warnings"
+                },
+                "pyls.plugins.pydocstyle.select": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "Select errors and warnings"
+                },
+                "pyls.plugins.pydocstyle.match": {
+                    "type": "string",
+                    "default": "(?!test_).*\\.py",
+                    "description": "Check only files that exactly match the given regular expression; default is to match files that don't start with 'test_' but end with '.py'."
+                },
+                "pyls.plugins.pydocstyle.matchDir": {
+                    "type": "string",
+                    "default": "[^\\.].*",
+                    "description": "Search only dirs that exactly match the given regular expression; default is to match dirs which do not begin with a dot."
+                },
                 "pyls.plugins.pyflakes.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -145,6 +200,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable or disable the plugin."
+                },
+                "pyls.rope.ropeFolder": {
+                    "type": "string",
+                    "default": ".ropeproject",
+                    "description": "The name of the folder in which rope stores project configurations and data.  Pass `null` for not using such a folder at all."
                 }
             }
         }

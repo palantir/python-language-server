@@ -32,17 +32,12 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
+        'autopep8',
         'configparser',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
         'jedi>=0.10',
         'json-rpc==1.10.8',
-        'mccabe',
-        'pycodestyle',
-        'pydocstyle>=2.0.0',
-        'pyflakes',
-        'rope>=0.10.5',
-        'yapf',
         'pluggy'
     ],
 
@@ -51,6 +46,20 @@ setup(
     # for example:
     # $ pip install -e .[test]
     extras_require={
+        'all': [
+            'mccabe',
+            'pycodestyle',
+            'pydocstyle>=2.0.0',
+            'pyflakes>=1.6.0',
+            'rope>-0.10.5',
+            'yapf',
+        ],
+        'mccabe': ['mccabe'],
+        'pycodestyle': ['pycodestyle'],
+        'pydocstyle': ['pydocstyle>=2.0.0'],
+        'pyflakes': ['pyflakes>=1.6.0'],
+        'rope': ['rope>0.10.5'],
+        'yapf': ['yapf'],
         'test': ['tox', 'versioneer', 'pytest', 'mock', 'pytest-cov', 'coverage'],
     },
 
@@ -62,6 +71,7 @@ setup(
             'pyls = pyls.__main__:main',
         ],
         'pyls': [
+            'autopep8 = pyls.plugins.autopep8_format',
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',
@@ -74,7 +84,7 @@ setup(
             'pyflakes = pyls.plugins.pyflakes_lint',
             'rope_completion = pyls.plugins.rope_completion',
             'rope_rename = pyls.plugins.rope_rename',
-            'yapf = pyls.plugins.format',
+            'yapf = pyls.plugins.yapf_format',
         ]
     },
 )

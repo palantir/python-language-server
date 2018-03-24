@@ -8,8 +8,6 @@ import imp
 import pkgutil
 
 import jedi
-from rope.base import libutils
-from rope.base.project import Project
 
 from . import lsp, uris, _utils
 
@@ -81,13 +79,18 @@ class Workspace(object):
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
 
-        # Whilst incubating, keep private
-        self.__rope = Project(self._root_path)
-        self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+        # Whilst incubating, keep rope private
+        self.__rope = None
+        self.__rope_config = None
 
-    @property
-    def _rope(self):
+    def _rope_project_builder(self, rope_config):
+        from rope.base.project import Project
+
         # TODO: we could keep track of dirty files and validate only those
+        if self.__rope is None or self.__rope_config != rope_config:
+            rope_folder = rope_config.get('ropeFolder')
+            self.__rope = Project(self._root_path, ropefolder=rope_folder)
+            self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
         self.__rope.validate()
         return self.__rope
 
@@ -107,14 +110,14 @@ class Workspace(object):
         return (self._root_uri_scheme == '' or self._root_uri_scheme == 'file') and os.path.exists(self._root_path)
 
     def get_document(self, doc_uri):
-        return self._docs[doc_uri]
+        """Return a managed document if-present, else create one pointing at disk.
 
-    def put_document(self, doc_uri, content, version=None):
-        path = uris.to_fs_path(doc_uri)
-        self._docs[doc_uri] = Document(
-            doc_uri, content,
-            extra_sys_path=self.source_roots(path), version=version, rope=self._rope
-        )
+        See https://github.com/Microsoft/language-server-protocol/issues/177
+        """
+        return self._docs.get(doc_uri) or self._create_document(doc_uri)
+
+    def put_document(self, doc_uri, source, version=None):
+        self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
 
     def rm_document(self, doc_uri):
         self._docs.pop(doc_uri)
@@ -140,10 +143,18 @@ class Workspace(object):
         files = _utils.find_parents(self._root_path, document_path, ['setup.py']) or []
         return [os.path.dirname(setup_py) for setup_py in files]
 
+    def _create_document(self, doc_uri, source=None, version=None):
+        path = uris.to_fs_path(doc_uri)
+        return Document(
+            doc_uri, source=source, version=version,
+            extra_sys_path=self.source_roots(path),
+            rope_project_builder=self._rope_project_builder,
+        )
+
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope=None):
+    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -152,14 +163,14 @@ class Document(object):
         self._local = local
         self._source = source
         self._extra_sys_path = extra_sys_path or []
-        self._rope_project = rope
+        self._rope_project_builder = rope_project_builder
 
     def __str__(self):
         return str(self.uri)
 
-    @property
-    def _rope(self):
-        return libutils.path_to_resource(self._rope_project, self.path)
+    def _rope_resource(self, rope_config):
+        from rope.base import libutils
+        return libutils.path_to_resource(self._rope_project_builder(rope_config), self.path)
 
     @property
     def lines(self):

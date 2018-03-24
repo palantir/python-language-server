@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+
 # C extensions
 *.so
 
@@ -45,6 +52,7 @@ coverage.xml
 *,cover
 .hypothesis/
 pytest.xml
+.pytest_cache/
 
 # Translations
 *.mo
