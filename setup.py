@@ -32,6 +32,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
+        'autopep8',
         'configparser',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
@@ -70,6 +71,7 @@ setup(
             'pyls = pyls.__main__:main',
         ],
         'pyls': [
+            'autopep8 = pyls.plugins.autopep8_format',
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',
@@ -82,7 +84,7 @@ setup(
             'pyflakes = pyls.plugins.pyflakes_lint',
             'rope_completion = pyls.plugins.rope_completion',
             'rope_rename = pyls.plugins.rope_rename',
-            'yapf = pyls.plugins.format',
+            'yapf = pyls.plugins.yapf_format',
         ]
     },
 )

@@ -8,12 +8,12 @@ from pyls import hookimpl
 log = logging.getLogger(__name__)
 
 
-@hookimpl
+@hookimpl(tryfirst=True)  # Prefer YAPF over autopep8 if available
 def pyls_format_document(document):
     return _format(document)
 
 
-@hookimpl
+@hookimpl(tryfirst=True)  # Prefer YAPF over autopep8 if available
 def pyls_format_range(document, range):  # pylint: disable=redefined-builtin
     # First we 'round' the range up/down to full lines only
     range['start']['character'] = 0
