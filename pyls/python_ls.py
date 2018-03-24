@@ -5,8 +5,7 @@ import re
 
 from . import lsp, _utils, uris
 from .config import config
-from .json_rpc_server import JSONRPCServer
-from .rpc_manager import JSONRPCManager, MissingMethodException
+from .json_rpc import server, manager
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
@@ -67,7 +66,7 @@ class PythonLanguageServer(object):
     # pylint: disable=too-many-public-methods,redefined-builtin
 
     def __init__(self, rx, tx):
-        self.rpc_manager = JSONRPCManager(JSONRPCServer(rx, tx), self.handle_request)
+        self.rpc_manager = manager.JSONRPCManager(server.JSONRPCServer(rx, tx), self.handle_request)
         self.workspace = None
         self.config = None
         self._dispatchers = []
@@ -98,7 +97,7 @@ class PythonLanguageServer(object):
                 if method_call in dispatcher:
                     return dispatcher[method_call](**params)
 
-        raise MissingMethodException('No handler for for method {}'.format(method))
+        raise manager.MissingMethodException('No handler for for method {}'.format(method))
 
     def m__cancel_request(self, **kwargs):
         self.rpc_manager.cancel(kwargs['id'])

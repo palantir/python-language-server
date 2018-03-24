@@ -7,10 +7,10 @@ from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20Request
 
 from pyls import uris
 from pyls.config.config import Config
+from pyls.json_rpc.manager import JSONRPCManager
+from pyls.json_rpc.server import JSONRPCServer
 from pyls.python_ls import PythonLanguageServer
-from pyls.rpc_manager import JSONRPCManager
 from pyls.workspace import Workspace, Document
-from pyls.json_rpc_server import JSONRPCServer
 
 if sys.version_info[0] < 3:
     from StringIO import StringIO
