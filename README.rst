@@ -27,7 +27,8 @@ If the respective dependencies are found, the following optional providers will 
 * McCabe_ linter for complexity checking
 * pycodestyle_ linter for style checking
 * pydocstyle_ linter for docstring style checking
-* YAPF_ for code formatting
+* autopep8_ for code formatting
+* YAPF_ for code formatting (preferred over autopep8)
 
 Optional providers can be installed using the `extras` syntax. To install YAPF_ formatting for example:
 
@@ -144,5 +145,6 @@ This project is made available under the MIT License.
 .. _pycodestyle: https://github.com/PyCQA/pycodestyle
 .. _pydocstyle: https://github.com/PyCQA/pydocstyle
 .. _YAPF: https://github.com/google/yapf
+.. _autopep8: https://github.com/hhatto/autopep8
 .. _pyls-mypy: https://github.com/tomv564/pyls-mypy
 .. _pyls-isort: https://github.com/paradoxxxzero/pyls-isort
