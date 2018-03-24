@@ -11,12 +11,13 @@ log = logging.getLogger(__name__)
 
 
 class JSONRPCServer(object):
-    """ Read/Write JSON RPC messages """
+    """JSONRPC Server that processes messages from an input and output stream."""
 
     def __init__(self, rfile, wfile):
-        self.pending_request = {}
         self.rfile = rfile
         self.wfile = wfile
+
+        self.pending_request = {}
         self.write_lock = threading.Lock()
 
     def close(self):
