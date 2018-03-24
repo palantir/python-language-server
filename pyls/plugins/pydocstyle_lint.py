@@ -1,6 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import contextlib
 import logging
+import os
+import re
 import sys
 
 import pydocstyle
@@ -12,6 +14,9 @@ log = logging.getLogger(__name__)
 pydocstyle_logger = logging.getLogger(pydocstyle.utils.__name__)
 pydocstyle_logger.setLevel(logging.INFO)
 
+DEFAULT_MATCH_RE = pydocstyle.config.ConfigurationParser.DEFAULT_MATCH_RE
+DEFAULT_MATCH_DIR_RE = pydocstyle.config.ConfigurationParser.DEFAULT_MATCH_DIR_RE
+
 
 @hookimpl
 def pyls_settings():
@@ -20,10 +25,39 @@ def pyls_settings():
 
 
 @hookimpl
-def pyls_lint(document):
-    conf = pydocstyle.config.ConfigurationParser()
+def pyls_lint(config, document):
+    settings = config.plugin_settings('pydocstyle')
+    log.debug("Got pydocstyle settings: %s", settings)
 
-    with _patch_sys_argv([document.path]):
+    # Explicitly passing a path to pydocstyle means it doesn't respect the --match flag, so do it ourselves
+    filename_match_re = re.compile(settings.get('match', DEFAULT_MATCH_RE) + '$')
+    if not filename_match_re.match(os.path.basename(document.path)):
+        return []
+
+    # Likewise with --match-dir
+    dir_match_re = re.compile(settings.get('matchDir', DEFAULT_MATCH_DIR_RE) + '$')
+    if not dir_match_re.match(os.path.basename(os.path.dirname(document.path))):
+        return []
+
+    args = [document.path]
+
+    if settings.get('convention'):
+        args.append('--convention=' + settings['convention'])
+
+        if settings.get('addSelect'):
+            args.append('--add-select=' + ','.join(settings['addSelect']))
+        if settings.get('addIgnore'):
+            args.append('--add-ignore=' + ','.join(settings['addIgnore']))
+
+    elif settings.get('select'):
+        args.append('--select=' + ','.join(settings['select']))
+    elif settings.get('ignore'):
+        args.append('--ignore=' + ','.join(settings['ignore']))
+
+    log.info("Using pydocstyle args: %s", args)
+
+    conf = pydocstyle.config.ConfigurationParser()
+    with _patch_sys_argv(args):
         # TODO(gatesn): We can add more pydocstyle args here from our pyls config
         conf.parse()
 
