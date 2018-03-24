@@ -1,5 +1,4 @@
 # Copyright 2018 Palantir Technologies, Inc.
-import traceback
 
 
 class JsonRpcException(Exception):
@@ -70,7 +69,7 @@ class JsonRpcInternalError(JsonRpcException):
 
     @classmethod
     def of(cls, exc):
-        return cls(message=str(exc), data={'traceback': traceback.format_exc()})
+        return cls(message=str(exc))
 
 
 class JsonRpcRequestCancelled(JsonRpcException):

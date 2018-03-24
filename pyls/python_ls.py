@@ -4,7 +4,9 @@ import socketserver
 
 from . import lsp, _utils, uris
 from .config import config
-from .jsonrpc import dispatchers, endpoint, streams
+from .jsonrpc.dispatchers import MethodDispatcher
+from .jsonrpc.endpoint import Endpoint
+from .jsonrpc.server import JsonRpcServer
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
@@ -55,7 +57,7 @@ def start_io_lang_server(rfile, wfile, handler_class):
     server.start()
 
 
-class PythonLanguageServer(dispatchers.MethodDispatcher):
+class PythonLanguageServer(MethodDispatcher):
     """ Implementation of the Microsoft VSCode Language Server Protocol
     https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
     """
@@ -66,8 +68,8 @@ class PythonLanguageServer(dispatchers.MethodDispatcher):
         self.workspace = None
         self.config = None
 
-        self._jsonrpc_server = streams.JsonRpcServer(rx, tx)
-        self._endpoint = endpoint.Endpoint(self, self._jsonrpc_server.write)
+        self._jsonrpc_server = JsonRpcServer(rx, tx)
+        self._endpoint = Endpoint(self, self._jsonrpc_server.write)
         self._dispatchers = []
         self._shutdown = False
 

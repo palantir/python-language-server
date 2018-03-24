@@ -20,7 +20,7 @@ class MethodDispatcher(object):
 
             @functools.wraps(method)
             def handler(params):
-                return method(**params)
+                return method(**(params or {}))
 
             return handler
         raise KeyError()

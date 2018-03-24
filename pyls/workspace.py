@@ -165,7 +165,7 @@ class Document(object):
         return str(self.uri)
 
     def _rope_resource(self, rope_config):
-        from rope.base import libutils        
+        from rope.base import libutils
         return libutils.path_to_resource(self._rope_project_builder(rope_config), self.path)
 
     @property
