@@ -4,7 +4,7 @@ import socketserver
 
 from . import lsp, _utils, uris
 from .config import config
-from .json_rpc import dispatchers, endpoint, streams
+from .jsonrpc import dispatchers, endpoint, streams
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)

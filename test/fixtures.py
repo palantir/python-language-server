@@ -7,8 +7,8 @@ from jsonrpc.jsonrpc2 import JSONRPC20Response, JSONRPC20Request
 
 from pyls import uris
 from pyls.config.config import Config
-from pyls.json_rpc.manager import JSONRPCManager
-from pyls.json_rpc.server import JSONRPCServer
+from pyls.jsonrpc.manager import JSONRPCManager
+from pyls.jsonrpc.server import JSONRPCServer
 from pyls.python_ls import PythonLanguageServer
 from pyls.workspace import Workspace, Document
 
