@@ -32,6 +32,9 @@ class Endpoint(object):
         self._server_request_futures = {}
         self._executor_service = futures.ThreadPoolExecutor(max_workers=max_workers)
 
+    def shutdown(self):
+        self._executor_service.shutdown()
+
     def notify(self, method, params=None):
         """Send a JSON RPC notification to the client.
 
@@ -108,12 +111,14 @@ class Endpoint(object):
                 log.debug("Handling request from client %s", message)
                 self._handle_request(message['id'], message['method'], message.get('params'))
             except JsonRpcException as e:
+                log.exception("Failed to handle request %s", message['id'])
                 self._consumer({
                     'jsonrpc': JSONRPC_VERSION,
                     'id': message['id'],
                     'error': e.to_dict()
                 })
             except Exception as e:  # pylint: disable=broad-except
+                log.exception("Failed to handle request %s", message['id'])
                 self._consumer({
                     'jsonrpc': JSONRPC_VERSION,
                     'id': message['id'],
