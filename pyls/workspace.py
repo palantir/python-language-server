@@ -85,6 +85,7 @@ class Workspace(object):
 
     def _rope_project_builder(self, rope_config):
         from rope.base.project import Project
+
         # TODO: we could keep track of dirty files and validate only those
         if self.__rope is None or self.__rope_config != rope_config:
             rope_folder = rope_config.get('ropeFolder')
