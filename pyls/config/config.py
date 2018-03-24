@@ -1,5 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import pkg_resources
+
 import pluggy
 
 from pyls import _utils, hookspecs, uris, PYLS
@@ -32,10 +34,23 @@ class Config(object):
         self._pm.trace.root.setwriter(log.debug)
         self._pm.enable_tracing()
         self._pm.add_hookspecs(hookspecs)
+
+        # Pluggy will skip loading a plugin if it throws a DistributionNotFound exception.
+        # However I don't want all plugins to have to catch ImportError and re-throw. So here we'll filter
+        # out any entry points that throw ImportError assuming one or more of their dependencies isn't present.
+        for entry_point in pkg_resources.iter_entry_points(PYLS):
+            try:
+                entry_point.load()
+            except ImportError as e:
+                log.warn("Failed to load %s entry point '%s': %s", PYLS, entry_point.name, e)
+                self._pm.set_blocked(entry_point.name)
+
+        # Load the entry points into pluggy, having blocked any failing ones
         self._pm.load_setuptools_entrypoints(PYLS)
 
         for name, plugin in self._pm.list_name_plugin():
-            log.info("Loaded pyls plugin %s from %s", name, plugin)
+            if plugin is not None:
+                log.info("Loaded pyls plugin %s from %s", name, plugin)
 
         for plugin_conf in self._pm.hook.pyls_settings(config=self):
             self._plugin_settings = _utils.merge_dicts(self._plugin_settings, plugin_conf)
