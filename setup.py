@@ -36,7 +36,6 @@ setup(
         'future>=0.14.0',
         'futures; python_version<"3.2"',
         'jedi>=0.10',
-        # 'json-rpc==1.10.8',
         # 'mccabe',
         # 'pycodestyle',
         # 'pydocstyle>=2.0.0',
