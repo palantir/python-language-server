@@ -32,7 +32,6 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'autopep8',
         'configparser',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
