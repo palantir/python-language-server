@@ -323,6 +323,6 @@ def await_called_once_with(mock_obj, *args, **kwargs):
         mock_obj.assert_called_once_with(*args, **kwargs)
     except AssertionError:
         time.sleep(interval)
-        await_called_once_with(mock_obj, timeout - interval, interval=interval, *args, **kwargs)
+        await_called_once_with(mock_obj, timeout=(timeout - interval), interval=interval, *args, **kwargs)
 
 
