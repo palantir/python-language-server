@@ -1,12 +1,13 @@
 # Copyright 2018 Palantir Technologies, Inc.
+import traceback
 
 
 class JsonRpcException(Exception):
 
     def __init__(self, code=None, message=None, data=None):
         super(JsonRpcException, self).__init__()
-        self.code = getattr(self.__class__, 'CODE', code)
-        self.message = getattr(self.__class__, 'MESSAGE', message)
+        self.code = code or getattr(self.__class__, 'CODE')
+        self.message = message or getattr(self.__class__, 'MESSAGE')
         self.data = data
 
     def to_dict(self):
@@ -22,12 +23,11 @@ class JsonRpcException(Exception):
         return (
             isinstance(other, self.__class__) and
             self.code == other.code and
-            self.message == other.message and
-            self.data == other.data
+            self.message == other.message
         )
 
     def __hash__(self):
-        return hash((self.code, self.message, self.data))
+        return hash((self.code, self.message))
 
     @staticmethod
     def from_dict(error):
@@ -71,8 +71,12 @@ class JsonRpcInternalError(JsonRpcException):
     MESSAGE = 'Internal Error'
 
     @classmethod
-    def of(cls, exc):
-        return cls(message=str(exc))
+    def of(cls, exc_info):
+        exc_type, exc_value, exc_tb = exc_info
+        return cls(
+            message=''.join(traceback.format_exception_only(exc_type, exc_value)).strip(),
+            data={'traceback': traceback.format_tb(exc_tb)}
+        )
 
 
 class JsonRpcRequestCancelled(JsonRpcException):

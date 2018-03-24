@@ -210,15 +210,15 @@ def test_consume_async_request(endpoint, consumer, dispatcher):
     })
 
 
-@pytest.mark.parametrize('exc,error', [
-    (ValueError, exceptions.JsonRpcInternalError.of(ValueError())),
-    (KeyError, exceptions.JsonRpcInternalError.of(KeyError())),
+@pytest.mark.parametrize('exc_type, error', [
+    (ValueError, exceptions.JsonRpcInternalError(message='ValueError')),
+    (KeyError, exceptions.JsonRpcInternalError(message='KeyError')),
     (exceptions.JsonRpcMethodNotFound, exceptions.JsonRpcMethodNotFound()),
 ])
-def test_consume_async_request_error(exc, error, endpoint, consumer, dispatcher):
+def test_consume_async_request_error(exc_type, error, endpoint, consumer, dispatcher):
     def _async_handler(params):
         assert params == {'key': 'value'}
-        raise exc()
+        raise exc_type()
     handler = mock.Mock(return_value=_async_handler)
     dispatcher['methodName'] = handler
 
@@ -230,11 +230,7 @@ def test_consume_async_request_error(exc, error, endpoint, consumer, dispatcher)
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    await_called_once_with(consumer, {
-        'jsonrpc': '2.0',
-        'id': MSG_ID,
-        'error': error.to_dict()
-    })
+    assert_consumer_error(consumer, error)
 
 
 def test_consume_request_method_not_found(endpoint, consumer):
@@ -244,20 +240,16 @@ def test_consume_request_method_not_found(endpoint, consumer):
         'method': 'methodName',
         'params': {'key': 'value'}
     })
-    consumer.assert_called_once_with({
-        'jsonrpc': '2.0',
-        'id': MSG_ID,
-        'error': exceptions.JsonRpcMethodNotFound().to_dict()
-    })
+    assert_consumer_error(consumer, exceptions.JsonRpcMethodNotFound.of('methodName'))
 
 
-@pytest.mark.parametrize('exc,error', [
-    (ValueError, exceptions.JsonRpcInternalError.of(ValueError())),
-    (KeyError, exceptions.JsonRpcInternalError.of(KeyError())),
-    (exceptions.JsonRpcMethodNotFound.of("method"), exceptions.JsonRpcMethodNotFound.of("method")),
+@pytest.mark.parametrize('exc_type, error', [
+    (ValueError, exceptions.JsonRpcInternalError(message='ValueError')),
+    (KeyError, exceptions.JsonRpcInternalError(message='KeyError')),
+    (exceptions.JsonRpcMethodNotFound, exceptions.JsonRpcMethodNotFound()),
 ])
-def test_consume_request_error(exc, error, endpoint, consumer, dispatcher):
-    handler = mock.Mock(side_effect=exc)
+def test_consume_request_error(exc_type, error, endpoint, consumer, dispatcher):
+    handler = mock.Mock(side_effect=exc_type)
     dispatcher['methodName'] = handler
 
     endpoint.consume({
@@ -268,11 +260,7 @@ def test_consume_request_error(exc, error, endpoint, consumer, dispatcher):
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    consumer.assert_called_once_with({
-        'jsonrpc': '2.0',
-        'id': MSG_ID,
-        'error': error.to_dict()
-    })
+    assert_consumer_error(consumer, error)
 
 
 def test_consume_request_cancel(endpoint, dispatcher):
@@ -322,5 +310,14 @@ def await_called_once_with(mock_obj, *args, **kwargs):
     try:
         mock_obj.assert_called_once_with(*args, **kwargs)
     except AssertionError:
+        if mock_obj.mock_calls:
+            raise AssertionError("Got unexpected mock_calls %s" % mock_obj.mock_calls)
         time.sleep(interval)
         await_called_once_with(mock_obj, timeout=(timeout - interval), interval=interval, *args, **kwargs)
+
+
+def assert_consumer_error(mock_obj, exception):
+    assert len(mock_obj.mock_calls) == 1
+    _name, args, _kwargs = mock_obj.mock_calls[0]
+    assert args[0]['error']['message'] == exception.message
+    assert args[0]['error']['code'] == exception.code

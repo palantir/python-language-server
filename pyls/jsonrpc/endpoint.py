@@ -1,6 +1,7 @@
 # Copyright 2018 Palantir Technologies, Inc.
 import logging
 import uuid
+import sys
 
 from concurrent import futures
 from .exceptions import JsonRpcException, JsonRpcRequestCancelled, JsonRpcInternalError, JsonRpcMethodNotFound
@@ -117,12 +118,12 @@ class Endpoint(object):
                     'id': message['id'],
                     'error': e.to_dict()
                 })
-            except Exception as e:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 log.exception("Failed to handle request %s", message['id'])
                 self._consumer({
                     'jsonrpc': JSONRPC_VERSION,
                     'id': message['id'],
-                    'error': JsonRpcInternalError.of(e).to_dict()
+                    'error': JsonRpcInternalError.of(sys.exc_info()).to_dict()
                 })
 
     def _handle_notification(self, method, params):
@@ -176,7 +177,7 @@ class Endpoint(object):
         try:
             handler = self._dispatcher[method]
         except KeyError:
-            raise JsonRpcMethodNotFound(method)
+            raise JsonRpcMethodNotFound.of(method)
 
         handler_result = handler(params)
 
@@ -212,9 +213,9 @@ class Endpoint(object):
             except JsonRpcException as e:
                 log.exception("Failed to handle request %s", request_id)
                 message['error'] = e.to_dict()
-            except Exception as e:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 log.exception("Failed to handle request %s", request_id)
-                message['error'] = JsonRpcInternalError.of(e).to_dict()
+                message['error'] = JsonRpcInternalError.of(sys.exc_info()).to_dict()
 
             self._consumer(message)
 
