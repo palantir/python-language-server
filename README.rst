@@ -15,7 +15,7 @@ A Python 2.7 and 3.4+ implementation of the `Language Server Protocol`_.
 Installation
 ------------
 
-The base language server required Jedi_ to provide Completions, Definitions, Hover, References, Signature Help, and
+The base language server requires Jedi_ to provide Completions, Definitions, Hover, References, Signature Help, and
 Symbols:
 
 ``pip install python-language-server``
