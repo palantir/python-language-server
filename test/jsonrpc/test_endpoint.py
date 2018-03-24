@@ -317,7 +317,7 @@ def await_called_once_with(mock_obj, *args, **kwargs):
     timeout = kwargs.pop('timeout', 3.0)
     interval = kwargs.pop('interval', 0.1)
 
-    if timeout < 0:
+    if timeout <= 0:
         raise AssertionError("Failed to wait for called_once_with %s: %s %s", mock_obj, args, kwargs)
     try:
         mock_obj.assert_called_once_with(*args, **kwargs)

@@ -46,6 +46,7 @@ setup(
     # $ pip install -e .[test]
     extras_require={
         'all': [
+            'autopep8',
             'mccabe',
             'pycodestyle',
             'pydocstyle>=2.0.0',
@@ -53,6 +54,7 @@ setup(
             'rope>-0.10.5',
             'yapf',
         ],
+        'autopep8': ['autopep8'],
         'mccabe': ['mccabe'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
