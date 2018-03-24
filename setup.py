@@ -38,12 +38,6 @@ setup(
         'futures; python_version<"3.2"',
         'jedi>=0.10',
         'json-rpc==1.10.8',
-        'mccabe',
-        'pycodestyle',
-        'pydocstyle>=2.0.0',
-        'pyflakes>=1.6.0',
-        'rope>=0.10.5',
-        'yapf',
         'pluggy'
     ],
 
@@ -52,6 +46,20 @@ setup(
     # for example:
     # $ pip install -e .[test]
     extras_require={
+        'all': [
+            'mccabe',
+            'pycodestyle',
+            'pydocstyle>=2.0.0',
+            'pyflakes>=1.6.0',
+            'rope>-0.10.5',
+            'yapf',
+        ],
+        'mccabe': ['mccabe'],
+        'pycodestyle': ['pycodestyle'],
+        'pydocstyle': ['pydocstyle>=2.0.0'],
+        'pyflakes': ['pyflakes>=1.6.0'],
+        'rope': ['rope>0.10.5'],
+        'yapf': ['yapf'],
         'test': ['tox', 'versioneer', 'pytest', 'mock', 'pytest-cov', 'coverage'],
     },
 
