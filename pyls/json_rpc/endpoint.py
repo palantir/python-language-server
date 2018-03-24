@@ -113,7 +113,7 @@ class Endpoint(object):
                     'id': message['id'],
                     'error': e.to_dict()
                 })
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 self._consumer({
                     'jsonrpc': JSONRPC_VERSION,
                     'id': message['id'],
@@ -123,7 +123,8 @@ class Endpoint(object):
     def _handle_notification(self, method, params):
         """Handle a notification from the client."""
         if method == CANCEL_METHOD:
-            return self._handle_cancel_notification(params['id'])
+            self._handle_cancel_notification(params['id'])
+            return
 
         try:
             handler = self._dispatcher[method]
@@ -132,14 +133,14 @@ class Endpoint(object):
             return
 
         try:
-            async = handler(params)
-        except Exception:  # pylint: disable=broad-exception
+            handler_result = handler(params)
+        except Exception:  # pylint: disable=broad-except
             log.exception("Failed to handle notification %s: %s", method, params)
             return
 
-        if callable(async):
-            log.debug("Executing async notification handler %s", async)
-            notification_future = self._executor_service.submit(async, params)
+        if callable(handler_result):
+            log.debug("Executing async notification handler %s", handler_result)
+            notification_future = self._executor_service.submit(handler_result, params)
             notification_future.add_done_callback(self._notification_callback(method, params))
 
     @staticmethod
@@ -149,7 +150,7 @@ class Endpoint(object):
             try:
                 future.result()
                 log.debug("Successfully handled async notification %s %s", method, params)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 log.exception("Failed to handle async notification %s %s", method, params)
         return callback
 
@@ -172,20 +173,19 @@ class Endpoint(object):
         except KeyError:
             raise JsonRpcMethodNotFound(method)
 
-        async = handler(params)
+        handler_result = handler(params)
 
-        if callable(async):
-            log.debug("Executing async request handler %s", async)
-            request_future = self._executor_service.submit(async, params)
+        if callable(handler_result):
+            log.debug("Executing async request handler %s", handler_result)
+            request_future = self._executor_service.submit(handler_result, params)
             self._client_request_futures[msg_id] = request_future
             request_future.add_done_callback(self._request_callback(msg_id))
         else:
-            result = async
-            log.debug("Got result from synchronous request handler: %s", result)
+            log.debug("Got result from synchronous request handler: %s", handler_result)
             self._consumer({
                 'jsonrpc': JSONRPC_VERSION,
                 'id': msg_id,
-                'result': result
+                'result': handler_result
             })
 
     def _request_callback(self, request_id):
@@ -207,7 +207,7 @@ class Endpoint(object):
             except JsonRpcException as e:
                 log.exception("Failed to handle request %s", request_id)
                 message['error'] = e.to_dict()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 log.exception("Failed to handle request %s", request_id)
                 message['error'] = JsonRpcInternalError.of(e).to_dict()
 

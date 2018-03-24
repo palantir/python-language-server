@@ -1,7 +1,8 @@
 # Copyright 2018 Palantir Technologies, Inc.
+# pylint: disable=redefined-outer-name
+import time
 import mock
 import pytest
-import time
 
 from pyls.json_rpc import exceptions
 from pyls.json_rpc.endpoint import Endpoint
@@ -303,7 +304,7 @@ def test_consume_request_cancel(endpoint, dispatcher):
     # })
 
 
-def test_consume_request_cancel_unknown(endpoint, dispatcher):
+def test_consume_request_cancel_unknown(endpoint):
     # Verify consume doesn't throw
     endpoint.consume({
         'jsonrpc': '2.0',

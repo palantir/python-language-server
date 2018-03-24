@@ -4,6 +4,7 @@
 class JsonRpcException(Exception):
 
     def __init__(self, code=None, message=None, data=None):
+        super(JsonRpcException, self).__init__()
         self.code = getattr(self.__class__, 'CODE', code)
         self.message = getattr(self.__class__, 'MESSAGE', message)
         self.data = data
@@ -68,7 +69,7 @@ class JsonRpcInternalError(JsonRpcException):
 
     @classmethod
     def of(cls, exc):
-        return cls(message=cls.MESSAGE + ': ' + str(exc))
+        return cls(message=str(exc))
 
 
 class JsonRpcRequestCancelled(JsonRpcException):
