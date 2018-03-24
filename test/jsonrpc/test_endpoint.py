@@ -165,7 +165,7 @@ def test_consume_async_notification_error(endpoint, dispatcher):
         'method': 'methodName',
         'params': {'key': 'value'}
     })
-    handler.assert_called_once_with({'key': 'value'})
+    await_called_once_with(handler, {'key': 'value'})
 
 
 def test_consume_request(endpoint, consumer, dispatcher):
@@ -203,7 +203,7 @@ def test_consume_async_request(endpoint, consumer, dispatcher):
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    consumer.assert_called_once_with({
+    await_called_once_with(consumer, {
         'jsonrpc': '2.0',
         'id': MSG_ID,
         'result': 1234
@@ -230,7 +230,7 @@ def test_consume_async_request_error(exc, error, endpoint, consumer, dispatcher)
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    consumer.assert_called_once_with({
+    await_called_once_with(consumer, {
         'jsonrpc': '2.0',
         'id': MSG_ID,
         'error': error.to_dict()
@@ -288,7 +288,7 @@ def test_consume_request_cancel(endpoint, dispatcher):
         'method': 'methodName',
         'params': {'key': 'value'}
     })
-    handler.assert_called_once_with({'key': 'value'})
+    await_called_once_with(handler, {'key': 'value'})
 
     endpoint.consume({
         'jsonrpc': '2.0',
@@ -311,3 +311,18 @@ def test_consume_request_cancel_unknown(endpoint):
         'method': '$/cancelRequest',
         'params': {'id': 'unknown identifier'}
     })
+
+
+def await_called_once_with(mock_obj, *args, **kwargs):
+    timeout = kwargs.pop('timeout', 3.0)
+    interval = kwargs.pop('interval', 0.1)
+
+    if timeout < 0:
+        raise AssertionError("Failed to wait for called_once_with %s: %s %s", mock_obj, args, kwargs)
+    try:
+        mock_obj.assert_called_once_with(*args, **kwargs)
+    except AssertionError:
+        time.sleep(interval)
+        await_called_once_with(mock_obj, timeout - interval, interval=interval, *args, **kwargs)
+
+
