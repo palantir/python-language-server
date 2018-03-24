@@ -9,45 +9,32 @@ log = logging.getLogger(__name__)
 
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
 ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
-KWD_MARK = object()
 
 
-def debounce(interval_s, keys=None):
+def debounce(interval_s, keyed_by=None):
     """Debounce calls to this function until interval_s seconds have passed."""
     def wrapper(func):
         timers = {}
         lock = threading.Lock()
 
-        @functools.wraps(func)
-        def cleanup_run(*args, **kwargs):
-            input_hash = _hash_input(keys, *args, **kwargs)
+        def run(*args, **kwargs):
             with lock:
-                del timers[input_hash]
+                del timers[kwargs[keyed_by]]
             return func(*args, **kwargs)
 
+        @functools.wraps(func)
         def debounced(*args, **kwargs):
-            input_hash = _hash_input(keys, *args, **kwargs)
+            key = kwargs[keyed_by]
             with lock:
-                if input_hash in timers:
-                    timers[input_hash].cancel()
-                timer = threading.Timer(interval_s, cleanup_run, args, kwargs)
-                timers[input_hash] = timer
+                old_timer = timers.get(key)
+                if old_timer:
+                    old_timer.cancel()
+
+                timer = threading.Timer(interval_s, run, args, kwargs)
+                timers[key] = timer
                 timer.start()
         return debounced
     return wrapper
-
-
-def _hash_input(keys, *args, **kwargs):
-    if not keys:
-        return args + (KWD_MARK, ) + tuple(sorted(kwargs.items()))
-    filtered_args = []
-    filtered_kwargs = {}
-    for key in keys:
-        if isinstance(key, int):
-            filtered_args.append(args[key])
-        elif isinstance(key, str):
-            filtered_kwargs[key] = kwargs[key]
-    return tuple(filtered_args) + (KWD_MARK, ) + tuple(sorted(filtered_kwargs.items()))
 
 
 def camel_to_underscore(string):
