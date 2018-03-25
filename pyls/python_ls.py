@@ -185,7 +185,7 @@ class PythonLanguageServer(MethodDispatcher):
     def hover(self, doc_uri, position):
         return self._hook('pyls_hover', doc_uri, position=position) or {'contents': ''}
 
-    @_utils.debounce(LINT_DEBOUNCE_S)
+    @_utils.debounce(LINT_DEBOUNCE_S, keyed_by='doc_uri')
     def lint(self, doc_uri):
         # Since we're debounced, the document may no longer be open
         if doc_uri in self.workspace.documents:
