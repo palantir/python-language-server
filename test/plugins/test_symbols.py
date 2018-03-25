@@ -40,6 +40,10 @@ def test_symbols(config):
     # Not going to get too in-depth here else we're just testing Jedi
     assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
 
+    # Ensure that the symbol range spans the whole definition
+    assert sym('main')['location']['range']['start'] == {'line': 9, 'character': 0}
+    assert sym('main')['location']['range']['end'] == {'line': 12, 'character': 0}
+
 
 def test_symbols_all_scopes(config):
     doc = Document(DOC_URI, DOC)

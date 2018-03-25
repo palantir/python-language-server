@@ -30,7 +30,11 @@ def pyls_completions(config, workspace, document, position):
     rope_project = workspace._rope_project_builder(rope_config)
     document_rope = document._rope_resource(rope_config)
 
-    definitions = code_assist(rope_project, document.source, offset, document_rope, maxfixes=3)
+    try:
+        definitions = code_assist(rope_project, document.source, offset, document_rope, maxfixes=3)
+    except Exception as e:  # pylint: disable=broad-except
+        log.debug("Failed to run Rope code assist: %s", e)
+        return []
 
     definitions = sorted_proposals(definitions)
     new_definitions = []
