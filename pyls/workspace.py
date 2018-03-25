@@ -72,9 +72,9 @@ class Workspace(object):
     M_SHOW_MESSAGE = 'window/showMessage'
     PRELOADED_MODULES = get_preferred_submodules()
 
-    def __init__(self, root_uri, rpc_manager):
+    def __init__(self, root_uri, endpoint):
         self._root_uri = root_uri
-        self._rpc_manager = rpc_manager
+        self._endpoint = endpoint
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
@@ -126,17 +126,14 @@ class Workspace(object):
         self._docs[doc_uri].apply_change(change)
         self._docs[doc_uri].version = version
 
-    def apply_edit(self, edit, on_result=None, on_error=None):
-        return self._rpc_manager.call(
-            self.M_APPLY_EDIT, {'edit': edit},
-            on_result=on_result, on_error=on_error
-        )
+    def apply_edit(self, edit):
+        return self._endpoint.request(self.M_APPLY_EDIT, {'edit': edit})
 
     def publish_diagnostics(self, doc_uri, diagnostics):
-        self._rpc_manager.notify(self.M_PUBLISH_DIAGNOSTICS, params={'uri': doc_uri, 'diagnostics': diagnostics})
+        self._endpoint.notify(self.M_PUBLISH_DIAGNOSTICS, params={'uri': doc_uri, 'diagnostics': diagnostics})
 
     def show_message(self, message, msg_type=lsp.MessageType.Info):
-        self._rpc_manager.notify(self.M_SHOW_MESSAGE, params={'type': msg_type, 'message': message})
+        self._endpoint.notify(self.M_SHOW_MESSAGE, params={'type': msg_type, 'message': message})
 
     def source_roots(self, document_path):
         """Return the source roots for the given document."""
