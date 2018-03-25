@@ -32,12 +32,10 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'autopep8',
         'configparser',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
         'jedi>=0.10',
-        'json-rpc==1.10.8',
         'pluggy'
     ],
 
@@ -47,6 +45,7 @@ setup(
     # $ pip install -e .[test]
     extras_require={
         'all': [
+            'autopep8',
             'mccabe',
             'pycodestyle',
             'pydocstyle>=2.0.0',
@@ -54,6 +53,7 @@ setup(
             'rope>-0.10.5',
             'yapf',
         ],
+        'autopep8': ['autopep8'],
         'mccabe': ['mccabe'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],

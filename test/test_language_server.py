@@ -1,9 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 from threading import Thread
-from jsonrpc.exceptions import JSONRPCMethodNotFound, JSONRPCDispatchException
 import pytest
 from pyls.python_ls import start_io_lang_server, PythonLanguageServer
+from pyls.jsonrpc.exceptions import JsonRpcMethodNotFound
 
 CALL_TIMEOUT = 2
 
@@ -34,13 +34,13 @@ def client_server():
 
     yield client
 
-    shutdown_response = client.rpc_manager.call('shutdown').result(timeout=CALL_TIMEOUT)
+    shutdown_response = client._endpoint.request('shutdown').result(timeout=CALL_TIMEOUT)
     assert shutdown_response is None
-    client.rpc_manager.notify('exit')
+    client._endpoint.notify('exit')
 
 
 def test_initialize(client_server):  # pylint: disable=redefined-outer-name
-    response = client_server.rpc_manager.call('initialize', {
+    response = client_server._endpoint.request('initialize', {
         'processId': 1234,
         'rootPath': os.path.dirname(__file__),
         'initializationOptions': {}
@@ -49,9 +49,5 @@ def test_initialize(client_server):  # pylint: disable=redefined-outer-name
 
 
 def test_missing_message(client_server):  # pylint: disable=redefined-outer-name
-    try:
-        client_server.rpc_manager.call('unknown_method').result(timeout=CALL_TIMEOUT)
-    except JSONRPCDispatchException as e:
-        assert e.error.code == JSONRPCMethodNotFound.CODE
-    else:
-        assert False, "expected JSONRPCDispatchException"
+    with pytest.raises(JsonRpcMethodNotFound):
+        client_server._endpoint.request('unknown_method').result(timeout=CALL_TIMEOUT)
