@@ -165,7 +165,7 @@ def test_consume_async_notification_error(endpoint, dispatcher):
         'method': 'methodName',
         'params': {'key': 'value'}
     })
-    await_called_once_with(handler, {'key': 'value'})
+    handler.assert_called_once_with({'key': 'value'})
 
 
 def test_consume_request(endpoint, consumer, dispatcher):
@@ -203,11 +203,11 @@ def test_consume_async_request(endpoint, consumer, dispatcher):
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    await_called_once_with(consumer, {
+    await(lambda: consumer.assert_called_once_with({
         'jsonrpc': '2.0',
         'id': MSG_ID,
         'result': 1234
-    })
+    }))
 
 
 @pytest.mark.parametrize('exc_type, error', [
@@ -230,7 +230,7 @@ def test_consume_async_request_error(exc_type, error, endpoint, consumer, dispat
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    assert_consumer_error(consumer, error)
+    await(lambda: assert_consumer_error(consumer, error))
 
 
 def test_consume_request_method_not_found(endpoint, consumer):
@@ -260,7 +260,7 @@ def test_consume_request_error(exc_type, error, endpoint, consumer, dispatcher):
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    assert_consumer_error(consumer, error)
+    await(lambda: assert_consumer_error(consumer, error))
 
 
 def test_consume_request_cancel(endpoint, dispatcher):
@@ -276,7 +276,7 @@ def test_consume_request_cancel(endpoint, dispatcher):
         'method': 'methodName',
         'params': {'key': 'value'}
     })
-    await_called_once_with(handler, {'key': 'value'})
+    handler.assert_called_once_with({'key': 'value'})
 
     endpoint.consume({
         'jsonrpc': '2.0',
@@ -301,23 +301,22 @@ def test_consume_request_cancel_unknown(endpoint):
     })
 
 
-def await_called_once_with(mock_obj, *args, **kwargs):
-    timeout = kwargs.pop('timeout', 3.0)
-    interval = kwargs.pop('interval', 0.1)
+def assert_consumer_error(consumer_mock, exception):
+    """Assert that the consumer mock has had once call with the given error message and code.
 
-    if timeout <= 0:
-        raise AssertionError("Failed to wait for called_once_with %s: %s %s" % (mock_obj, args, kwargs))
-    try:
-        mock_obj.assert_called_once_with(*args, **kwargs)
-    except AssertionError:
-        if mock_obj.mock_calls:
-            raise AssertionError("Got unexpected mock_calls %s" % mock_obj.mock_calls)
-        time.sleep(interval)
-        await_called_once_with(mock_obj, timeout=(timeout - interval), interval=interval, *args, **kwargs)
-
-
-def assert_consumer_error(mock_obj, exception):
-    assert len(mock_obj.mock_calls) == 1
-    _name, args, _kwargs = mock_obj.mock_calls[0]
+    The error's data part is not compared since it contains the traceback.
+    """
+    assert len(consumer_mock.mock_calls) == 1
+    _name, args, _kwargs = consumer_mock.mock_calls[0]
     assert args[0]['error']['message'] == exception.message
     assert args[0]['error']['code'] == exception.code
+
+
+def await(condition, timeout=3.0, interval=0.1, exc=None):
+    if timeout <= 0:
+        raise exc if exc else AssertionError("Failed to wait for condition %s" % condition)
+    try:
+        condition()
+    except AssertionError as e:
+        time.sleep(interval)
+        await(condition, timeout=(timeout - interval), interval=interval, exc=e)
