@@ -203,7 +203,7 @@ def test_consume_async_request(endpoint, consumer, dispatcher):
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    await(lambda: consumer.assert_called_once_with({
+    await_assertion(lambda: consumer.assert_called_once_with({
         'jsonrpc': '2.0',
         'id': MSG_ID,
         'result': 1234
@@ -230,7 +230,7 @@ def test_consume_async_request_error(exc_type, error, endpoint, consumer, dispat
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    await(lambda: assert_consumer_error(consumer, error))
+    await_assertion(lambda: assert_consumer_error(consumer, error))
 
 
 def test_consume_request_method_not_found(endpoint, consumer):
@@ -260,7 +260,7 @@ def test_consume_request_error(exc_type, error, endpoint, consumer, dispatcher):
     })
 
     handler.assert_called_once_with({'key': 'value'})
-    await(lambda: assert_consumer_error(consumer, error))
+    await_assertion(lambda: assert_consumer_error(consumer, error))
 
 
 def test_consume_request_cancel(endpoint, dispatcher):
@@ -312,11 +312,11 @@ def assert_consumer_error(consumer_mock, exception):
     assert args[0]['error']['code'] == exception.code
 
 
-def await(condition, timeout=3.0, interval=0.1, exc=None):
+def await_assertion(condition, timeout=3.0, interval=0.1, exc=None):
     if timeout <= 0:
         raise exc if exc else AssertionError("Failed to wait for condition %s" % condition)
     try:
         condition()
     except AssertionError as e:
         time.sleep(interval)
-        await(condition, timeout=(timeout - interval), interval=interval, exc=e)
+        await_assertion(condition, timeout=(timeout - interval), interval=interval, exc=e)
