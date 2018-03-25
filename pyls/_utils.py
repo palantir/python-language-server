@@ -1,14 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import functools
+import inspect
 import logging
 import os
-import re
 import threading
 
 log = logging.getLogger(__name__)
-
-FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
-ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 
 def debounce(interval_s, keyed_by=None):
@@ -17,29 +14,26 @@ def debounce(interval_s, keyed_by=None):
         timers = {}
         lock = threading.Lock()
 
-        def run(*args, **kwargs):
-            with lock:
-                del timers[kwargs[keyed_by]]
-            return func(*args, **kwargs)
-
         @functools.wraps(func)
         def debounced(*args, **kwargs):
-            key = kwargs[keyed_by]
+            call_args = inspect.getcallargs(func, *args, **kwargs)
+            key = call_args[keyed_by] if keyed_by else None
+
+            def run():
+                with lock:
+                    del timers[key]
+                return func(*args, **kwargs)
+
             with lock:
                 old_timer = timers.get(key)
                 if old_timer:
                     old_timer.cancel()
 
-                timer = threading.Timer(interval_s, run, args, kwargs)
+                timer = threading.Timer(interval_s, run)
                 timers[key] = timer
                 timer.start()
         return debounced
     return wrapper
-
-
-def camel_to_underscore(string):
-    s1 = FIRST_CAP_RE.sub(r'\1_\2', string)
-    return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
 
 
 def find_parents(root, path, names):
