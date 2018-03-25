@@ -91,6 +91,8 @@ class Workspace(object):
             rope_folder = rope_config.get('ropeFolder')
             self.__rope = Project(self._root_path, ropefolder=rope_folder)
             self.__rope.prefs.set('extension_modules', self.PRELOADED_MODULES)
+            self.__rope.prefs.set('ignore_syntax_errors', True)
+            self.__rope.prefs.set('ignore_bad_imports', True)
         self.__rope.validate()
         return self.__rope
 
