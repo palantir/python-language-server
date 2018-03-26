@@ -70,7 +70,7 @@ class Workspace(object):
     M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
     M_APPLY_EDIT = 'workspace/applyEdit'
     M_SHOW_MESSAGE = 'window/showMessage'
-    PRELOADED_MODULES = get_preferred_submodules()
+    PRELOADED_MODULES = None
 
     def __init__(self, root_uri, endpoint):
         self._root_uri = root_uri
@@ -85,6 +85,9 @@ class Workspace(object):
 
     def _rope_project_builder(self, rope_config):
         from rope.base.project import Project
+
+        if self.PRELOADED_MODULES is None:
+            self.__class__.PRELOADED_MODULES = get_preferred_submodules()
 
         # TODO: we could keep track of dirty files and validate only those
         if self.__rope is None or self.__rope_config != rope_config:
