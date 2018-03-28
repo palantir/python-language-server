@@ -153,8 +153,7 @@ def test_consume_notification_method_not_found(endpoint):
 
 
 def test_consume_async_notification_error(endpoint, dispatcher):
-    def _async_handler(params):
-        assert params == {'key': 'value'}
+    def _async_handler():
         raise ValueError()
     handler = mock.Mock(return_value=_async_handler)
     dispatcher['methodName'] = handler
@@ -189,8 +188,7 @@ def test_consume_request(endpoint, consumer, dispatcher):
 
 
 def test_consume_async_request(endpoint, consumer, dispatcher):
-    def _async_handler(params):
-        assert params == {'key': 'value'}
+    def _async_handler():
         return 1234
     handler = mock.Mock(return_value=_async_handler)
     dispatcher['methodName'] = handler
@@ -216,8 +214,7 @@ def test_consume_async_request(endpoint, consumer, dispatcher):
     (exceptions.JsonRpcMethodNotFound, exceptions.JsonRpcMethodNotFound()),
 ])
 def test_consume_async_request_error(exc_type, error, endpoint, consumer, dispatcher):
-    def _async_handler(params):
-        assert params == {'key': 'value'}
+    def _async_handler():
         raise exc_type()
     handler = mock.Mock(return_value=_async_handler)
     dispatcher['methodName'] = handler
@@ -264,8 +261,7 @@ def test_consume_request_error(exc_type, error, endpoint, consumer, dispatcher):
 
 
 def test_consume_request_cancel(endpoint, dispatcher):
-    def async_handler(params):
-        assert params == {'key': 'value'}
+    def async_handler():
         time.sleep(3)
     handler = mock.Mock(return_value=async_handler)
     dispatcher['methodName'] = handler

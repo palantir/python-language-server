@@ -146,7 +146,7 @@ class Endpoint(object):
 
         if callable(handler_result):
             log.debug("Executing async notification handler %s", handler_result)
-            notification_future = self._executor_service.submit(handler_result, params)
+            notification_future = self._executor_service.submit(handler_result)
             notification_future.add_done_callback(self._notification_callback(method, params))
 
     @staticmethod
@@ -183,7 +183,7 @@ class Endpoint(object):
 
         if callable(handler_result):
             log.debug("Executing async request handler %s", handler_result)
-            request_future = self._executor_service.submit(handler_result, params)
+            request_future = self._executor_service.submit(handler_result)
             self._client_request_futures[msg_id] = request_future
             request_future.add_done_callback(self._request_callback(msg_id))
         else:
