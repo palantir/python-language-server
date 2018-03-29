@@ -178,7 +178,7 @@ class Document(object):
     @property
     def source(self):
         if self._source is None:
-            with open(self.path, 'r') as f:
+            with io.open(self.path, 'r', encoding='utf-8') as f:
                 return f.read()
         return self._source
 
