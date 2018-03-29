@@ -14,6 +14,12 @@ def test_document_lines(doc):
     assert doc.lines[0] == 'import sys\n'
 
 
+def test_document_source_unicode():
+    document_mem = Document(DOC_URI, u'my source')
+    document_disk = Document(DOC_URI)
+    assert isinstance(document_mem.source, type(document_disk.source))
+
+
 def test_offset_at_position(doc):
     assert doc.offset_at_position({'line': 0, 'character': 8}) == 8
     assert doc.offset_at_position({'line': 1, 'character': 5}) == 16
