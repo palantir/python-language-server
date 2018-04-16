@@ -5,9 +5,6 @@ import pkg_resources
 import pluggy
 
 from pyls import _utils, hookspecs, uris, PYLS
-from .flake8_conf import Flake8Config
-from .pycodestyle_conf import PyCodeStyleConfig
-
 
 log = logging.getLogger(__name__)
 
@@ -25,10 +22,17 @@ class Config(object):
         self._settings = {}
         self._plugin_settings = {}
 
-        self._config_sources = {
-            'flake8': Flake8Config(self._root_path),
-            'pycodestyle': PyCodeStyleConfig(self._root_path)
-        }
+        self._config_sources = {}
+        try:
+            from .flake8_conf import Flake8Config
+            self._config_sources['flake8'] = Flake8Config(self._root_path)
+        except ImportError:
+            pass
+        try:
+            from .pycodestyle_conf import PyCodeStyleConfig
+            self._config_sources['pycodestyle'] = PyCodeStyleConfig(self._root_path)
+        except ImportError:
+            pass
 
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
