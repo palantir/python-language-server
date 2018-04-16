@@ -36,7 +36,7 @@ class PyflakesDiagnosticReport(object):
 
     def syntaxError(self, _filename, msg, lineno, offset, text):
         # We've seen that lineno and offset can sometimes be None
-        lineno = lineno or 0
+        lineno = lineno or 1
         offset = offset or 0
 
         err_range = {
