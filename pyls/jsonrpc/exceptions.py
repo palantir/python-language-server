@@ -4,10 +4,10 @@ import traceback
 
 class JsonRpcException(Exception):
 
-    def __init__(self, code=None, message=None, data=None):
+    def __init__(self, message=None, code=None, data=None):
         super(JsonRpcException, self).__init__()
-        self.code = code or getattr(self.__class__, 'CODE')
         self.message = message or getattr(self.__class__, 'MESSAGE')
+        self.code = code or getattr(self.__class__, 'CODE')
         self.data = data
 
     def to_dict(self):
@@ -86,9 +86,9 @@ class JsonRpcRequestCancelled(JsonRpcException):
 
 class JsonRpcServerError(JsonRpcException):
 
-    def __init__(self, code, message=None, data=None):
+    def __init__(self, message, code, data=None):
         assert _is_server_error_code(code)
-        super(JsonRpcServerError, self).__init__(code=code, message=message, data=data)
+        super(JsonRpcServerError, self).__init__(message=message, code=code, data=data)
 
     @classmethod
     def supports_code(cls, code):
