@@ -35,7 +35,7 @@ setup(
         'configparser; python_version<"3.0"',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
-        'jedi>=0.10,<0.12',
+        'jedi>=0.12',
         'pluggy'
     ],
 

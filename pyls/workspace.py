@@ -3,7 +3,6 @@ import io
 import logging
 import os
 import re
-import sys
 import imp
 import pkgutil
 
@@ -268,11 +267,8 @@ class Document(object):
         # Copy our extra sys path
         path = list(self._extra_sys_path)
 
-        # Check to see if we're in a virtualenv
-        if 'VIRTUAL_ENV' in os.environ:
-            log.info("Using virtualenv %s", os.environ['VIRTUAL_ENV'])
-            path.extend(jedi.evaluate.sys_path.get_venv_path(os.environ['VIRTUAL_ENV']))
-        else:
-            path.extend(sys.path)
+        # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
+        environment = jedi.api.environment.get_default_environment()
+        path.extend(environment.get_sys_path())
 
         return path
