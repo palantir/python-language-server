@@ -265,14 +265,5 @@ class Document(object):
         return jedi.Script(**kwargs)
 
     def sys_path(self):
-        # Copy our extra sys path
-        path = list(self._extra_sys_path)
-
-        # Check to see if we're in a virtualenv
-        if 'VIRTUAL_ENV' in os.environ:
-            log.info("Using virtualenv %s", os.environ['VIRTUAL_ENV'])
-            path.extend(jedi.evaluate.sys_path.get_venv_path(os.environ['VIRTUAL_ENV']))
-        else:
-            path.extend(sys.path)
-
-        return path
+        environment = jedi.api.environment.get_default_environment()
+        return environment.get_sys_path()
