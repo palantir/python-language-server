@@ -12,8 +12,10 @@ OPTIONS = [
     ('exclude', 'plugins.pycodestyle.exclude', list),
     ('filename', 'plugins.pycodestyle.filename', list),
     ('hang-closing', 'plugins.pycodestyle.hangClosing', bool),
+    ('hang_closing', 'plugins.pycodestyle.hangClosing', bool),
     ('ignore', 'plugins.pycodestyle.ignore', list),
     ('max-line-length', 'plugins.pycodestyle.maxLineLength', int),
+    ('max_line_length', 'plugins.pycodestyle.maxLineLength', int),
     ('select', 'plugins.pycodestyle.select', list),
 ]
 
