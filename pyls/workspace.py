@@ -265,5 +265,11 @@ class Document(object):
         return jedi.Script(**kwargs)
 
     def sys_path(self):
+        # Copy our extra sys path
+        path = list(self._extra_sys_path)
+
+        # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
         environment = jedi.api.environment.get_default_environment()
-        return environment.get_sys_path()
+        path.extend(environment.get_sys_path())
+
+        return path
