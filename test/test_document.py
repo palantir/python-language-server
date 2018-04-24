@@ -42,14 +42,6 @@ def test_word_at_position(doc):
     assert doc.word_at_position({'line': 4, 'character': 0}) == ''
 
 
-def test_document_sys_path(doc):
-    """Test the document's sys path is updated."""
-    assert 'foo' not in doc.sys_path()
-    sys.path.append('foo')
-    # Check that the new sys path is included in the doc's sys path
-    assert 'foo' in doc.sys_path()
-
-
 def test_document_empty_edit():
     doc = Document('file:///uri', u'')
     doc.apply_change({
