@@ -3,6 +3,7 @@ import os
 from future.standard_library import install_aliases
 import pluggy
 from ._version import get_versions
+from .__main__ import main
 
 install_aliases()
 __version__ = get_versions()['version']
@@ -14,3 +15,6 @@ hookspec = pluggy.HookspecMarker(PYLS)
 hookimpl = pluggy.HookimplMarker(PYLS)
 
 IS_WIN = os.name == 'nt'
+
+if __name__ == '__main__':
+    main()
