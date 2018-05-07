@@ -1,4 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from functools import reduce
+import io
 import logging
 import os
 import sys
@@ -9,6 +11,13 @@ from rope.refactor.rename import Rename
 from pyls import hookimpl, uris
 
 log = logging.getLogger(__name__)
+
+
+def _num_lines(resource):
+    """Count the number of lines in a `File` resource.
+    """
+    s = io.StringIO(resource.read())
+    return reduce(lambda x, _: x + 1, s, 0)
 
 
 @hookimpl
@@ -35,7 +44,7 @@ def pyls_rename(config, workspace, document, position, new_name):
             'edits': [{
                 'range': {
                     'start': {'line': 0, 'character': 0},
-                    'end': {'line': sys.maxsize, 'character': 0},
+                    'end': {'line': _num_lines(change.resource), 'character': 0},
                 },
                 'newText': change.new_contents
             }]
