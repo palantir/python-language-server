@@ -83,6 +83,7 @@ setup(
             'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
             'rope_completion = pyls.plugins.rope_completion',
+            'rope_organize_imports = pyls.plugins.rope_organize_imports',
             'rope_rename = pyls.plugins.rope_rename',
             'yapf = pyls.plugins.yapf_format',
         ]
