@@ -33,7 +33,7 @@ def tmp_workspace(workspace):
     return workspace
 
 
-def test_references(tmp_workspace):
+def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name
     # Over 'Test1' in class Test1():
     position = {'line': 0, 'character': 8}
     DOC1_URI = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC1_NAME))

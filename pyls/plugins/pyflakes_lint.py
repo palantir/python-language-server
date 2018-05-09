@@ -1,6 +1,21 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyflakes import api as pyflakes_api
+from pyflakes import api as pyflakes_api, messages
 from pyls import hookimpl, lsp
+
+# Pyflakes messages that should be reported as Errors instead of Warns
+PYFLAKES_ERROR_MESSAGES = (
+    messages.UndefinedName,
+    messages.UndefinedExport,
+    messages.UndefinedLocal,
+    messages.DuplicateArgument,
+    messages.FutureFeatureNotDefined,
+    messages.ReturnOutsideFunction,
+    messages.YieldOutsideFunction,
+    messages.ContinueOutsideLoop,
+    messages.BreakOutsideLoop,
+    messages.ContinueInFinally,
+    messages.TwoStarredExpressions,
+)
 
 
 @hookimpl
@@ -20,6 +35,10 @@ class PyflakesDiagnosticReport(object):
         pass
 
     def syntaxError(self, _filename, msg, lineno, offset, text):
+        # We've seen that lineno and offset can sometimes be None
+        lineno = lineno or 1
+        offset = offset or 0
+
         err_range = {
             'start': {'line': lineno - 1, 'character': offset},
             'end': {'line': lineno - 1, 'character': offset + len(text)},
@@ -37,9 +56,16 @@ class PyflakesDiagnosticReport(object):
             'start': {'line': message.lineno - 1, 'character': message.col},
             'end': {'line': message.lineno - 1, 'character': len(self.lines[message.lineno - 1])},
         }
+
+        severity = lsp.DiagnosticSeverity.Warning
+        for message_type in PYFLAKES_ERROR_MESSAGES:
+            if isinstance(message, message_type):
+                severity = lsp.DiagnosticSeverity.Error
+                break
+
         self.diagnostics.append({
             'source': 'pyflakes',
             'range': err_range,
             'message': message.message % message.message_args,
-            'severity': lsp.DiagnosticSeverity.Warning
+            'severity': severity
         })

@@ -12,15 +12,31 @@ Python Language Server
 
 A Python 2.7 and 3.4+ implementation of the `Language Server Protocol`_.
 
-Feature Providers
------------------
-* Jedi_ for Completions, Definitions, Hover, References, Signature Help, and Symbols
+Installation
+------------
+
+The base language server requires Jedi_ to provide Completions, Definitions, Hover, References, Signature Help, and
+Symbols:
+
+``pip install python-language-server``
+
+If the respective dependencies are found, the following optional providers will be enabled:
+
 * Rope_ for Completions and renaming
 * Pyflakes_ linter to detect various errors
 * McCabe_ linter for complexity checking
 * pycodestyle_ linter for style checking
 * pydocstyle_ linter for docstring style checking
-* YAPF_ for code formatting
+* autopep8_ for code formatting
+* YAPF_ for code formatting (preferred over autopep8)
+
+Optional providers can be installed using the `extras` syntax. To install YAPF_ formatting for example:
+
+``pip install 'python-language-server[yapf]'``
+
+All optional providers can be installed using:
+
+``pip install 'python-language-server[all]'``
 
 3rd Party Plugins
 ~~~~~~~~~~~~~~~~~
@@ -28,6 +44,9 @@ Installing these plugins will add extra functionality to the language server:
 
 * pyls-mypy_ Mypy type checking for Python 3
 * pyls-isort_ Isort import sort code formatting
+
+Please see the above repositories for examples on how to write plugins for the Python Language Server. Please file an
+issue if you require assistance writing a plugin.
 
 Configuration
 -------------
@@ -78,11 +97,6 @@ Document Formatting:
 
 .. image:: https://raw.githubusercontent.com/palantir/python-language-server/develop/resources/document-format.gif
 
-Installation
-------------
-
-``pip install python-language-server``
-
 Development
 -----------
 
@@ -131,5 +145,6 @@ This project is made available under the MIT License.
 .. _pycodestyle: https://github.com/PyCQA/pycodestyle
 .. _pydocstyle: https://github.com/PyCQA/pydocstyle
 .. _YAPF: https://github.com/google/yapf
+.. _autopep8: https://github.com/hhatto/autopep8
 .. _pyls-mypy: https://github.com/tomv564/pyls-mypy
 .. _pyls-isort: https://github.com/paradoxxxzero/pyls-isort

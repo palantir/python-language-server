@@ -1,5 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyls import uris
+from pyls import lsp, uris
 from pyls.workspace import Document
 from pyls.plugins import pyflakes_lint
 
@@ -16,6 +16,8 @@ DOC_SYNTAX_ERR = """def hello()
     pass
 """
 
+DOC_UNDEFINED_NAME_ERR = "a = b"
+
 
 def test_pyflakes():
     doc = Document(DOC_URI, DOC)
@@ -26,6 +28,7 @@ def test_pyflakes():
     unused_import = [d for d in diags if d['message'] == msg][0]
 
     assert unused_import['range']['start'] == {'line': 0, 'character': 0}
+    assert unused_import['severity'] == lsp.DiagnosticSeverity.Warning
 
 
 def test_syntax_error_pyflakes():
@@ -34,3 +37,13 @@ def test_syntax_error_pyflakes():
 
     assert diag['message'] == 'invalid syntax'
     assert diag['range']['start'] == {'line': 0, 'character': 12}
+    assert diag['severity'] == lsp.DiagnosticSeverity.Error
+
+
+def test_undefined_name_pyflakes():
+    doc = Document(DOC_URI, DOC_UNDEFINED_NAME_ERR)
+    diag = pyflakes_lint.pyls_lint(doc)[0]
+
+    assert diag['message'] == 'undefined name \'b\''
+    assert diag['range']['start'] == {'line': 0, 'character': 4}
+    assert diag['severity'] == lsp.DiagnosticSeverity.Error

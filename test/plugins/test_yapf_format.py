@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 from pyls import uris
-from pyls.plugins.format import pyls_format_document, pyls_format_range
+from pyls.plugins.yapf_format import pyls_format_document, pyls_format_range
 from pyls.workspace import Document
 
 DOC_URI = uris.from_fs_path(__file__)
@@ -30,11 +30,11 @@ def test_format():
 def test_range_format():
     doc = Document(DOC_URI, DOC)
 
-    range = {
+    def_range = {
         'start': {'line': 0, 'character': 0},
         'end': {'line': 4, 'character': 10}
     }
-    res = pyls_format_range(doc, range)
+    res = pyls_format_range(doc, def_range)
 
     assert len(res) == 1
 
@@ -44,4 +44,4 @@ def test_range_format():
 
 def test_no_change():
     doc = Document(DOC_URI, GOOD_DOC)
-    assert len(pyls_format_document(doc)) == 0
+    assert not pyls_format_document(doc)

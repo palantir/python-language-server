@@ -1,20 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
-import sys
-import pytest
-from pyls import uris
+from test.fixtures import DOC_URI, DOC
 from pyls.workspace import Document
-
-DOC_URI = uris.from_fs_path(__file__)
-DOC = """import sys
-
-def main():
-    print sys.stdin.read()
-"""
-
-
-@pytest.fixture
-def doc():
-    return Document(DOC_URI, DOC)
 
 
 def test_document_props(doc):
@@ -25,6 +11,12 @@ def test_document_props(doc):
 def test_document_lines(doc):
     assert len(doc.lines) == 4
     assert doc.lines[0] == 'import sys\n'
+
+
+def test_document_source_unicode():
+    document_mem = Document(DOC_URI, u'my source')
+    document_disk = Document(DOC_URI)
+    assert isinstance(document_mem.source, type(document_disk.source))
 
 
 def test_offset_at_position(doc):
@@ -47,14 +39,6 @@ def test_word_at_position(doc):
     assert doc.word_at_position({'line': 2, 'character': 0}) == 'def'
     # Past end of file
     assert doc.word_at_position({'line': 4, 'character': 0}) == ''
-
-
-def test_document_sys_path(doc):
-    """Test the document's sys path is updated."""
-    assert 'foo' not in doc.sys_path()
-    sys.path.append('foo')
-    # Check that the new sys path is included in the doc's sys path
-    assert 'foo' in doc.sys_path()
 
 
 def test_document_empty_edit():

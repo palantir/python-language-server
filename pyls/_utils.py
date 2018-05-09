@@ -1,32 +1,39 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import functools
+import inspect
 import logging
 import os
-import re
 import threading
 
 log = logging.getLogger(__name__)
 
-FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
-ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
-
-def debounce(interval_s):
+def debounce(interval_s, keyed_by=None):
     """Debounce calls to this function until interval_s seconds have passed."""
     def wrapper(func):
+        timers = {}
+        lock = threading.Lock()
+
         @functools.wraps(func)
         def debounced(*args, **kwargs):
-            if hasattr(debounced, '_timer'):
-                debounced._timer.cancel()
-            debounced._timer = threading.Timer(interval_s, func, args, kwargs)
-            debounced._timer.start()
+            call_args = inspect.getcallargs(func, *args, **kwargs)
+            key = call_args[keyed_by] if keyed_by else None
+
+            def run():
+                with lock:
+                    del timers[key]
+                return func(*args, **kwargs)
+
+            with lock:
+                old_timer = timers.get(key)
+                if old_timer:
+                    old_timer.cancel()
+
+                timer = threading.Timer(interval_s, run)
+                timers[key] = timer
+                timer.start()
         return debounced
     return wrapper
-
-
-def camel_to_underscore(string):
-    s1 = FIRST_CAP_RE.sub(r'\1_\2', string)
-    return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
 
 
 def find_parents(root, path, names):
@@ -104,5 +111,5 @@ def format_docstring(contents):
 def clip_column(column, lines, line_number):
     # Normalise the position as per the LSP that accepts character positions > line length
     # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
-    max_column = len(lines[line_number]) - 1 if len(lines) > line_number else 0
+    max_column = len(lines[line_number].rstrip('\r\n')) if len(lines) > line_number else 0
     return min(column, max_column)

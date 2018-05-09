@@ -1,44 +1,116 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from . import lsp, _utils
+import socketserver
+
+from . import lsp, _utils, uris
 from .config import config
-from .language_server import LanguageServer
+from .jsonrpc.dispatchers import MethodDispatcher
+from .jsonrpc.endpoint import Endpoint
+from .jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
 
+
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 
 
-class PythonLanguageServer(LanguageServer):
+class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
+    """A wrapper class that is used to construct a custom handler class."""
+
+    delegate = None
+
+    def setup(self):
+        super(_StreamHandlerWrapper, self).setup()
+        # pylint: disable=no-member
+        self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
+
+    def handle(self):
+        self.delegate.start()
+
+
+def start_tcp_lang_server(bind_addr, port, handler_class):
+    if not issubclass(handler_class, PythonLanguageServer):
+        raise ValueError('Handler class must be an instance of PythonLanguageServer')
+
+    # Construct a custom wrapper class around the user's handler_class
+    wrapper_class = type(
+        handler_class.__name__ + 'Handler',
+        (_StreamHandlerWrapper,),
+        {'DELEGATE_CLASS': handler_class}
+    )
+
+    server = socketserver.TCPServer((bind_addr, port), wrapper_class)
+    try:
+        log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
+        server.serve_forever()
+    finally:
+        log.info('Shutting down')
+        server.server_close()
+
+
+def start_io_lang_server(rfile, wfile, handler_class):
+    if not issubclass(handler_class, PythonLanguageServer):
+        raise ValueError('Handler class must be an instance of PythonLanguageServer')
+    log.info('Starting %s IO language server', handler_class.__name__)
+    server = handler_class(rfile, wfile)
+    server.start()
+
+
+class PythonLanguageServer(MethodDispatcher):
+    """ Implementation of the Microsoft VSCode Language Server Protocol
+    https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
+    """
+
     # pylint: disable=too-many-public-methods,redefined-builtin
 
-    workspace = None
-    config = None
+    def __init__(self, rx, tx):
+        self.workspace = None
+        self.config = None
 
-    # Set of method dispatchers to query
-    _dispatchers = []
+        self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
+        self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
+        self._endpoint = Endpoint(self, self._jsonrpc_stream_writer.write)
+        self._dispatchers = []
+        self._shutdown = False
+
+    def start(self):
+        """Entry point for the server."""
+        self._jsonrpc_stream_reader.listen(self._endpoint.consume)
 
     def __getitem__(self, item):
-        """Override the method dispatcher to farm out any unknown messages to our plugins."""
+        """Override getitem to fallback through multiple dispatchers."""
+        if self._shutdown and item != 'exit':
+            # exit is the only allowed method during shutdown
+            log.debug("Ignoring non-exit method during shutdown: %s", item)
+            raise KeyError
+
         try:
             return super(PythonLanguageServer, self).__getitem__(item)
         except KeyError:
-            log.debug("Checking dispatchers for %s: %s", item, self._dispatchers)
+            # Fallback through extra dispatchers
             for dispatcher in self._dispatchers:
                 try:
-                    return dispatcher.__getitem__(item)
+                    return dispatcher[item]
                 except KeyError:
-                    pass
-        raise KeyError("Unknown item %s" % item)
+                    continue
 
-    def _hook_caller(self, hook_name):
-        return self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+        raise KeyError()
+
+    def m_shutdown(self, **_kwargs):
+        self._shutdown = True
+        return None
+
+    def m_exit(self, **_kwargs):
+        self._endpoint.shutdown()
+        self._jsonrpc_stream_reader.close()
+        self._jsonrpc_stream_writer.close()
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
+        """Calls hook_name and returns a list of results from all registered handlers"""
         doc = self.workspace.get_document(doc_uri) if doc_uri else None
-        hook = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+        hook_handlers = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
+        return hook_handlers(config=self.config, workspace=self.workspace, document=doc, **kwargs)
 
     def capabilities(self):
         server_capabilities = {
@@ -66,14 +138,24 @@ class PythonLanguageServer(LanguageServer):
             'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL,
             'experimental': merge(self._hook('pyls_experimental_capabilities'))
         }
-        log.info("Server capabilities: %s", server_capabilities)
+        log.info('Server capabilities: %s', server_capabilities)
         return server_capabilities
 
-    def initialize(self, root_uri, init_opts, _process_id):
-        self.workspace = Workspace(root_uri, lang_server=self)
-        self.config = config.Config(root_uri, init_opts)
+    def m_initialize(self, processId=None, rootUri=None, rootPath=None, initializationOptions=None, **_kwargs):
+        log.debug('Language server initialized with %s %s %s %s', processId, rootUri, rootPath, initializationOptions)
+        if rootUri is None:
+            rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
+
+        self.workspace = Workspace(rootUri, self._endpoint)
+        self.config = config.Config(rootUri, initializationOptions or {})
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
+
+        # Get our capabilities
+        return {'capabilities': self.capabilities()}
+
+    def m_initialized(self, **_kwargs):
+        pass
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook('pyls_code_actions', doc_uri, range=range, context=context))
@@ -106,7 +188,7 @@ class PythonLanguageServer(LanguageServer):
     def hover(self, doc_uri, position):
         return self._hook('pyls_hover', doc_uri, position=position) or {'contents': ''}
 
-    @_utils.debounce(LINT_DEBOUNCE_S)
+    @_utils.debounce(LINT_DEBOUNCE_S, keyed_by='doc_uri')
     def lint(self, doc_uri):
         # Since we're debounced, the document may no longer be open
         if doc_uri in self.workspace.documents:

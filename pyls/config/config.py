@@ -1,11 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import pkg_resources
+
 import pluggy
 
 from pyls import _utils, hookspecs, uris, PYLS
-from .flake8_conf import Flake8Config
-from .pycodestyle_conf import PyCodeStyleConfig
-
 
 log = logging.getLogger(__name__)
 
@@ -20,26 +19,47 @@ class Config(object):
         self._root_uri = root_uri
         self._init_opts = init_opts
 
-        self._disabled_plugins = []
         self._settings = {}
         self._plugin_settings = {}
 
-        self._config_sources = {
-            'flake8': Flake8Config(self._root_path),
-            'pycodestyle': PyCodeStyleConfig(self._root_path)
-        }
+        self._config_sources = {}
+        try:
+            from .flake8_conf import Flake8Config
+            self._config_sources['flake8'] = Flake8Config(self._root_path)
+        except ImportError:
+            pass
+        try:
+            from .pycodestyle_conf import PyCodeStyleConfig
+            self._config_sources['pycodestyle'] = PyCodeStyleConfig(self._root_path)
+        except ImportError:
+            pass
 
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
         self._pm.enable_tracing()
         self._pm.add_hookspecs(hookspecs)
+
+        # Pluggy will skip loading a plugin if it throws a DistributionNotFound exception.
+        # However I don't want all plugins to have to catch ImportError and re-throw. So here we'll filter
+        # out any entry points that throw ImportError assuming one or more of their dependencies isn't present.
+        for entry_point in pkg_resources.iter_entry_points(PYLS):
+            try:
+                entry_point.load()
+            except ImportError as e:
+                log.warn("Failed to load %s entry point '%s': %s", PYLS, entry_point.name, e)
+                self._pm.set_blocked(entry_point.name)
+
+        # Load the entry points into pluggy, having blocked any failing ones
         self._pm.load_setuptools_entrypoints(PYLS)
 
         for name, plugin in self._pm.list_name_plugin():
-            log.info("Loaded pyls plugin %s from %s", name, plugin)
+            if plugin is not None:
+                log.info("Loaded pyls plugin %s from %s", name, plugin)
 
         for plugin_conf in self._pm.hook.pyls_settings(config=self):
             self._plugin_settings = _utils.merge_dicts(self._plugin_settings, plugin_conf)
+
+        self._update_disabled_plugins()
 
     @property
     def disabled_plugins(self):
@@ -64,6 +84,8 @@ class Config(object):
             2. Plugin settings, reported by PyLS plugins
             3. LSP settings, given to us from didChangeConfiguration
             4. Project settings, found in config files in the current project.
+
+        TODO(gatesn): We should update a cached view of this whenever any configs change
         """
         settings = {}
         sources = self._settings.get('configurationSources', DEFAULT_CONFIG_SOURCES)
@@ -101,10 +123,12 @@ class Config(object):
         """Recursively merge the given settings into the current settings."""
         self._settings = settings
         log.info("Updated settings to %s", self._settings)
+        self._update_disabled_plugins()
 
+    def _update_disabled_plugins(self):
         # All plugins default to enabled
         self._disabled_plugins = [
             plugin for name, plugin in self.plugin_manager.list_name_plugin()
-            if not self._settings.get('plugins', {}).get(name, {}).get('enabled', True)
+            if not self.settings().get('plugins', {}).get(name, {}).get('enabled', True)
         ]
         log.info("Disabled plugins: %s", self._disabled_plugins)

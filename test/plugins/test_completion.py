@@ -24,10 +24,10 @@ def _a_hello():
 """
 
 
-def test_rope_import_completion():
+def test_rope_import_completion(config, workspace):
     com_position = {'line': 0, 'character': 7}
     doc = Document(DOC_URI, DOC)
-    items = pyls_rope_completions(doc, com_position)
+    items = pyls_rope_completions(config, workspace, doc, com_position)
     assert items is None
 
 
@@ -37,22 +37,23 @@ def test_jedi_completion():
     doc = Document(DOC_URI, DOC)
     items = pyls_jedi_completions(doc, com_position)
 
-    assert len(items) > 0
+    assert items
     assert items[0]['label'] == 'isabs(s)'
 
     # Test we don't throw with big character
     pyls_jedi_completions(doc, {'line': 1, 'character': 1000})
 
 
-def test_rope_completion():
+def test_rope_completion(config, workspace):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
     rope = Project(LOCATION)
     rope.prefs.set('extension_modules', get_preferred_submodules())
-    doc = Document(DOC_URI, DOC, rope=rope)
-    items = pyls_rope_completions(doc, com_position)
+    workspace.put_document(DOC_URI, source=DOC)
+    doc = workspace.get_document(DOC_URI)
+    items = pyls_rope_completions(config, workspace, doc, com_position)
 
-    assert len(items) > 0
+    assert items
     assert items[0]['label'] == 'isabs'
 
 
