@@ -107,3 +107,7 @@ def _configure_logger(verbose=0, log_config=None, log_file=None):
         level = logging.DEBUG
 
     root_logger.setLevel(level)
+
+
+if __name__ == '__main__':
+    main()
