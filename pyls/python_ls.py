@@ -123,6 +123,7 @@ class PythonLanguageServer(MethodDispatcher):
                 'triggerCharacters': ['.']
             },
             'documentFormattingProvider': True,
+            'documentHighlightProvider': True,
             'documentRangeFormattingProvider': True,
             'documentSymbolProvider': True,
             'definitionProvider': True,
@@ -185,6 +186,9 @@ class PythonLanguageServer(MethodDispatcher):
     def format_range(self, doc_uri, range):
         return self._hook('pyls_format_range', doc_uri, range=range)
 
+    def highlight(self, doc_uri, position):
+        return flatten(self._hook('pyls_document_highlight', doc_uri, position=position)) or None
+
     def hover(self, doc_uri, position):
         return self._hook('pyls_hover', doc_uri, position=position) or {'contents': ''}
 
@@ -237,6 +241,9 @@ class PythonLanguageServer(MethodDispatcher):
 
     def m_text_document__definition(self, textDocument=None, position=None, **_kwargs):
         return self.definitions(textDocument['uri'], position)
+
+    def m_text_document__document_highlight(self, textDocument=None, position=None, **_kwargs):
+        return self.highlight(textDocument['uri'], position)
 
     def m_text_document__hover(self, textDocument=None, position=None, **_kwargs):
         return self.hover(textDocument['uri'], position)
