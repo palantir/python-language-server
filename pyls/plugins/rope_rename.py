@@ -30,6 +30,7 @@ def pyls_rename(config, workspace, document, position, new_name):
                 'uri': uris.uri_with(
                     document.uri, path=os.path.join(workspace.root_path, change.resource.path)
                 ),
+                'version': document.version 
             },
             'edits': [{
                 'range': {
