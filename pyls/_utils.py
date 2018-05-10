@@ -5,6 +5,8 @@ import logging
 import os
 import threading
 
+from .markdown import rst2markdown
+
 log = logging.getLogger(__name__)
 
 
@@ -97,15 +99,9 @@ def merge_dicts(dict_a, dict_b):
 
 
 def format_docstring(contents):
-    """Python doc strings come in a number of formats, but LSP wants markdown.
-
-    Until we can find a fast enough way of discovering and parsing each format,
-    we can do a little better by at least preserving indentation.
-    """
-    contents = contents.replace('\t', u'\u00A0' * 4)
-    contents = contents.replace('  ', u'\u00A0' * 2)
-    contents = contents.replace('*', '\\*')
+    """Python doc strings come in a number of formats, but LSP wants markdown."""
     return contents
+    #return rst2markdown(contents)
 
 
 def clip_column(column, lines, line_number):

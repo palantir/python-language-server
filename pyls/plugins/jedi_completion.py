@@ -1,9 +1,12 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 from pyls import hookimpl, lsp, _utils
+import numpy
 
 log = logging.getLogger(__name__)
 
+
+numpy.linspace
 
 @hookimpl
 def pyls_completions(document, position):
