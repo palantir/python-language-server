@@ -48,6 +48,11 @@ def pyls_document_did_save(config, workspace, document):
 
 
 @hookspec
+def pyls_document_highlight(config, workspace, document, position):
+    pass
+
+
+@hookspec
 def pyls_document_symbols(config, workspace, document):
     pass
 
