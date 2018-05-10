@@ -38,6 +38,10 @@ All optional providers can be installed using:
 
 ``pip install 'python-language-server[all]'``
 
+If you get an error similar to ``'install_requires' must be a string or list of strings`` then please upgrade setuptools before trying again. 
+
+``pip install -U setuptools``
+
 3rd Party Plugins
 ~~~~~~~~~~~~~~~~~
 Installing these plugins will add extra functionality to the language server:
