@@ -100,8 +100,7 @@ def merge_dicts(dict_a, dict_b):
 
 def format_docstring(contents):
     """Python doc strings come in a number of formats, but LSP wants markdown."""
-    return contents
-    #return rst2markdown(contents)
+    return rst2markdown(contents)
 
 
 def clip_column(column, lines, line_number):

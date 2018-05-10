@@ -16,8 +16,4 @@ def test_rst2markdown(basename):
 
     expected = open(md_file).read().rstrip('\n')
     actual = markdown.rst2markdown(open(pydoc_file).read())
-
-    if basename == "numpy.linspace":
-        with open(md_file + ".test.md", 'w+') as f:
-            f.write(actual)
     assert actual == expected

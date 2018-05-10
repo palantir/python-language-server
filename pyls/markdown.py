@@ -48,6 +48,7 @@ class _Rst2Markdown(object):
             i += 1
 
         self._end_code()
+        self._end_doctest()
         self._end_preformatted()
 
         return '\n'.join(self._md).strip()
@@ -59,7 +60,7 @@ class _Rst2Markdown(object):
             self._start_code()
             return 0
 
-        if line.startswith('>>>'):
+        if line.startswith('>>>') or line.startswith('...'):
             self._start_doctest()
             return -1
 
@@ -126,7 +127,7 @@ class _Rst2Markdown(object):
 
     def _doctest(self, line):
         if not line:
-            self._end_code()
+            self._end_doctest()
         else:
             self._md.append(line)
 
@@ -175,7 +176,8 @@ class _Rst2Markdown(object):
         return True
 
     def _start_doctest(self):
-        self._start_code()
+        self._try_remove_preceeding_empty_lines()
+        self._md.append('```pydocstring')
         self._state = _STATE_DOCTEST
 
     def _start_code(self):
@@ -186,6 +188,12 @@ class _Rst2Markdown(object):
 
     def _end_code(self):
         if self._state == _STATE_CODE:
+            self._try_remove_preceeding_empty_lines()
+            self._md.append('```')
+            self._state = _STATE_DEFAULT
+
+    def _end_doctest(self):
+        if self._state == _STATE_DOCTEST:
             self._try_remove_preceeding_empty_lines()
             self._md.append('```')
             self._state = _STATE_DEFAULT
