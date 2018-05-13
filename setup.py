@@ -75,6 +75,7 @@ setup(
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',
+            'jedi_highlight = pyls.plugins.highlight',
             'jedi_references = pyls.plugins.references',
             'jedi_signature_help = pyls.plugins.signature',
             'jedi_symbols = pyls.plugins.symbols',

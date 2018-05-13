@@ -26,6 +26,12 @@ class CompletionItemKind(object):
     Reference = 18
 
 
+class DocumentHighlightKind(object):
+    Text = 1
+    Read = 2
+    Write = 3
+
+
 class DiagnosticSeverity(object):
     Error = 1
     Warning = 2
