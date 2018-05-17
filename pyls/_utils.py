@@ -5,6 +5,7 @@ import logging
 import os
 import threading
 
+from . import lsp
 from .markdown import rst2markdown
 
 log = logging.getLogger(__name__)
@@ -99,8 +100,14 @@ def merge_dicts(dict_a, dict_b):
 
 
 def format_docstring(contents):
-    """Python doc strings come in a number of formats, but LSP wants markdown."""
-    return rst2markdown(contents)
+    """Python doc strings come in a number of formats, but LSP wants markdown.
+
+    Returns: MarkupContent
+    """
+    return {
+        'kind': lsp.MarkupKind.Markdown,
+        'value': rst2markdown(contents)
+    }
 
 
 def clip_column(column, lines, line_number):
