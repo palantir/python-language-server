@@ -1,47 +1,39 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyls import uris
-from pyls.plugins.yapf_format import pyls_format_document, pyls_format_range
-from pyls.workspace import Document
 
-DOC_URI = uris.from_fs_path(__file__)
-DOC = """A = [
-    'h',   'w',
+import re
 
-    'a'
-      ]
+# pylint: disable=W0622
+from functools import reduce, partial
 
-B = ['h',
+from hypothesis import given
+from hypothesis import strategies as st
 
-
-'w']
-"""
-
-GOOD_DOC = """A = ['hello', 'world']\n"""
+from pyls.plugins.yapf_format import (
+    _make_edits,
+    _to_position,
+    _to_index,
+)
 
 
-def test_format():
-    doc = Document(DOC_URI, DOC)
-    res = pyls_format_document(doc)
-
-    assert len(res) == 1
-    assert res[0]['newText'] == "A = ['h', 'w', 'a']\n\nB = ['h', 'w']\n"
-
-
-def test_range_format():
-    doc = Document(DOC_URI, DOC)
-
-    def_range = {
-        'start': {'line': 0, 'character': 0},
-        'end': {'line': 4, 'character': 10}
-    }
-    res = pyls_format_range(doc, def_range)
-
-    assert len(res) == 1
-
-    # Make sure B is still badly formatted
-    assert res[0]['newText'] == "A = ['h', 'w', 'a']\n\nB = ['h',\n\n\n'w']\n"
+@given(st.lists(st.integers(min_value=1), unique=True), st.data())
+def test_position(ends, data):
+    ends.sort()
+    ends.insert(0, 0)
+    index = data.draw(st.integers(min_value=0, max_value=ends[-1]))
+    assert _to_index(ends, _to_position(ends, index)) == index
 
 
-def test_no_change():
-    doc = Document(DOC_URI, GOOD_DOC)
-    assert not pyls_format_document(doc)
+@given(st.text(), st.data())
+def test_make_edits(s1, data):
+    ends = [0] + list(m.start() for m in re.finditer('\n', s1))
+    s2 = ''.join(data.draw(st.permutations(s1 + data.draw(st.text()))))
+    edits = _make_edits(s1, s2)
+    assert apply_edits(s1, ends, edits) == s2
+
+
+def apply_edits(text, ends, edits):
+    def apply_edit(acc, edit):
+        range = edit['range']
+        start, end = map(partial(_to_index, ends), (range['start'], range['end']))
+        return ''.join((acc[:start], edit['newText'], acc[end:]))
+    return reduce(apply_edit, reversed(edits), text)
