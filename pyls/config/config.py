@@ -9,7 +9,7 @@ from pyls import _utils, hookspecs, uris, PYLS
 log = logging.getLogger(__name__)
 
 # Sources of config, first source overrides next source
-DEFAULT_CONFIG_SOURCES = ['pycodestyle']
+DEFAULT_CONFIG_SOURCES = ['pycodestyle', 'jedi']
 
 
 class Config(object):
@@ -31,6 +31,11 @@ class Config(object):
         try:
             from .pycodestyle_conf import PyCodeStyleConfig
             self._config_sources['pycodestyle'] = PyCodeStyleConfig(self._root_path)
+        except ImportError:
+            pass
+        try:
+            from .jedi_conf import JediConfig
+            self._config_sources['jedi'] = JediConfig(self._root_path)
         except ImportError:
             pass
 

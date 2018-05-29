@@ -65,6 +65,11 @@
                     "default": true,
                     "description": "If True lists the names of all scopes instead of only the module namespace."
                 },
+                "plugins.jedi.follow_imports": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "If True follow jedi definitions recursively as far as possible."
+                },
                 "pyls.plugins.mccabe.enabled": {
                     "type": "boolean",
                     "default": true,
