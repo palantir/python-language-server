@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import os
 from pyls._utils import find_parents
 from .source import ConfigSource
-import os
 
 CONFIG_KEY = 'jedi'
 PROJECT_CONFIGS = ['.jedi']
