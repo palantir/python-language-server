@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+
 import io
 import logging
 import os
@@ -17,22 +18,30 @@ RE_START_WORD = re.compile('[A-Za-z_0-9]*$')
 RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 
-def get_submodules(mod):
-    """Get all submodules of a given module"""
-    def catch_exceptions(_module):
-        pass
+def get_submodules(modname):
 
-    try:
-        m = __import__(mod)
-        submodules = [mod]
-        submods = pkgutil.walk_packages(m.__path__, m.__name__ + '.', catch_exceptions)
-        for sm in submods:
-            sm_name = sm[1]
-            submodules.append(sm_name)
-    except ImportError:
-        return []
-    except:  # pylint: disable=bare-except
-        return [mod]
+    submodules = []
+    tovisit = [[modname, True]]
+
+    # imp.walk_packages actually imports packages imp.find_modules not,
+    # so let's implement the recursion...
+    while tovisit:
+        mname, ispkg = tovisit.pop()
+        try:
+            _, mpath, _ = imp.find_module(mname)
+            # mimic python2 behaviour
+            if not mpath:
+                mpath = mname
+        except ImportError:
+            continue
+
+        submodules.append(mname)
+        # if the curent module is not a package,
+        # there is no need to continue the scan
+        if ispkg:
+            for mod in pkgutil.iter_modules([mpath], mname + "."):
+                tovisit.append(mod[1:])
+
     return submodules
 
 
@@ -48,19 +57,9 @@ def get_preferred_submodules():
             'strop', 'sys', 'thread', 'time', 'wx', 'xxsubtype',
             'zipimport', 'zlib', 'nose', 'os.path']
 
-    submodules = []
-    for mod in mods:
-        submods = get_submodules(mod)
-        submodules += submods
-
     actual = []
-    for submod in submodules:
-        try:
-            imp.find_module(submod)
-            actual.append(submod)
-        except ImportError:
-            pass
-
+    for mod in mods:
+        actual.extend(get_submodules(mod))
     return actual
 
 
