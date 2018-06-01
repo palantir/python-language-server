@@ -3,7 +3,7 @@ import os
 from rope.base.project import Project
 
 from pyls import uris
-from pyls.workspace import Document, get_preferred_submodules
+from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
@@ -47,8 +47,6 @@ def test_jedi_completion():
 def test_rope_completion(config, workspace):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
-    rope = Project(LOCATION)
-    rope.prefs.set('extension_modules', get_preferred_submodules())
     workspace.put_document(DOC_URI, source=DOC)
     doc = workspace.get_document(DOC_URI)
     items = pyls_rope_completions(config, workspace, doc, com_position)
