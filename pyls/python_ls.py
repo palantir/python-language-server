@@ -2,11 +2,12 @@
 import logging
 import socketserver
 
+from jsonrpc.dispatchers import MethodDispatcher
+from jsonrpc.endpoint import Endpoint
+from jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
+
 from . import lsp, _utils, uris
 from .config import config
-from .jsonrpc.dispatchers import MethodDispatcher
-from .jsonrpc.endpoint import Endpoint
-from .jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
