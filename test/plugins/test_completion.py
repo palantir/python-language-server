@@ -1,6 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-from rope.base.project import Project
 
 from pyls import uris
 from pyls.workspace import Document
