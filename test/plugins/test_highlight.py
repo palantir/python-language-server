@@ -30,3 +30,27 @@ def test_highlight():
         # The second usage is Read
         'kind': lsp.DocumentHighlightKind.Read
     }]
+
+
+SYS_DOC = '''import sys
+print sys.path
+'''
+
+
+def test_sys_highlight():
+    cursor_pos = {'line': 0, 'character': 8}
+
+    doc = Document(DOC_URI, SYS_DOC)
+    assert pyls_document_highlight(doc, cursor_pos) == [{
+        'range': {
+            'start': {'line': 0, 'character': 7},
+            'end': {'line': 0, 'character': 10}
+        },
+        'kind': lsp.DocumentHighlightKind.Write
+    }, {
+        'range': {
+            'start': {'line': 1, 'character': 6},
+            'end': {'line': 1, 'character': 9}
+        },
+        'kind': lsp.DocumentHighlightKind.Read
+    }]
