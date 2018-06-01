@@ -80,6 +80,7 @@ setup(
             'jedi_signature_help = pyls.plugins.signature',
             'jedi_symbols = pyls.plugins.symbols',
             'mccabe = pyls.plugins.mccabe_lint',
+            'preload = pyls.plugins.preload_imports',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
