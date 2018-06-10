@@ -5,7 +5,6 @@ before_install:
     - pip install -r requirements.txt
 script:
     - flake8
-    - python -m unittest discover
     - pytest
     # - coverage run --source=. -m unittest discover
 # after_success:

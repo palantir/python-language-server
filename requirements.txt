@@ -1,4 +1,5 @@
 future
+flake8
 configparser
 python-language-server
 mypy;python_version >= '3.2'
