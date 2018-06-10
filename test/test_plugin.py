@@ -4,6 +4,7 @@ from pyls_mypy import plugin
 DOC_URI = __file__
 DOC_TYPE_ERR = """{}.append(3)
 """
+TYPE_ERR_MSG = '"Dict[<nothing>, <nothing>]" has no attribute "append"'
 
 TEST_LINE = 'main.py:279:8: error: "Request" has no attribute "id"'
 TEST_LINE_WITHOUT_COL = 'main.py:279: error: "Request" has no attribute "id"'
@@ -16,7 +17,7 @@ def test_plugin():
 
     assert len(diags) == 1
     diag = diags[0]
-    assert diag['message'] == '"Dict[<nothing>, <nothing>]" has no attribute "append"'
+    assert diag['message'] == TYPE_ERR_MSG
     assert diag['range']['start'] == {'line': 0, 'character': 1}
     assert diag['range']['end'] == {'line': 0, 'character': 2}
 

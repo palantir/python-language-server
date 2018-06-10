@@ -14,7 +14,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
 
-    description='Mypy linter for the Python Language Server for the Language Server Protocol',
+    description='Mypy linter for the Python Language Server',
 
     long_description=README,
 
