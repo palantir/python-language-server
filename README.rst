@@ -1,6 +1,8 @@
 Mypy plugin for PYLS
 ======================
 
+[![Build Status](https://travis-ci.org/tomv564/pyls-mypy.svg?branch=master)](https://travis-ci.org/tomv564/pyls-mypy)
+
 This is a plugin for the Palantir's Python Language Server (https://github.com/palantir/python-language-server)
 
 It, like mypy, requires Python 3.2 or newer.
