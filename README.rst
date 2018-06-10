@@ -1,6 +1,9 @@
 Mypy plugin for PYLS
 ======================
 
+.. image:: https://badge.fury.io/py/pyls-mypy.svg
+    :target: https://badge.fury.io/py/pyls-mypy
+
 .. image:: https://travis-ci.org/tomv564/pyls-mypy.svg?branch=master
     :target: https://travis-ci.org/tomv564/pyls-mypy
 
