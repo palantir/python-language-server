@@ -1,7 +1,8 @@
 Mypy plugin for PYLS
 ======================
 
-[![Build Status](https://travis-ci.org/tomv564/pyls-mypy.svg?branch=master)](https://travis-ci.org/tomv564/pyls-mypy)
+.. image:: https://travis-ci.org/tomv564/pyls-mypy.svg?branch=master
+    :target: https://travis-ci.org/tomv564/pyls-mypy
 
 This is a plugin for the Palantir's Python Language Server (https://github.com/palantir/python-language-server)
 
