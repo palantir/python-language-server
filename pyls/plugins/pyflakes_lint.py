@@ -32,7 +32,16 @@ class PyflakesDiagnosticReport(object):
         self.diagnostics = []
 
     def unexpectedError(self, filename, msg):  # pragma: no cover
-        pass
+        err_range = {
+            'start': {'line': 0, 'character': 0},
+            'end': {'line': 0, 'character': 0},
+        }
+        self.diagnostics.append({
+            'source': 'pyflakes',
+            'range': err_range,
+            'message': msg,
+            'severity': lsp.DiagnosticSeverity.Error,
+        })
 
     def syntaxError(self, _filename, msg, lineno, offset, text):
         # We've seen that lineno and offset can sometimes be None
