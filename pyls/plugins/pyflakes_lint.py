@@ -31,7 +31,7 @@ class PyflakesDiagnosticReport(object):
         self.lines = lines
         self.diagnostics = []
 
-    def unexpectedError(self, filename, msg):  # pragma: no cover
+    def unexpectedError(self, _filename, msg):  # pragma: no cover
         err_range = {
             'start': {'line': 0, 'character': 0},
             'end': {'line': 0, 'character': 0},
