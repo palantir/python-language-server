@@ -5,7 +5,11 @@ from pyls import hookimpl
 line_pattern = r"([^:]+):(?:(\d+):)?(?:(\d+):)? (\w+): (.*)"
 
 
-def parse_line(line):
+def parse_line(line, document=None):
+    '''
+    Return a language-server diagnostic from a line of the Mypy error report;
+    optionally, use the whole document to provide more context on it.
+    '''
     result = re.match(line_pattern, line)
     if result:
         _, lineno, offset, severity, msg = result.groups()
@@ -14,7 +18,7 @@ def parse_line(line):
         errno = 2
         if severity == 'error':
             errno = 1
-        return {
+        diag = {
             'source': 'mypy',
             'range': {
                 'start': {'line': lineno - 1, 'character': offset},
@@ -24,6 +28,15 @@ def parse_line(line):
             'message': msg,
             'severity': errno
         }
+        if document:
+            # although mypy does not provide the end of the affected range, we
+            # can make a good guess by highlighting the word that Mypy flagged
+            word = document.word_at_position(diag['range']['start'])
+            if word:
+                diag['range']['end']['character'] = (
+                    diag['range']['start']['character'] + len(word))
+
+        return diag
 
 
 @hookimpl
