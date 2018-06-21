@@ -30,6 +30,15 @@
                     },
                     "uniqueItems": true
                 },
+                "pyls.extraSysPath": {
+                    "type": "array",
+                    "default": [],
+                    "description": "List of extra paths to use to find packages.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                },
                 "pyls.plugins.jedi_completion.enabled": {
                     "type": "boolean",
                     "default": true,

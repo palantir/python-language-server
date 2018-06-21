@@ -21,9 +21,10 @@ class Workspace(object):
     M_APPLY_EDIT = 'workspace/applyEdit'
     M_SHOW_MESSAGE = 'window/showMessage'
 
-    def __init__(self, root_uri, endpoint):
+    def __init__(self, root_uri, endpoint, config):
         self._root_uri = root_uri
         self._endpoint = endpoint
+        self._config = config
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
@@ -93,9 +94,12 @@ class Workspace(object):
 
     def _create_document(self, doc_uri, source=None, version=None):
         path = uris.to_fs_path(doc_uri)
+        extra_sys_path = self.source_roots(path)
+        settings = self._config.settings(doc_uri)
+        extra_sys_path.extend(settings.get('extraSysPath', []))
         return Document(
             doc_uri, source=source, version=version,
-            extra_sys_path=self.source_roots(path),
+            extra_sys_path=extra_sys_path,
             rope_project_builder=self._rope_project_builder,
         )
 

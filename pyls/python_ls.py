@@ -147,8 +147,8 @@ class PythonLanguageServer(MethodDispatcher):
         if rootUri is None:
             rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
-        self.workspace = Workspace(rootUri, self._endpoint)
         self.config = config.Config(rootUri, initializationOptions or {})
+        self.workspace = Workspace(rootUri, self._endpoint, self.config)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 

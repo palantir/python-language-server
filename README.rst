@@ -66,6 +66,8 @@ order to respect flake8 configuration instead.
 Overall configuration is computed first from user configuration (in home directory), overridden by configuration
 passed in by the language client, and then overriden by configuration discovered in the workspace.
 
+Additional extra python paths can be passed by adding a them as a list in the `pyls.extraSysPath` setting.
+
 Language Server Features
 ------------------------
 
