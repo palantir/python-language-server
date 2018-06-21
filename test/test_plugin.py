@@ -1,3 +1,5 @@
+import pytest
+
 from pyls.workspace import Document
 from pyls_mypy import plugin
 
@@ -41,3 +43,13 @@ def test_parse_line_without_line():
     assert diag['message'] == '"Request" has no attribute "id"'
     assert diag['range']['start'] == {'line': 0, 'character': 0}
     assert diag['range']['end'] == {'line': 0, 'character': 1}
+
+
+@pytest.mark.parametrize('word,bounds', [('', (8, 9)), ('my_var', (8, 14))])
+def test_parse_line_with_context(monkeypatch, word, bounds):
+    monkeypatch.setattr(Document, 'word_at_position', lambda *args: word)
+    doc = Document('file:///some/path')
+    diag = plugin.parse_line(TEST_LINE, doc)
+    assert diag['message'] == '"Request" has no attribute "id"'
+    assert diag['range']['start'] == {'line': 278, 'character': bounds[0]}
+    assert diag['range']['end'] == {'line': 278, 'character': bounds[1]}
