@@ -29,6 +29,7 @@ If the respective dependencies are found, the following optional providers will 
 * pydocstyle_ linter for docstring style checking
 * autopep8_ for code formatting
 * YAPF_ for code formatting (preferred over autopep8)
+* pylint_ linter to detect various errors.
 
 Optional providers can be installed using the `extras` syntax. To install YAPF_ formatting for example:
 
@@ -155,3 +156,4 @@ This project is made available under the MIT License.
 .. _pyls-isort: https://github.com/paradoxxxzero/pyls-isort
 .. _pyls-black: https://github.com/rupert/pyls-black
 .. _Black: https://github.com/ambv/black
+.. _pylint: https://www.pylint.org/
