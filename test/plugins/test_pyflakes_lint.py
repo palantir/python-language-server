@@ -19,6 +19,11 @@ DOC_SYNTAX_ERR = """def hello()
 DOC_UNDEFINED_NAME_ERR = "a = b"
 
 
+DOC_ENCODING = u"""# encoding=utf-8
+import sys
+"""
+
+
 def test_pyflakes():
     doc = Document(DOC_URI, DOC)
     diags = pyflakes_lint.pyls_lint(doc)
@@ -47,3 +52,11 @@ def test_undefined_name_pyflakes():
     assert diag['message'] == 'undefined name \'b\''
     assert diag['range']['start'] == {'line': 0, 'character': 4}
     assert diag['severity'] == lsp.DiagnosticSeverity.Error
+
+
+def test_unicode_encoding():
+    doc = Document(DOC_URI, DOC_ENCODING)
+    diags = pyflakes_lint.pyls_lint(doc)
+
+    assert len(diags) == 1
+    assert diags[0]['message'] == '\'sys\' imported but unused'
