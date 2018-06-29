@@ -91,7 +91,9 @@ class Config(object):
         sources = self._settings.get('configurationSources', DEFAULT_CONFIG_SOURCES)
 
         for source_name in reversed(sources):
-            source = self._config_sources[source_name]
+            source = self._config_sources.get(source_name)
+            if not source:
+                continue
             source_conf = source.user_config()
             log.debug("Got user config from %s: %s", source.__class__.__name__, source_conf)
             settings = _utils.merge_dicts(settings, source_conf)
@@ -104,7 +106,9 @@ class Config(object):
         log.debug("With lsp configuration: %s", settings)
 
         for source_name in reversed(sources):
-            source = self._config_sources[source_name]
+            source = self._config_sources.get(source_name)
+            if not source:
+                continue
             source_conf = source.project_config(document_path or self._root_path)
             log.debug("Got project config from %s: %s", source.__class__.__name__, source_conf)
             settings = _utils.merge_dicts(settings, source_conf)

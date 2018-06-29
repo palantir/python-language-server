@@ -38,12 +38,17 @@ All optional providers can be installed using:
 
 ``pip install 'python-language-server[all]'``
 
+If you get an error similar to ``'install_requires' must be a string or list of strings`` then please upgrade setuptools before trying again. 
+
+``pip install -U setuptools``
+
 3rd Party Plugins
 ~~~~~~~~~~~~~~~~~
 Installing these plugins will add extra functionality to the language server:
 
 * pyls-mypy_ Mypy type checking for Python 3
 * pyls-isort_ Isort import sort code formatting
+* pyls-black_ for code formatting using Black_
 
 Please see the above repositories for examples on how to write plugins for the Python Language Server. Please file an
 issue if you require assistance writing a plugin.
@@ -148,3 +153,5 @@ This project is made available under the MIT License.
 .. _autopep8: https://github.com/hhatto/autopep8
 .. _pyls-mypy: https://github.com/tomv564/pyls-mypy
 .. _pyls-isort: https://github.com/paradoxxxzero/pyls-isort
+.. _pyls-black: https://github.com/rupert/pyls-black
+.. _Black: https://github.com/ambv/black

@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import os
-import sys
 
 from rope.base import libutils
 from rope.refactor.rename import Rename
@@ -31,13 +30,19 @@ def pyls_rename(config, workspace, document, position, new_name):
                 'uri': uris.uri_with(
                     document.uri, path=os.path.join(workspace.root_path, change.resource.path)
                 ),
+                'version': workspace.get_document(document.uri).version
             },
             'edits': [{
                 'range': {
                     'start': {'line': 0, 'character': 0},
-                    'end': {'line': sys.maxsize, 'character': 0},
+                    'end': {'line': _num_lines(change.resource), 'character': 0},
                 },
                 'newText': change.new_contents
             }]
         } for change in changeset.changes]
     }
+
+
+def _num_lines(resource):
+    "Count the number of lines in a `File` resource."
+    return len(resource.read().splitlines())
