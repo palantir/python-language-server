@@ -128,7 +128,7 @@ The Python language server can be developed against a local instance of Visual S
 
     # Install the vscode-client extension
     cd vscode-client
-    yarn install .
+    yarn install
 
     # Run VSCode which is configured to use pyls
     # See the bottom of vscode-client/src/extension.ts for info
