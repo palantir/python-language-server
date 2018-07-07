@@ -43,7 +43,7 @@ function startLangServerTCP(addr: number, documentSelector: string[]): Disposabl
 }
 
 export function activate(context: ExtensionContext) {
-    context.subscriptions.push(startLangServer("pyls", ["-vv"], ["python"]));
+    context.subscriptions.push(startLangServer("pyls", ["-v"], ["python"]));
     // For TCP server needs to be started seperately
     // context.subscriptions.push(startLangServerTCP(2087, ["python"]));
 }
