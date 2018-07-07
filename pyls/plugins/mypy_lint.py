@@ -26,9 +26,9 @@ def pyls_initialize(workspace):
 @hookimpl
 def pyls_lint(document):
     args = _parse_daemon_args([document.path])
-    log.info("Sending request to mypy daemon")
+    log.debug("Sending request to mypy daemon", args)
     response = dmypy.request('run', version=version.__version__, args=args.flags)
-    log.info("Got response from mypy daemon: %s", response)
+    log.debug("Got response from mypy daemon: %s", response)
 
     # If the daemon signals that a restart is necessary, do it
     if 'restart' in response:
@@ -101,6 +101,7 @@ def launch_daemon(raw_args, workspace):
 
 
 def _parse_daemon_args(raw_args):
+    # TODO(gatesn): Take extra arguments from pyls config
     return dmypy.parser.parse_args([
         'run', '--',
         '--show-traceback',
@@ -126,6 +127,7 @@ class PylsFileSystemCache(fscache.FileSystemCache):
         if document:
             size = len(document.source.encode('utf-8'))
             mtime = self._workspace.get_document_mtime(uri)
+            log.debug("Patching os.stat response with size %s and mtime %s", size, mtime)
             return MutableOsState(stat, {'st_size': size, 'st_mtime': mtime})
 
         return stat
@@ -133,9 +135,7 @@ class PylsFileSystemCache(fscache.FileSystemCache):
     def read(self, path):
         document = self._workspace.documents.get(uris.from_fs_path(path))
         if document:
-            # We need to return bytes
-            data = document.source.encode('utf-8')
-            return data
+            return document.source.encode('utf-8')  # Workspace returns unicode, we need bytes
         return super(PylsFileSystemCache, self).read(path)
 
     def md5(self, path):
@@ -146,6 +146,7 @@ class PylsFileSystemCache(fscache.FileSystemCache):
 
 
 class MutableOsState(object):
+    """Wrapper around a stat_result that allows us to override values."""
 
     def __init__(self, stat_result, overrides):
         self._stat_result = stat_result
