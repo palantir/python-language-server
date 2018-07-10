@@ -1,9 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 from threading import Thread
+
+from jsonrpc.exceptions import JsonRpcMethodNotFound
 import pytest
+
 from pyls.python_ls import start_io_lang_server, PythonLanguageServer
-from pyls.jsonrpc.exceptions import JsonRpcMethodNotFound
 
 CALL_TIMEOUT = 2
 
