@@ -194,10 +194,10 @@ class PythonLanguageServer(MethodDispatcher):
         return self._hook('pyls_hover', doc_uri, position=position) or {'contents': ''}
 
     @_utils.debounce(LINT_DEBOUNCE_S, keyed_by='doc_uri')
-    def lint(self, doc_uri):
+    def lint(self, doc_uri, on_change=True):
         # Since we're debounced, the document may no longer be open
         if doc_uri in self.workspace.documents:
-            self.workspace.publish_diagnostics(doc_uri, flatten(self._hook('pyls_lint', doc_uri)))
+            self.workspace.publish_diagnostics(doc_uri, flatten(self._hook('pyls_lint', doc_uri, on_change=on_change)))
 
     def references(self, doc_uri, position, exclude_declaration):
         return flatten(self._hook(
@@ -217,7 +217,7 @@ class PythonLanguageServer(MethodDispatcher):
     def m_text_document__did_open(self, textDocument=None, **_kwargs):
         self.workspace.put_document(textDocument['uri'], textDocument['text'], version=textDocument.get('version'))
         self._hook('pyls_document_did_open', textDocument['uri'])
-        self.lint(textDocument['uri'])
+        self.lint(textDocument['uri'], on_change=False)
 
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **_kwargs):
         for change in contentChanges:
@@ -229,7 +229,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.lint(textDocument['uri'])
 
     def m_text_document__did_save(self, textDocument=None, **_kwargs):
-        self.lint(textDocument['uri'])
+        self.lint(textDocument['uri'], on_change=False)
 
     def m_text_document__code_action(self, textDocument=None, range=None, context=None, **_kwargs):
         return self.code_actions(textDocument['uri'], range, context)
