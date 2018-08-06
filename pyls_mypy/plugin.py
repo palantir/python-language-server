@@ -43,6 +43,7 @@ def parse_line(line, document=None):
 def pyls_lint(document):
     args = ('--incremental',
             '--show-column-numbers',
+            '--follow-imports', 'silent',
             '--command', document.source)
     report, errors, _ = mypy_api.run(args)
 
