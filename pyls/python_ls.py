@@ -188,7 +188,7 @@ class PythonLanguageServer(MethodDispatcher):
         return self._hook('pyls_format_range', doc_uri, range=range)
 
     def highlight(self, doc_uri, position):
-        return flatten(self._hook('pyls_document_highlight', doc_uri, position=position)) or None
+        return flatten(self._hook('pyls_document_highlight', doc_uri, position=position))
 
     def hover(self, doc_uri, position):
         return self._hook('pyls_hover', doc_uri, position=position) or {'contents': ''}
