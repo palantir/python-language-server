@@ -218,7 +218,7 @@ class Document(object):
         path = list(self._extra_sys_path)
 
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
-        environment = jedi.api.environment.get_default_environment()
+        environment = jedi.api.environment.get_cached_default_environment()
         path.extend(environment.get_sys_path())
 
         return path
