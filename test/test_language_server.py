@@ -14,7 +14,7 @@ def start_client(client):
     client.start()
 
 
-class _client_server():
+class _ClientServer(object):
     """ A class to setup a client/server pair """
     def __init__(self):
         # Client to Server pipe
@@ -37,7 +37,7 @@ class _client_server():
 @pytest.fixture
 def client_server():
     """ A fixture that sets up a client/server pair and shuts down the server """
-    client_server_pair = _client_server()
+    client_server_pair = _ClientServer()
 
     yield client_server_pair.client
 
@@ -49,7 +49,7 @@ def client_server():
 @pytest.fixture
 def client_exited_server():
     """ A fixture that sets up a client/server pair and assert the server has already exited """
-    client_server_pair = _client_server()
+    client_server_pair = _ClientServer()
 
     yield client_server_pair.client
 
