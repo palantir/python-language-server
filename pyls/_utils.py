@@ -113,3 +113,19 @@ def clip_column(column, lines, line_number):
     # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
     max_column = len(lines[line_number].rstrip('\r\n')) if len(lines) > line_number else 0
     return min(column, max_column)
+
+
+def is_process_alive(pid):
+    """ Check whether the process with the given pid is still alive.
+
+    :param pid: (int): process id
+    """
+    try:
+        os.kill(pid, 0)
+    except OSError as err:
+        # no such process or process is already dead
+        log.info("process %s is not alive: %s", pid, err)
+        return False
+    else:
+        log.info("process %s is alive", pid)
+        return True

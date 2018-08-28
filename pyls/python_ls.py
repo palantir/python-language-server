@@ -1,6 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import socketserver
+from threading import Thread, Timer
 
 from jsonrpc.dispatchers import MethodDispatcher
 from jsonrpc.endpoint import Endpoint
@@ -14,6 +15,7 @@ log = logging.getLogger(__name__)
 
 
 LINT_DEBOUNCE_S = 0.5  # 500 ms
+PARENT_PROCESS_WATCH_INTERVAL = 10  # 10 s
 
 
 class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
@@ -149,9 +151,20 @@ class PythonLanguageServer(MethodDispatcher):
             rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
         self.workspace = Workspace(rootUri, self._endpoint)
-        self.config = config.Config(rootUri, initializationOptions or {})
+        self.config = config.Config(rootUri, initializationOptions or {}, processId)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
+
+        if processId is not None:
+            def watch_parent_process(pid):
+                # exist when the given pid is not alive
+                if not _utils.is_process_alive(pid):
+                    self.m_exit()
+                Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process(pid)).start()
+
+            watching_thread = Thread(target=watch_parent_process, args=[processId])
+            watching_thread.daemon = True
+            watching_thread.start()
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
