@@ -44,7 +44,7 @@ def workspace(tmpdir):
 @pytest.fixture
 def config(workspace):  # pylint: disable=redefined-outer-name
     """Return a config object."""
-    return Config(workspace.root_uri, {})
+    return Config(workspace.root_uri, {}, 0)
 
 
 @pytest.fixture

@@ -67,7 +67,7 @@ def test_pycodestyle_config(workspace):
     doc_uri = uris.from_fs_path(os.path.join(workspace.root_path, 'test.py'))
     workspace.put_document(doc_uri, DOC)
     doc = workspace.get_document(doc_uri)
-    config = Config(workspace.root_uri, {})
+    config = Config(workspace.root_uri, {}, 1234)
 
     # Make sure we get a warning for 'indentation contains tabs'
     diags = pycodestyle_lint.pyls_lint(config, doc)

@@ -14,10 +14,11 @@ DEFAULT_CONFIG_SOURCES = ['pycodestyle']
 
 class Config(object):
 
-    def __init__(self, root_uri, init_opts):
+    def __init__(self, root_uri, init_opts, process_id):
         self._root_path = uris.to_fs_path(root_uri)
         self._root_uri = root_uri
         self._init_opts = init_opts
+        self._process_id = process_id
 
         self._settings = {}
         self._plugin_settings = {}
@@ -76,6 +77,10 @@ class Config(object):
     @property
     def root_uri(self):
         return self._root_uri
+
+    @property
+    def process_id(self):
+        return self._process_id
 
     def settings(self, document_path=None):
         """Settings are constructed from a few sources:
