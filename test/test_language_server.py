@@ -37,23 +37,23 @@ class _client_server():
 @pytest.fixture
 def client_server():
     """ A fixture that sets up a client/server pair and shuts down the server """
-    client_server = _client_server()
+    client_server_pair = _client_server()
 
-    yield client_server.client
+    yield client_server_pair.client
 
-    shutdown_response = client_server.client._endpoint.request('shutdown').result(timeout=CALL_TIMEOUT)
+    shutdown_response = client_server_pair.client._endpoint.request('shutdown').result(timeout=CALL_TIMEOUT)
     assert shutdown_response is None
-    client_server.client._endpoint.notify('exit')
+    client_server_pair.client._endpoint.notify('exit')
 
 
 @pytest.fixture
 def client_exited_server():
     """ A fixture that sets up a client/server pair and assert the server has already exited """
-    client_server = _client_server()
+    client_server_pair = _client_server()
 
-    yield client_server.client
+    yield client_server_pair.client
 
-    assert client_server.server_thread.is_alive() is False
+    assert client_server_pair.server_thread.is_alive() is False
 
 
 def test_initialize(client_server):  # pylint: disable=redefined-outer-name

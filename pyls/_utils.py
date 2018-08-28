@@ -118,14 +118,16 @@ def clip_column(column, lines, line_number):
 def is_process_alive(pid):
     """ Check whether the process with the given pid is still alive.
 
-    :param pid: (int): process id
+    Args:
+        pid (int): process ID
+
+    Returns:
+        bool: False if the process is not alive or don't have permission to check, True otherwise.
     """
     try:
         os.kill(pid, 0)
-    except OSError as err:
+    except OSError:
         # no such process or process is already dead
-        log.info("process %s is not alive: %s", pid, err)
         return False
     else:
-        log.info("process %s is alive", pid)
         return True

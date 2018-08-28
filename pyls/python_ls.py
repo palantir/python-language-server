@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import socketserver
-from threading import Thread, Timer
+import threading
 
 from jsonrpc.dispatchers import MethodDispatcher
 from jsonrpc.endpoint import Endpoint
@@ -159,10 +159,12 @@ class PythonLanguageServer(MethodDispatcher):
             def watch_parent_process(pid):
                 # exist when the given pid is not alive
                 if not _utils.is_process_alive(pid):
+                    log.info("parent process %s is not alive", pid)
                     self.m_exit()
-                Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process(pid)).start()
+                log.debug("parent process %s is still alive", pid)
+                threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process(pid)).start()
 
-            watching_thread = Thread(target=watch_parent_process, args=[processId])
+            watching_thread = threading.Thread(target=watch_parent_process, args=[processId])
             watching_thread.daemon = True
             watching_thread.start()
 
