@@ -218,7 +218,7 @@
                 "pyls.rope.extensionModules": {
                     "type": "string",
                     "default": null,
-                    "description": "The name of the folder in which rope stores project configurations and data.  Pass `null` for not using such a folder at all."
+                    "description": "Builtin and c-extension modules that are allowed to be imported and inspected by rope."
                 },
                 "pyls.rope.ropeFolder": {
                      "type": "array",
@@ -227,7 +227,7 @@
                         "type": "string"
                     },
                     "uniqueItems": true,
-                    "description": "Builtin and c-extension modules that are allowed to be imported and inspected by rope."
+                    "description": "The name of the folder in which rope stores project configurations and data.  Pass `null` for not using such a folder at all."
                 }
             }
         }
