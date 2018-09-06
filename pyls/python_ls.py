@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 PARENT_PROCESS_WATCH_INTERVAL = 10  # 10 s
+MAX_WORKERS = 64
 
 
 class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
@@ -73,7 +74,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
         self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
-        self._endpoint = Endpoint(self, self._jsonrpc_stream_writer.write)
+        self._endpoint = Endpoint(self, self._jsonrpc_stream_writer.write, max_workers=MAX_WORKERS)
         self._dispatchers = []
         self._shutdown = False
 
