@@ -27,7 +27,8 @@ def pyls_format_range(config, document, range):  # pylint: disable=redefined-bui
 
 
 def _format(config, document, line_range=None):
-    options = _autopep8_config(config)
+    # We user pycodestyle settings to avoid redefining things
+    options = _autopep8_config(config.settingsplugin_settings('pycodestyle', document_path=document.path))
     if line_range:
         options['line_range'] = list(line_range)
 
@@ -48,9 +49,7 @@ def _format(config, document, line_range=None):
     }]
 
 
-def _autopep8_config(config):
-    # We user pycodestyle settings to avoid redefining things
-    settings = config.plugin_settings('pycodestyle')
+def _autopep8_config(settings):
     options = {
         'exclude': settings.get('exclude'),
         'hang_closing': settings.get('hangClosing'),
