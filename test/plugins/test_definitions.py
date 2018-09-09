@@ -19,7 +19,7 @@ class Directory(object):
 """
 
 
-def test_definitions():
+def test_definitions(config):
     # Over 'a' in print a
     cursor_pos = {'line': 3, 'character': 6}
 
@@ -30,19 +30,19 @@ def test_definitions():
     }
 
     doc = Document(DOC_URI, DOC)
-    assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(doc, cursor_pos)
+    assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(doc, cursor_pos, config)
 
 
-def test_builtin_definition():
+def test_builtin_definition(config):
     # Over 'i' in dict
     cursor_pos = {'line': 8, 'character': 24}
 
     # No go-to def for builtins
     doc = Document(DOC_URI, DOC)
-    assert [] == pyls_definitions(doc, cursor_pos)
+    assert [] == pyls_definitions(doc, cursor_pos, config)
 
 
-def test_assignment():
+def test_assignment(config):
     # Over 's' in self.members[id]
     cursor_pos = {'line': 11, 'character': 19}
 
@@ -53,4 +53,4 @@ def test_assignment():
     }
 
     doc = Document(DOC_URI, DOC)
-    assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(doc, cursor_pos)
+    assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(doc, cursor_pos, config)
