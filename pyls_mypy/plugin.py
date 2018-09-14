@@ -48,7 +48,7 @@ def pyls_lint(document):
 
     diagnostics = []
     for line in report.splitlines():
-        diag = parse_line(line)
+        diag = parse_line(line, document)
         if diag:
             diagnostics.append(diag)
 
