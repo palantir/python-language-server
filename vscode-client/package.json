@@ -40,6 +40,16 @@
                     "default": true,
                     "description": "Enable or disable the plugin."
                 },
+                "pyls.plugins.jedi_definition.follow_imports": {
+                    "type": "boolean",
+                    "default": null,
+                    "description": "The goto call will follow imports."
+                },
+                "pyls.plugins.jedi_definition.follow_builtin_imports": {
+                    "type": "boolean",
+                    "default": null,
+                    "description": "If follow_imports is True will decide if it follow builtin imports."
+                },
                 "pyls.plugins.jedi_hover.enabled": {
                     "type": "boolean",
                     "default": true,
