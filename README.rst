@@ -26,7 +26,7 @@ If the respective dependencies are found, the following optional providers will 
 * Pyflakes_ linter to detect various errors
 * McCabe_ linter for complexity checking
 * pycodestyle_ linter for style checking
-* pydocstyle_ linter for docstring style checking
+* pydocstyle_ linter for docstring style checking (disabled by default)
 * autopep8_ for code formatting
 * YAPF_ for code formatting (preferred over autopep8)
 
@@ -66,6 +66,11 @@ order to respect flake8 configuration instead.
 
 Overall configuration is computed first from user configuration (in home directory), overridden by configuration
 passed in by the language client, and then overriden by configuration discovered in the workspace.
+
+To enable pydocstyle for linting docstrings add the following setting in your LSP configuration:
+```
+"pyls.plugins.pydocstyle.enabled": true
+```
 
 Language Server Features
 ------------------------
