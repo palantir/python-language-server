@@ -20,6 +20,10 @@ Symbols:
 
 ``pip install python-language-server``
 
+You can then start the server with this command:
+
+``python -m pyls``
+
 If the respective dependencies are found, the following optional providers will be enabled:
 
 * Rope_ for Completions and renaming
