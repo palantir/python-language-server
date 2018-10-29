@@ -3,8 +3,7 @@ from mypy import api as mypy_api
 from pyls import hookimpl
 
 line_pattern = r"([^:]+):(?:(\d+):)?(?:(\d+):)? (\w+): (.*)"
-LIVE_MODE = r"live_mode"
-DEFAULT_LIVE_MODE = True
+
 
 def parse_line(line, document=None):
     '''
@@ -42,7 +41,7 @@ def parse_line(line, document=None):
 
 @hookimpl
 def pyls_lint(config, document):
-    live_mode = config.plugin_settings('pyls_mypy').get(LIVE_MODE, DEFAULT_LIVE_MODE)
+    live_mode = config.plugin_settings('pyls_mypy').get('live_mode', True)
     if live_mode:
         args = ('--incremental',
                 '--show-column-numbers',
