@@ -13,9 +13,15 @@ TEST_LINE_WITHOUT_COL = 'main.py:279: error: "Request" has no attribute "id"'
 TEST_LINE_WITHOUT_LINE = 'main.py: error: "Request" has no attribute "id"'
 
 
+class FakeConfig(object):
+    def plugin_settings(self, plugin, document_path=None):
+        return {}
+
+
 def test_plugin():
+    config = FakeConfig()
     doc = Document(DOC_URI, DOC_TYPE_ERR)
-    diags = plugin.pyls_lint(doc)
+    diags = plugin.pyls_lint(config, doc)
 
     assert len(diags) == 1
     diag = diags[0]
