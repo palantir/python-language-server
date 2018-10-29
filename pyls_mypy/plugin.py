@@ -3,7 +3,8 @@ from mypy import api as mypy_api
 from pyls import hookimpl
 
 line_pattern = r"([^:]+):(?:(\d+):)?(?:(\d+):)? (\w+): (.*)"
-
+LIVE_MODE = r"live_mode"
+DEFAULT_LIVE_MODE = True
 
 def parse_line(line, document=None):
     '''
@@ -40,11 +41,19 @@ def parse_line(line, document=None):
 
 
 @hookimpl
-def pyls_lint(document):
-    args = ('--incremental',
-            '--show-column-numbers',
-            '--follow-imports', 'silent',
-            '--command', document.source)
+def pyls_lint(config, document):
+    live_mode = config.plugin_settings('pyls_mypy').get(LIVE_MODE, DEFAULT_LIVE_MODE)
+    if live_mode:
+        args = ('--incremental',
+                '--show-column-numbers',
+                '--follow-imports', 'silent',
+                '--command', document.source)
+    else:
+        args = ('--incremental',
+                '--show-column-numbers',
+                '--follow-imports', 'silent',
+                document.path)
+
     report, errors, _ = mypy_api.run(args)
 
     diagnostics = []
