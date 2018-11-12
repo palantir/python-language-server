@@ -28,7 +28,8 @@ class _ClientServer(object):
         self.server_thread.daemon = True
         self.server_thread.start()
 
-        self.client = PythonLanguageServer(os.fdopen(scr, 'rb'), os.fdopen(csw, 'wb'))
+        self.csw_file = os.fdopen(csw, 'wb')
+        self.client = PythonLanguageServer(os.fdopen(scr, 'rb'), self.csw_file)
         self.client_thread = Thread(target=start_client, args=[self.client])
         self.client_thread.daemon = True
         self.client_thread.start()
@@ -50,6 +51,7 @@ def client_server():
 def client_exited_server():
     """ A fixture that sets up a client/server pair and assert the server has already exited """
     client_server_pair = _ClientServer()
+    client_server_pair.csw_file.close()
 
     yield client_server_pair.client
 
@@ -68,7 +70,6 @@ def test_exit_with_parent_process_died(client_exited_server):  # pylint: disable
     # language server should have already exited before responding
     with pytest.raises(Exception):
         client_exited_server._endpoint.request('initialize', {
-            'processId': 1234,
             'rootPath': os.path.dirname(__file__),
             'initializationOptions': {}
         }).result(timeout=CALL_TIMEOUT)

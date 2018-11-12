@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import socketserver
-import threading
 
 from jsonrpc.dispatchers import MethodDispatcher
 from jsonrpc.endpoint import Endpoint
@@ -81,6 +80,7 @@ class PythonLanguageServer(MethodDispatcher):
     def start(self):
         """Entry point for the server."""
         self._jsonrpc_stream_reader.listen(self._endpoint.consume)
+        self.m_exit()
 
     def __getitem__(self, item):
         """Override getitem to fallback through multiple dispatchers."""
@@ -155,19 +155,6 @@ class PythonLanguageServer(MethodDispatcher):
         self.config = config.Config(rootUri, initializationOptions or {}, processId)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
-
-        if processId is not None:
-            def watch_parent_process(pid):
-                # exist when the given pid is not alive
-                if not _utils.is_process_alive(pid):
-                    log.info("parent process %s is not alive", pid)
-                    self.m_exit()
-                log.debug("parent process %s is still alive", pid)
-                threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
-
-            watching_thread = threading.Thread(target=watch_parent_process, args=(processId,))
-            watching_thread.daemon = True
-            watching_thread.start()
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
