@@ -24,6 +24,12 @@ def add_arguments(parser):
         "--port", type=int, default=2087,
         help="Bind to this port"
     )
+    parser.add_argument(
+        '--check-parent-process', action="store_true",
+        help="Check whether parent process is still alive using os.kill(ppid, 0) "
+        "and auto shut down language server process when parent process is not alive."
+        "Note that this may not work on a Windows machine."
+    )
 
     log_group = parser.add_mutually_exclusive_group()
     log_group.add_argument(
@@ -52,7 +58,7 @@ def main():
         start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
     else:
         stdin, stdout = _binary_stdio()
-        start_io_lang_server(stdin, stdout, PythonLanguageServer)
+        start_io_lang_server(stdin, stdout, args.check_parent_process, PythonLanguageServer)
 
 
 def _binary_stdio():
