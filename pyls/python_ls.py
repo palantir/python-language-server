@@ -53,11 +53,11 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
         server.server_close()
 
 
-def start_io_lang_server(rfile, wfile, handler_class):
+def start_io_lang_server(rfile, wfile, check_parent_process, handler_class):
     if not issubclass(handler_class, PythonLanguageServer):
         raise ValueError('Handler class must be an instance of PythonLanguageServer')
     log.info('Starting %s IO language server', handler_class.__name__)
-    server = handler_class(rfile, wfile)
+    server = handler_class(rfile, wfile, check_parent_process)
     server.start()
 
 
@@ -68,12 +68,13 @@ class PythonLanguageServer(MethodDispatcher):
 
     # pylint: disable=too-many-public-methods,redefined-builtin
 
-    def __init__(self, rx, tx):
+    def __init__(self, rx, tx, check_parent_process=False):
         self.workspace = None
         self.config = None
 
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
         self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
+        self._check_parent_process = check_parent_process
         self._endpoint = Endpoint(self, self._jsonrpc_stream_writer.write, max_workers=MAX_WORKERS)
         self._dispatchers = []
         self._shutdown = False
@@ -156,7 +157,7 @@ class PythonLanguageServer(MethodDispatcher):
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
-        if processId is not None:
+        if self._check_parent_process and processId is not None:
             def watch_parent_process(pid):
                 # exist when the given pid is not alive
                 if not _utils.is_process_alive(pid):
