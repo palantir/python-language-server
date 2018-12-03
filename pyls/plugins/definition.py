@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_definitions(config, document, position):
-    params = {k: v for k, v in config.plugin_settings('jedi_definition').items() if v is not None}
+    params = {k: v for k, v in config.plugin_settings('jedi_definition').items() if v is not None and k != 'enabled'}
     definitions = document.jedi_script(position).goto_assignments(**params)
 
     definitions = [
