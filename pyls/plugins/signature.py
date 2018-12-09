@@ -20,10 +20,16 @@ def pyls_signature_help(document, position):
         return {'signatures': []}
 
     s = signatures[0]
-    sig = {
-        'label': s.docstring().splitlines()[0],
-        'documentation': _utils.format_docstring(s.docstring(raw=True))
-    }
+    try:
+        sig = {
+            'label': s.docstring().splitlines()[0],
+            'documentation': _utils.format_docstring(s.docstring(raw=True))
+        }
+    except IndexError:
+        sig = {
+            'label': s.docstring().splitlines(),
+            'documentation': _utils.format_docstring(s.docstring(raw=True))
+        }
 
     # If there are params, add those
     if s.params:
