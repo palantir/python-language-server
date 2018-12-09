@@ -21,7 +21,7 @@ def pyls_signature_help(document, position):
 
     s = signatures[0]
     sig = {
-        'label': s.docstring().splitlines()[0],
+        'label': (s.docstring().splitlines() or [''])[0],
         'documentation': _utils.format_docstring(s.docstring(raw=True))
     }
 
