@@ -2,7 +2,7 @@
 import os
 from threading import Thread
 
-from jsonrpc.exceptions import JsonRpcMethodNotFound
+from pyls_jsonrpc.exceptions import JsonRpcMethodNotFound
 import pytest
 
 from pyls.python_ls import start_io_lang_server, PythonLanguageServer
