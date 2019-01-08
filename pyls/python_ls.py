@@ -3,9 +3,9 @@ import logging
 import socketserver
 import threading
 
-from jsonrpc.dispatchers import MethodDispatcher
-from jsonrpc.endpoint import Endpoint
-from jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
+from pyls_jsonrpc.dispatchers import MethodDispatcher
+from pyls_jsonrpc.endpoint import Endpoint
+from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 
 from . import lsp, _utils, uris
 from .config import config

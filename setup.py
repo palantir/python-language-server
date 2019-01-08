@@ -36,7 +36,7 @@ setup(
         'future>=0.14.0',
         'futures; python_version<"3.2"',
         'jedi>=0.12',
-        'python-jsonrpc-server',
+        'python-jsonrpc-server>=0.1.0',
         'pluggy'
     ],
 
