@@ -37,7 +37,7 @@ def _format(document, lines=None):
         lines=lines,
         filename=document.filename,
         style_config=file_resources.GetDefaultStyleForDir(
-            os.path.dirname(document.filename)
+            os.path.dirname(document.path)
         )
     )
 
