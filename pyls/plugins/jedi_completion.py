@@ -20,9 +20,17 @@ def pyls_completions(document, position):
 
 def _label(definition):
     if definition.type in ('function', 'method'):
-        params = ', '.join(param.name for param in definition.params)
-        return '{}({})'.format(definition.name, params)
-
+        try:
+            params = definition.params
+        except AttributeError as e:
+            # Probably function decorated with @property, no params for it
+            log.warning(
+                'Got AttributeError when trying to get params of %s: %s',
+                definition.full_name, e
+            )
+        else:
+            params_names = ', '.join(param.name for param in params)
+            return '{}({})'.format(definition.name, params_names)
     return definition.name
 
 
