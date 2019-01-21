@@ -19,13 +19,13 @@ def hello():
 
 def _a_hello():
     pass
-    
+
 class Hello():
 
     @property
     def world(self):
         return None
-        
+
 print Hello().world
 """
 
