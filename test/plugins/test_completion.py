@@ -19,7 +19,14 @@ def hello():
 
 def _a_hello():
     pass
+    
+class Hello():
 
+    @property
+    def world(self):
+        return None
+        
+print Hello().world
 """
 
 
@@ -64,3 +71,15 @@ def test_jedi_completion_ordering():
 
     # And that 'hidden' functions come after unhidden ones
     assert items['hello()'] < items['_a_hello()']
+
+
+def test_jedi_property_completion():
+    # Over the 'w' in 'print Hello().world'
+    com_position = {'line': 15, 'character': 15}
+    doc = Document(DOC_URI, DOC)
+    completions = pyls_jedi_completions(doc, com_position)
+
+    items = {c['label']: c['sortText'] for c in completions}
+
+    # Ensure we can complete the 'world' property
+    assert 'world' in items
