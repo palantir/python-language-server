@@ -43,6 +43,9 @@ workflows:
       - python2-test
       - python3-test
       - publish:
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)+((-(beta|rc)[0-9]{1,2})(\.[0-9])?)?/
           requires:
             - python2-test
             - python3-test
