@@ -2,11 +2,11 @@
 import os
 from threading import Thread
 
+from test import unix_only
 from pyls_jsonrpc.exceptions import JsonRpcMethodNotFound
 import pytest
 
 from pyls.python_ls import start_io_lang_server, PythonLanguageServer
-from test import unix_only
 
 CALL_TIMEOUT = 2
 
