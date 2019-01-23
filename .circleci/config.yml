@@ -17,11 +17,19 @@ jobs:
       - image: "python:3.4-stretch"
     steps:
       - checkout
-      - run: pip install -e .[all] .[test]
+      - run: pip install -e .[all] .[test] mypy
       - run: py.test test/
-      - run: pylint pyls test
-      - run: pycodestyle pyls test
-      - run: pyflakes pyls test
+      - run: mypy pyls
+
+  lint:
+    docker:
+    - image: "python:2.7-stretch"
+    steps:
+    - checkout
+    - run: pip install -e .[all] .[test]
+    - run: pylint pyls test
+    - run: pycodestyle pyls test
+    - run: pyflakes pyls test
 
   publish:
     docker:
