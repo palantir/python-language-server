@@ -6,6 +6,7 @@ from pyls_jsonrpc.exceptions import JsonRpcMethodNotFound
 import pytest
 
 from pyls.python_ls import start_io_lang_server, PythonLanguageServer
+from test import unix_only
 
 CALL_TIMEOUT = 2
 
@@ -68,6 +69,7 @@ def test_initialize(client_server):  # pylint: disable=redefined-outer-name
     assert 'capabilities' in response
 
 
+@unix_only
 def test_exit_with_parent_process_died(client_exited_server):  # pylint: disable=redefined-outer-name
     # language server should have already exited before responding
     with pytest.raises(Exception):
