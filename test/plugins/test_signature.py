@@ -21,7 +21,7 @@ main(
 MULTI_LINE_DOC = """import sys
 
 def main(param1=None,
-            param2=None, 
+            param2=None,
             param3=None,
             param4=None,
             param5=None,
