@@ -1,0 +1,35 @@
+version: 2
+
+jobs:
+  python2-test:
+    docker:
+      image: "python:2.7-alpine"
+    steps:
+      - checkout
+      - run: pip install -e .
+      - run: py.test
+
+  python3-test:
+    docker:
+      image: "python:3.4-alpine"
+    steps:
+      - checkout
+      - run: pip install -e .
+      - run: py.test
+
+  publish:
+    docker:
+      image: "python:3.4-alpine"
+    steps:
+      - attach_workspace: { at: . }
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - python2-test
+      - python3-test
+      - publish:
+          requires:
+            - python2-test
+            - python3-test
