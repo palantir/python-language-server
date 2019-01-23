@@ -17,9 +17,8 @@ jobs:
       - image: "python:3.4-stretch"
     steps:
       - checkout
-      - run: pip install -e .[all] .[test] mypy
+      - run: pip install -e .[all] .[test]
       - run: py.test test/
-      - run: mypy pyls
 
   lint:
     docker:
