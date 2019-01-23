@@ -1,19 +1,26 @@
 environment:
   matrix:
-    - TOXENV: py27
-    - TOXENV: py34
-    - TOXENV: lint
+    - PYTHON: "C:\\Python27"
+      PYTHON_VERSION: "2.7.15"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python34"
+      PYTHON_VERSION: "3.4.1"
+      PYTHON_ARCH: "64"
 
 matrix:
   fast_finish: true
 
-install:
-  - C:\Python27\python -m pip install --pre -U tox
+init:
+  - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 
-build: false  # Not a C# project
+install:
+  - "%PYTHON%/Scripts/pip.exe install .[all] .[test]"
 
 test_script:
-  - C:\Python27\scripts\tox
+  - "%PYTHON%/Scripts/pytest.exe test/"
+
+build: false  # Not a C# project
 
 cache:
   - '%APPDATA%\pip\Cache'
