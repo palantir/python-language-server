@@ -8,6 +8,7 @@ jobs:
       - checkout
       - run: pip install -e .[all] .[test]
       - run: py.test
+      - run: pylint
 
   python3-test:
     docker:
@@ -16,6 +17,7 @@ jobs:
       - checkout
       - run: pip install -e .[all] .[test]
       - run: py.test
+      - run: pylint
 
   publish:
     docker:
