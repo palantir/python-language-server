@@ -5,7 +5,7 @@ environment:
       PYTHON_ARCH: "64"
 
     - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.1"
+      PYTHON_VERSION: "3.4.9"
       PYTHON_ARCH: "64"
 
 matrix:
