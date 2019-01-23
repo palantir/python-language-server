@@ -3,7 +3,7 @@ version: 2
 jobs:
   python2-test:
     docker:
-      image: "python:2.7-alpine"
+      - image: "python:2.7-alpine"
     steps:
       - checkout
       - run: pip install -e .
@@ -11,7 +11,7 @@ jobs:
 
   python3-test:
     docker:
-      image: "python:3.4-alpine"
+      - image: "python:3.4-alpine"
     steps:
       - checkout
       - run: pip install -e .
@@ -19,7 +19,7 @@ jobs:
 
   publish:
     docker:
-      image: "python:3.4-alpine"
+      - image: "python:3.4-alpine"
     steps:
       - attach_workspace: { at: . }
 
