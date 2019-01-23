@@ -15,7 +15,7 @@ init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 
 install:
-  - "%PYTHON%/python.exe -m pip install --upgrade pip"
+  - "%PYTHON%/python.exe -m pip install --upgrade pip setuptools"
   - "%PYTHON%/python.exe -m pip install .[all] .[test]"
 
 test_script:
