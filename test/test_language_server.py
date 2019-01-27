@@ -2,6 +2,7 @@
 import os
 from threading import Thread
 
+from test import unix_only
 from pyls_jsonrpc.exceptions import JsonRpcMethodNotFound
 import pytest
 
@@ -68,6 +69,7 @@ def test_initialize(client_server):  # pylint: disable=redefined-outer-name
     assert 'capabilities' in response
 
 
+@unix_only
 def test_exit_with_parent_process_died(client_exited_server):  # pylint: disable=redefined-outer-name
     # language server should have already exited before responding
     with pytest.raises(Exception):

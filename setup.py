@@ -61,7 +61,7 @@ setup(
         'pyflakes': ['pyflakes>=1.6.0'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
-        'test': ['tox', 'versioneer', 'pytest', 'mock', 'pytest-cov', 'coverage'],
+        'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov', 'coverage'],
     },
 
     # To provide executable scripts, use entry points in preference to the

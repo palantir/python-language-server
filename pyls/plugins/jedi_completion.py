@@ -19,7 +19,7 @@ def pyls_completions(document, position):
 
 
 def _label(definition):
-    if definition.type in ('function', 'method'):
+    if definition.type in ('function', 'method') and hasattr(definition, 'params'):
         params = ', '.join(param.name for param in definition.params)
         return '{}({})'.format(definition.name, params)
 

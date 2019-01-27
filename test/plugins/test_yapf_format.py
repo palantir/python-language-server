@@ -45,3 +45,14 @@ def test_range_format():
 def test_no_change():
     doc = Document(DOC_URI, GOOD_DOC)
     assert not pyls_format_document(doc)
+
+
+def test_config_file(tmpdir):
+    # a config file in the same directory as the source file will be used
+    conf = tmpdir.join('.style.yapf')
+    conf.write('[style]\ncolumn_limit = 14')
+    src = tmpdir.join('test.py')
+    doc = Document(uris.from_fs_path(src.strpath), DOC)
+
+    # A was split on multiple lines because of column_limit from config file
+    assert pyls_format_document(doc)[0]['newText'] == "A = [\n    'h', 'w',\n    'a'\n]\n\nB = ['h', 'w']\n"
