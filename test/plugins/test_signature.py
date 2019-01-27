@@ -18,6 +18,26 @@ def main(param1, param2):
 main(
 """
 
+MULTI_LINE_DOC = """import sys
+
+def main(param1=None,
+            param2=None,
+            param3=None,
+            param4=None,
+            param5=None,
+            param6=None,
+            param7=None,
+            param8=None):
+    \"\"\" Main docstring
+
+    Args:
+        param1 (str): Docs for param1
+    \"\"\"
+    raise Exception()
+
+main(
+"""
+
 
 def test_no_signature():
     # Over blank line
@@ -38,6 +58,25 @@ def test_signature():
     sigs = sig_info['signatures']
     assert len(sigs) == 1
     assert sigs[0]['label'] == 'main(param1, param2)'
+    assert sigs[0]['parameters'][0]['label'] == 'param1'
+    assert sigs[0]['parameters'][0]['documentation'] == 'Docs for param1'
+
+    assert sig_info['activeParameter'] == 0
+
+
+def test_multi_line_signature():
+    # Over '( ' in main(
+    sig_position = {'line': 17, 'character': 5}
+    doc = Document(DOC_URI, MULTI_LINE_DOC)
+
+    sig_info = signature.pyls_signature_help(doc, sig_position)
+
+    sigs = sig_info['signatures']
+    assert len(sigs) == 1
+    assert sigs[0]['label'] == (
+        'main(param1=None, param2=None, param3=None, param4=None, '
+        'param5=None, param6=None, param7=None, param8=None)'
+    )
     assert sigs[0]['parameters'][0]['label'] == 'param1'
     assert sigs[0]['parameters'][0]['documentation'] == 'Docs for param1'
 
