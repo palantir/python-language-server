@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import json
 from pyls import hookimpl, _utils
 
 log = logging.getLogger(__name__)
@@ -17,4 +18,9 @@ def pyls_hover(document, position):
         # :(
         return {'contents': ''}
 
-    return {'contents': _utils.format_docstring(definitions[0].docstring()) or ""}
+    pos = document.word_range_at_position(position)
+
+    return {
+        'contents': _utils.format_docstring(definitions[0].docstring()) or "",
+        'range': pos,
+    }
