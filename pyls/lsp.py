@@ -39,6 +39,11 @@ class DiagnosticSeverity(object):
     Hint = 4
 
 
+class MarkupKind(object):
+    PlainText = 'plaintext'
+    Markdown = 'markdown'
+
+
 class MessageType(object):
     Error = 1
     Warning = 2

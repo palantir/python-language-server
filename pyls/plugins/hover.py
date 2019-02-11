@@ -14,7 +14,6 @@ def pyls_hover(document, position):
     definitions = [d for d in definitions if d.name == word]
 
     if not definitions:
-        # :(
-        return {'contents': ''}
+        return None
 
-    return {'contents': _utils.format_docstring(definitions[0].docstring()) or ""}
+    return {'contents': _utils.format_docstring(definitions[0].docstring())}
