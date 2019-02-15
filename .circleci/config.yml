@@ -42,14 +42,16 @@ workflows:
   version: 2
   build:
     jobs:
-      - python2-test
-      - python3-test
+      - python2-test:
+          filters: { tags: { only: /.*/ } }
+      - python3-test:
+          filters: { tags: { only: /.*/ } }
       - publish:
           filters:
             tags:
               only: /[0-9]+(\.[0-9]+)+((-(beta|rc)[0-9]{1,2})(\.[0-9])?)?/
             branches:
-              ignore: /.*/
+              only: develop
           requires:
             - python2-test
             - python3-test
