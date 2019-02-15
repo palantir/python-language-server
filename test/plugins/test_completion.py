@@ -25,7 +25,7 @@ class Hello():
     @property
     def world(self):
         return None
-        
+
     def everyone(self, a, b, c=None, d=2):
         pass
 
