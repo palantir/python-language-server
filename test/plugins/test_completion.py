@@ -52,7 +52,7 @@ def test_jedi_completion(config):
     assert items[0]['label'] == 'isabs(s)'
 
     # Test we don't throw with big character
-    pyls_jedi_completions(doc, {'line': 1, 'character': 1000})
+    pyls_jedi_completions(config, doc, {'line': 1, 'character': 1000})
 
 
 def test_rope_completion(config, workspace):
