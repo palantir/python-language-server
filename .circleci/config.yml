@@ -35,6 +35,8 @@ jobs:
       - image: "python:3.4-stretch"
     steps:
       - attach_workspace: { at: . }
+      - run: ./scripts/circle/pypi.sh
+
 
 workflows:
   version: 2
@@ -47,7 +49,7 @@ workflows:
             tags:
               only: /[0-9]+(\.[0-9]+)+((-(beta|rc)[0-9]{1,2})(\.[0-9])?)?/
             branches:
-              ignore: /.*/
+              only: develop
           requires:
             - python2-test
             - python3-test
