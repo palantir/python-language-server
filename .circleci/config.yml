@@ -34,7 +34,7 @@ jobs:
     docker:
       - image: "python:3.4-stretch"
     steps:
-      - attach_workspace: { at: . }
+      - checkout
       - run: ./scripts/circle/pypi.sh
 
 
@@ -49,7 +49,7 @@ workflows:
             tags:
               only: /[0-9]+(\.[0-9]+)+((-(beta|rc)[0-9]{1,2})(\.[0-9])?)?/
             branches:
-              only: develop
+              ignore: /.*/
           requires:
             - python2-test
             - python3-test
