@@ -294,10 +294,15 @@ class PythonLanguageServer(MethodDispatcher):
         for doc_uri in self.workspace.documents:
             self.lint(doc_uri)
 
-    def m_workspace__did_change_watched_files(self, **_kwargs):
-        # Externally changed files may result in changed diagnostics
+    def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
+        changed_py_files = set(d['uri'] for d in changes if d['uri'].endswith(('.py', '.pyi')))
+        # Only externally changed python files may result in changed diagnostics
+        if not changed_py_files:
+            return
         for doc_uri in self.workspace.documents:
-            self.lint(doc_uri)
+            # Changes in doc_uri are already handled by m_text_document__did_save
+            if doc_uri not in changed_py_files:
+                self.lint(doc_uri)
 
     def m_workspace__execute_command(self, command=None, arguments=None):
         return self.execute_command(command, arguments)
