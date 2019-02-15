@@ -6,16 +6,39 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_completions(document, position):
+def pyls_completions(config, document, position):
     definitions = document.jedi_script(position).completions()
-    return [{
-        'label': _label(d),
-        'kind': _kind(d),
-        'detail': _detail(d),
-        'documentation': _utils.format_docstring(d.docstring()),
-        'sortText': _sort_text(d),
-        'insertText': d.name
-    } for d in definitions] or None
+    if not definitions:
+        return None
+
+    settings = config.plugin_settings('jedi_completion', document_path=document.path)
+    include_params = settings.get('include_params', True)
+
+    completions = []
+    for d in definitions:
+        completion = {
+            'label': _label(d),
+            'kind': _kind(d),
+            'detail': _detail(d),
+            'documentation': _utils.format_docstring(d.docstring()),
+            'sortText': _sort_text(d),
+            'insertText': d.name
+        }
+
+        if include_params and hasattr(d, 'params') and d.params:
+            # For completions with params, we can generate a snippet instead
+            completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
+            snippet = d.name + '('
+            for i, param in enumerate(d.params):
+                snippet += '${%s:%s}' % (i + 1, param.name)
+                if i < len(d.params) - 1:
+                    snippet += ', '
+            snippet += ')$0'
+            completion['insertText'] = snippet
+
+        completions.append(completion)
+
+    return completions or None
 
 
 def _label(definition):
