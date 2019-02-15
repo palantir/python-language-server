@@ -65,8 +65,9 @@ class PythonLanguageServer(MethodDispatcher):
     """ Implementation of the Microsoft VSCode Language Server Protocol
     https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
     """
-
     # pylint: disable=too-many-public-methods,redefined-builtin
+
+    INITIAL_CONFIG = {}
 
     def __init__(self, rx, tx, check_parent_process=False):
         self.workspace = None
@@ -154,6 +155,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         self.workspace = Workspace(rootUri, self._endpoint)
         self.config = config.Config(rootUri, initializationOptions or {}, processId)
+        self.config.update(PythonLanguageServer.INITIAL_CONFIG)
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 

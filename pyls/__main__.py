@@ -4,6 +4,7 @@ import json
 import logging
 import logging.config
 import sys
+import yaml
 from .python_ls import start_io_lang_server, start_tcp_lang_server, PythonLanguageServer
 
 LOG_FORMAT = "%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s"
@@ -30,6 +31,10 @@ def add_arguments(parser):
         "and auto shut down language server process when parent process is not alive."
         "Note that this may not work on a Windows machine."
     )
+    parser.add_argument(
+        '-c', '--conf',
+        help='Pass a YAML file containing PYLS settings'
+    )
 
     log_group = parser.add_mutually_exclusive_group()
     log_group.add_argument(
@@ -53,6 +58,10 @@ def main():
     add_arguments(parser)
     args = parser.parse_args()
     _configure_logger(args.verbose, args.log_config, args.log_file)
+
+    if args.conf:
+        with open(args.conf, 'r') as f:
+            PythonLanguageServer.INITIAL_CONFIG = yaml.load(f)
 
     if args.tcp:
         start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
