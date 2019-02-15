@@ -34,7 +34,7 @@ jobs:
     docker:
       - image: "python:3.4-stretch"
     steps:
-      - attach_workspace: { at: . }
+      - checkout
       - run: ./scripts/circle/pypi.sh
 
 
@@ -42,8 +42,10 @@ workflows:
   version: 2
   build:
     jobs:
-      - python2-test
-      - python3-test
+      - python2-test:
+          filters: { tags: { only: /.*/ } }
+      - python3-test:
+          filters: { tags: { only: /.*/ } }
       - publish:
           filters:
             tags:
