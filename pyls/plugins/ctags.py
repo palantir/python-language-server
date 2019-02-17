@@ -222,6 +222,7 @@ def parse_tags(tag_file, query):
 def parse_tag(line, query):
     match = TAG_RE.match(line)
     log.info("Got match %s from line: %s", match, line)
+    log.info("Line: ", line.replace('\t', '\\t').replace(' ', '\\s'))
 
     if not match:
         return None
