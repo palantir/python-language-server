@@ -213,6 +213,7 @@ def parse_tags(tag_file, query):
         return
 
     with io.open(tag_file, 'rb') as f:
+        raise Exception(f.read())
         for line in f:
             tag = parse_tag(line.decode('utf-8', errors='ignore'), query)
             if tag:
