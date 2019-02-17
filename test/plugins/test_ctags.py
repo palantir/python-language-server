@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+# pylint: disable=redefined-outer-name
 import os
 import tempfile
 

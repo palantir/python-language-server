@@ -141,7 +141,7 @@ class CtagsPlugin(object):
         ctags_exe = _ctags_exe(settings)
 
         for tag_file in settings.get('tagFiles', []):
-            mode = tag_file.get('onStart', CtagMode.DEFAULT_ON_START_MODE)
+            mode = tag_file.get('onStart', DEFAULT_ON_START_MODE)
 
             if mode == CtagMode.NONE:
                 log.debug("Skipping tag file with onStart mode NONE: %s", tag_file)
@@ -158,7 +158,7 @@ class CtagsPlugin(object):
         ctags_exe = _ctags_exe(settings)
 
         for tag_file in settings.get('tagFiles', []):
-            mode = tag_file.get('onSave', CtagMode.DEFAULT_ON_SAVE_MODE)
+            mode = tag_file.get('onSave', DEFAULT_ON_SAVE_MODE)
 
             if mode == CtagMode.NONE:
                 log.debug("Skipping tag file with onSave mode NONE: %s", tag_file)
@@ -210,7 +210,7 @@ def execute(ctags_exe, tag_file, directory, append=False):
 
 def parse_tags(tag_file, query):
     if not os.path.exists(tag_file):
-        return []
+        return
 
     with io.open(tag_file, 'rb') as f:
         for line in f:
