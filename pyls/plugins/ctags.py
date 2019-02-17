@@ -213,7 +213,6 @@ def parse_tags(tag_file, query):
         return
 
     with io.open(tag_file, 'rb') as f:
-        raise Exception(f.read())
         for line in f:
             tag = parse_tag(line.decode('utf-8', errors='ignore'), query)
             if tag:
@@ -222,6 +221,8 @@ def parse_tags(tag_file, query):
 
 def parse_tag(line, query):
     match = TAG_RE.match(line)
+    log.info("Got match %s from line: %s", match, line)
+
     if not match:
         return None
 
