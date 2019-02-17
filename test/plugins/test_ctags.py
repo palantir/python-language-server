@@ -13,7 +13,9 @@ from pyls.plugins import ctags
 @pytest.fixture(scope='session')
 def pyls_ctags():
     """Fixture for generating ctags for the Python Langyage Server"""
-    _fd, tag_file = tempfile.mkstemp()
+    fd, tag_file = tempfile.mkstemp()
+    os.close(fd)  # Close our handle to the file, we just want the path
+
     try:
         ctags.execute("ctags", tag_file, os.path.dirname(pyls.__file__))
         yield tag_file
