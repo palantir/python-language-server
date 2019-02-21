@@ -4,6 +4,40 @@ from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
 
+# Map to the VSCode type
+_TYPE_MAP = {
+    'none': lsp.CompletionItemKind.Value,
+    'type': lsp.CompletionItemKind.Class,
+    'tuple': lsp.CompletionItemKind.Class,
+    'dict': lsp.CompletionItemKind.Class,
+    'dictionary': lsp.CompletionItemKind.Class,
+    'function': lsp.CompletionItemKind.Function,
+    'lambda': lsp.CompletionItemKind.Function,
+    'generator': lsp.CompletionItemKind.Function,
+    'class': lsp.CompletionItemKind.Class,
+    'instance': lsp.CompletionItemKind.Reference,
+    'method': lsp.CompletionItemKind.Method,
+    'builtin': lsp.CompletionItemKind.Class,
+    'builtinfunction': lsp.CompletionItemKind.Function,
+    'module': lsp.CompletionItemKind.Module,
+    'file': lsp.CompletionItemKind.File,
+    'xrange': lsp.CompletionItemKind.Class,
+    'slice': lsp.CompletionItemKind.Class,
+    'traceback': lsp.CompletionItemKind.Class,
+    'frame': lsp.CompletionItemKind.Class,
+    'buffer': lsp.CompletionItemKind.Class,
+    'dictproxy': lsp.CompletionItemKind.Class,
+    'funcdef': lsp.CompletionItemKind.Function,
+    'property': lsp.CompletionItemKind.Property,
+    'import': lsp.CompletionItemKind.Module,
+    'keyword': lsp.CompletionItemKind.Keyword,
+    'constant': lsp.CompletionItemKind.Variable,
+    'variable': lsp.CompletionItemKind.Variable,
+    'value': lsp.CompletionItemKind.Value,
+    'param': lsp.CompletionItemKind.Variable,
+    'statement': lsp.CompletionItemKind.Keyword,
+}
+
 
 @hookimpl
 def pyls_completions(config, document, position):
@@ -14,36 +48,35 @@ def pyls_completions(config, document, position):
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     include_params = settings.get('include_params', True)
 
-    completions = []
-    for d in definitions:
-        completion = {
-            'label': _label(d),
-            'kind': _kind(d),
-            'detail': _detail(d),
-            'documentation': _utils.format_docstring(d.docstring()),
-            'sortText': _sort_text(d),
-            'insertText': d.name
-        }
+    return [_format_completion(d, include_params) for d in definitions] or None
 
-        if include_params and hasattr(d, 'params') and d.params:
-            # For completions with params, we can generate a snippet instead
-            completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
-            snippet = d.name + '('
-            for i, param in enumerate(d.params):
-                snippet += '${%s:%s}' % (i + 1, param.name)
-                if i < len(d.params) - 1:
-                    snippet += ', '
-            snippet += ')$0'
-            completion['insertText'] = snippet
 
-        completions.append(completion)
+def _format_completion(d, include_params=True):
+    completion = {
+        'label': _label(d),
+        'kind': _TYPE_MAP.get(d.type),
+        'detail': _detail(d),
+        'documentation': _utils.format_docstring(d.docstring()),
+        'sortText': _sort_text(d),
+        'insertText': d.name
+    }
 
-    return completions or None
+    if include_params and hasattr(d, 'params') and d.params:
+        # For completions with params, we can generate a snippet instead
+        completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
+        snippet = d.name + '('
+        for i, param in enumerate(d.params):
+            snippet += '${%s:%s}' % (i + 1, param.name)
+            if i < len(d.params) - 1:
+                snippet += ', '
+        snippet += ')$0'
+        completion['insertText'] = snippet
+    return completion
 
 
 def _label(definition):
     if definition.type in ('function', 'method') and hasattr(definition, 'params'):
-        params = ', '.join(param.name for param in definition.params)
+        params = ', '.join([param.name for param in definition.params])
         return '{}({})'.format(definition.name, params)
 
     return definition.name
@@ -61,41 +94,3 @@ def _sort_text(definition):
     # If its 'hidden', put it next last
     prefix = 'z{}' if definition.name.startswith('_') else 'a{}'
     return prefix.format(definition.name)
-
-
-def _kind(d):
-    """ Return the VSCode type """
-    MAP = {
-        'none': lsp.CompletionItemKind.Value,
-        'type': lsp.CompletionItemKind.Class,
-        'tuple': lsp.CompletionItemKind.Class,
-        'dict': lsp.CompletionItemKind.Class,
-        'dictionary': lsp.CompletionItemKind.Class,
-        'function': lsp.CompletionItemKind.Function,
-        'lambda': lsp.CompletionItemKind.Function,
-        'generator': lsp.CompletionItemKind.Function,
-        'class': lsp.CompletionItemKind.Class,
-        'instance': lsp.CompletionItemKind.Reference,
-        'method': lsp.CompletionItemKind.Method,
-        'builtin': lsp.CompletionItemKind.Class,
-        'builtinfunction': lsp.CompletionItemKind.Function,
-        'module': lsp.CompletionItemKind.Module,
-        'file': lsp.CompletionItemKind.File,
-        'xrange': lsp.CompletionItemKind.Class,
-        'slice': lsp.CompletionItemKind.Class,
-        'traceback': lsp.CompletionItemKind.Class,
-        'frame': lsp.CompletionItemKind.Class,
-        'buffer': lsp.CompletionItemKind.Class,
-        'dictproxy': lsp.CompletionItemKind.Class,
-        'funcdef': lsp.CompletionItemKind.Function,
-        'property': lsp.CompletionItemKind.Property,
-        'import': lsp.CompletionItemKind.Module,
-        'keyword': lsp.CompletionItemKind.Keyword,
-        'constant': lsp.CompletionItemKind.Variable,
-        'variable': lsp.CompletionItemKind.Variable,
-        'value': lsp.CompletionItemKind.Value,
-        'param': lsp.CompletionItemKind.Variable,
-        'statement': lsp.CompletionItemKind.Keyword,
-    }
-
-    return MAP.get(d.type)
