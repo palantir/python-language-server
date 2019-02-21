@@ -30,6 +30,49 @@
                     },
                     "uniqueItems": true
                 },
+                "pyls.plugins.ctags.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.ctags.ctagsPath": {
+                    "type": "string",
+                    "default": "ctags",
+                    "description": "Path to the ctags executable."
+                },
+                "pyls.plugins.ctags.tagFiles": {
+                    "type": "array",
+                    "description": "Set of Exuberant CTags files for workspace symbols.",
+                    "default": [{
+                        "filePath": "{workspaceRoot}/.vscode/tags",
+                        "directory": "{workspaceRoot}"
+                    }],
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "filePath": {
+                                "type": "string",
+                                "description": "Path to the Exuberant Ctags tag file, can template {workspaceRoot} into the path."
+                            },
+                            "directory": {
+                                "type": "string",
+                                "description": "Directory to index with ctags, can template {workspaceRoot} into the path."
+                            },
+                            "onStart": {
+                                "type": "string",
+                                "enum": ["none", "append", "rebuild"],
+                                "default": "rebuild",
+                                "description": "Whether to rebuild or append the tags file on language server startup"
+                            },
+                            "onSave": {
+                                "type": "string",
+                                "enum": ["none", "append", "rebuild"],
+                                "default": "append",
+                                "description": "Whether to rebuild or append the tags file when a file within the rootPath is saved."
+                            }
+                        }
+                    }
+                },
                 "pyls.plugins.jedi_completion.enabled": {
                     "type": "boolean",
                     "default": true,

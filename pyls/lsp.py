@@ -24,6 +24,13 @@ class CompletionItemKind(object):
     Color = 16
     File = 17
     Reference = 18
+    Folder = 19
+    EnumMember = 20
+    Constant = 21
+    Struct = 22
+    Event = 23
+    Operator = 24
+    TypeParameter = 25
 
 
 class DocumentHighlightKind(object):
@@ -70,6 +77,14 @@ class SymbolKind(object):
     Number = 16
     Boolean = 17
     Array = 18
+    Object = 19
+    Key = 20
+    Null = 21
+    EnumMember = 22
+    Struct = 23
+    Event = 24
+    Operator = 25
+    TypeParameter = 26
 
 
 class TextDocumentSyncKind(object):

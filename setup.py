@@ -73,6 +73,7 @@ setup(
         ],
         'pyls': [
             'autopep8 = pyls.plugins.autopep8_format',
+            'ctags = pyls.plugins.ctags:INSTANCE',
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',

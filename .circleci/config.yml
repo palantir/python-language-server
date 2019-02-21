@@ -6,6 +6,8 @@ jobs:
       - image: "python:2.7-stretch"
     steps:
       - checkout
+      - run: apt-get update
+      - run: apt-get install exuberant-ctags
       - run: pip install -e .[all] .[test]
       - run: py.test test/
       - run: pylint pyls test
@@ -17,6 +19,8 @@ jobs:
       - image: "python:3.4-stretch"
     steps:
       - checkout
+      - run: apt-get update
+      - run: apt-get install exuberant-ctags
       - run: pip install -e .[all] .[test]
       - run: py.test test/
 
