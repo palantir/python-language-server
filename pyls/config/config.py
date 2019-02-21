@@ -1,6 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import pkg_resources
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
 
 import pluggy
 
@@ -47,7 +51,7 @@ class Config(object):
             try:
                 entry_point.load()
             except ImportError as e:
-                log.warn("Failed to load %s entry point '%s': %s", PYLS, entry_point.name, e)
+                log.warning("Failed to load %s entry point '%s': %s", PYLS, entry_point.name, e)
                 self._pm.set_blocked(entry_point.name)
 
         # Load the entry points into pluggy, having blocked any failing ones
@@ -82,6 +86,7 @@ class Config(object):
     def process_id(self):
         return self._process_id
 
+    @lru_cache(maxsize=32)
     def settings(self, document_path=None):
         """Settings are constructed from a few sources:
 
@@ -90,7 +95,8 @@ class Config(object):
             3. LSP settings, given to us from didChangeConfiguration
             4. Project settings, found in config files in the current project.
 
-        TODO(gatesn): We should update a cached view of this whenever any configs change
+        Since this function is nondeterministic, it is important to call
+        settings.cache_clear() when the config is updated
         """
         settings = {}
         sources = self._settings.get('configurationSources', DEFAULT_CONFIG_SOURCES)
@@ -130,6 +136,7 @@ class Config(object):
 
     def update(self, settings):
         """Recursively merge the given settings into the current settings."""
+        self.settings.cache_clear()
         self._settings = settings
         log.info("Updated settings to %s", self._settings)
         self._update_disabled_plugins()
