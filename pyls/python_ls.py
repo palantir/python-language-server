@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 PARENT_PROCESS_WATCH_INTERVAL = 10  # 10 s
 MAX_WORKERS = 64
+# We also watch for changes in config files
+PYTHON_FILE_EXTENSIONS = ('.py', '.pyi', 'pycodestyle.cfg', 'setup.cfg', 'tox.ini', '.flake8')
 
 
 class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
@@ -295,10 +297,12 @@ class PythonLanguageServer(MethodDispatcher):
             self.lint(doc_uri)
 
     def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
-        changed_py_files = set(d['uri'] for d in changes if d['uri'].endswith(('.py', '.pyi')))
-        # Only externally changed python files may result in changed diagnostics
+        changed_py_files = set(d['uri'] for d in changes if d['uri'].endswith(PYTHON_FILE_EXTENSIONS))
+        # Only externally changed python files and lint configs may result in changed diagnostics.
         if not changed_py_files:
             return
+        # TODO: We currently don't cache settings therefor we can just lint again.
+        # Here would be the right point to update the settings after a change to config files.
         for doc_uri in self.workspace.documents:
             # Changes in doc_uri are already handled by m_text_document__did_save
             if doc_uri not in changed_py_files:
