@@ -247,7 +247,9 @@ class PythonLanguageServer(MethodDispatcher):
                 change,
                 version=textDocument.get('version')
             )
-        self.lint(textDocument['uri'])
+        settings = self.config.plugin_settings('jedi_completion')
+        if settings.get('lint_on_change', True):
+            self.lint(textDocument['uri'])
 
     def m_text_document__did_save(self, textDocument=None, **_kwargs):
         self.lint(textDocument['uri'])

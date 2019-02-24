@@ -40,6 +40,11 @@
                     "default": true,
                     "description": "Auto-completes methods and classes with tabstops for each parameter."
                 },
+                "pyls.plugins.jedi_completion.lint_on_change": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Lint on every change to the document."
+                },
                 "pyls.plugins.jedi_definition.enabled": {
                     "type": "boolean",
                     "default": true,
