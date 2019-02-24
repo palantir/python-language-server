@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import re
+import time
 
 import jedi
 
@@ -27,6 +28,7 @@ class Workspace(object):
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
+        self._doc_mtimes = {}
 
         # Whilst incubating, keep rope private
         self.__rope = None
@@ -69,6 +71,7 @@ class Workspace(object):
 
     def put_document(self, doc_uri, source, version=None):
         self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
+        self._doc_mtimes[doc_uri] = time.time()
 
     def rm_document(self, doc_uri):
         self._docs.pop(doc_uri)
@@ -76,6 +79,11 @@ class Workspace(object):
     def update_document(self, doc_uri, change, version=None):
         self._docs[doc_uri].apply_change(change)
         self._docs[doc_uri].version = version
+        self._doc_mtimes[doc_uri] = time.time()
+
+    def get_document_mtime(self, doc_uri):
+        # TODO(gatesn): Do we want to fall back to os.stat?
+        return self._doc_mtimes[doc_uri]
 
     def apply_edit(self, edit):
         return self._endpoint.request(self.M_APPLY_EDIT, {'edit': edit})

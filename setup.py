@@ -48,6 +48,7 @@ setup(
         'all': [
             'autopep8',
             'mccabe',
+            'mypy; python_version>="3.4"',
             'pycodestyle',
             'pydocstyle>=2.0.0',
             'pyflakes>=1.6.0',
@@ -56,6 +57,7 @@ setup(
         ],
         'autopep8': ['autopep8'],
         'mccabe': ['mccabe'],
+        'mypy': ['mypy; python_version>="3.4"'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
         'pyflakes': ['pyflakes>=1.6.0'],
@@ -81,6 +83,7 @@ setup(
             'jedi_signature_help = pyls.plugins.signature',
             'jedi_symbols = pyls.plugins.symbols',
             'mccabe = pyls.plugins.mccabe_lint',
+            'mypy = pyls.plugins.mypy_lint',
             'preload = pyls.plugins.preload_imports',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pydocstyle = pyls.plugins.pydocstyle_lint',

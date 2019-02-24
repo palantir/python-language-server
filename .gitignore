@@ -109,3 +109,7 @@ ENV/
 
 # Merge orig files
 *.orig
+
+# Mypy
+.dmypy.json
+.mypy_cache/
