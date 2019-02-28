@@ -178,6 +178,28 @@ class Document(object):
         """Return the byte-offset pointed at by the given position."""
         return position['character'] + len(''.join(self.lines[:position['line']]))
 
+    def word_range_at_position(self, position):
+        """Get the range of a word at given position."""
+        if position['line'] >= len(self.lines):
+            return None
+
+        line = self.lines[position['line']]
+        i = position['character']
+        # Split word in two
+        start = line[:i]
+        end = line[i:]
+
+        # Take end of start and start of end to find word
+        # These are guaranteed to match, even if they match the empty string
+        m_start = RE_START_WORD.findall(start)
+        m_end = RE_END_WORD.findall(end)
+
+        start = { 'line': position['line'], 'character': i - len(m_start[0]) }
+        end = { 'line': position['line'], 'character': i + len(m_end[-1]) }
+
+        return { 'start': start, 'end': end }
+
+
     def word_at_position(self, position):
         """Get the word under the cursor returning the start and end positions."""
         if position['line'] >= len(self.lines):
