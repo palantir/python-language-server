@@ -1,6 +1,6 @@
 {
-    "name": "vscode-client",
-    "description": "VSCode extension for running multiple language servers",
+    "name": "pyls",
+    "description": "Python language server",
     "author": "Sourcegraph",
     "repository": "https://github.com/Microsoft/vscode-languageserver-node",
     "license": "MIT",
@@ -20,6 +20,11 @@
             "title": "Python Language Server Configuration",
             "type": "object",
             "properties": {
+                "pyls.executable": {
+                    "type": "string",
+                    "default": "pyls",
+                    "description": "Language server executable"
+                },
                 "pyls.configurationSources": {
                     "type": "array",
                     "default": ["pycodestyle"],

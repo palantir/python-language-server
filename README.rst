@@ -119,8 +119,7 @@ Develop against VS Code
 
 The Python language server can be developed against a local instance of Visual Studio Code.
 
-1. Install `VSCode for Mac <http://code.visualstudio.com/docs/?dv=osx>`_
-2. From within VSCode View -> Command Palette, then type *shell* and run ``install 'code' command in PATH``
+1. Install `VSCode <https://code.visualstudio.com/download`_
 
 .. code-block:: bash
 
