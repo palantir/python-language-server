@@ -37,7 +37,8 @@ setup(
         'futures; python_version<"3.2"',
         'jedi>=0.13.2',
         'python-jsonrpc-server>=0.1.0',
-        'pluggy'
+        'pluggy',
+        'pyyaml'
     ],
 
     # List additional groups of dependencies here (e.g. development
