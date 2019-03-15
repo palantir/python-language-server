@@ -11,10 +11,8 @@ def pyls_hover(document, position):
     word = document.word_at_position(position)
 
     # Find an exact match for a completion
-    definitions = [d for d in definitions if d.name == word]
+    for d in definitions:
+        if d.name == word:
+            return {'contents': _utils.format_docstring(d.docstring()) or ''}
 
-    if not definitions:
-        # :(
-        return {'contents': ''}
-
-    return {'contents': _utils.format_docstring(definitions[0].docstring()) or ""}
+    return {'contents': ''}
