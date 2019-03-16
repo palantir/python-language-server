@@ -45,8 +45,13 @@ def pyls_completions(config, document, position):
     if not definitions:
         return None
 
+    text_document = config.capabilities.get('textDocument', {})
+    completion = text_document.get('completion', {})
+    completion_item = completion.get('completionItem', {})
+    snippet_support = completion_item.get('snippetSupport', False)
+
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
-    include_params = settings.get('include_params', True)
+    include_params = settings.get('include_params', snippet_support)
 
     return [_format_completion(d, include_params) for d in definitions] or None
 
