@@ -95,6 +95,8 @@ def test_jedi_method_completion(config):
     com_position = {'line': 20, 'character': 19}
     doc = Document(DOC_URI, DOC)
 
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+
     completions = pyls_jedi_completions(config, doc, com_position)
     everyone_method = [completion for completion in completions if completion['label'] == 'everyone(a, b, c, d)'][0]
 
