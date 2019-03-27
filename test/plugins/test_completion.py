@@ -95,13 +95,15 @@ def test_jedi_method_completion(config):
     com_position = {'line': 20, 'character': 19}
     doc = Document(DOC_URI, DOC)
 
+    config.capabilities['textDocument'] = {'completion': {'completionItem': {'snippetSupport': True}}}
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
 
     completions = pyls_jedi_completions(config, doc, com_position)
     everyone_method = [completion for completion in completions if completion['label'] == 'everyone(a, b, c, d)'][0]
 
+    # Ensure we only generate snippets for positional args
     assert everyone_method['insertTextFormat'] == lsp.InsertTextFormat.Snippet
-    assert everyone_method['insertText'] == 'everyone(${1:a}, ${2:b}, ${3:c}, ${4:d})$0'
+    assert everyone_method['insertText'] == 'everyone(${1:a}, ${2:b})$0'
 
     # Disable param snippets
     config.update({'plugins': {'jedi_completion': {'include_params': False}}})
