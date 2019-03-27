@@ -82,6 +82,7 @@ def test_pycodestyle_config(workspace):
         # Now we'll add config file to ignore it
         with open(os.path.join(workspace.root_path, conf_file), 'w+') as f:
             f.write(content)
+        config.settings.cache_clear()
 
         # And make sure we don't get any warnings
         diags = pycodestyle_lint.pyls_lint(config, doc)
