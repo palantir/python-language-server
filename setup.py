@@ -25,7 +25,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'test']),
+    packages=find_packages(exclude=['contrib', 'docs', 'test', 'test.*']),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -52,6 +52,7 @@ setup(
             'pycodestyle',
             'pydocstyle>=2.0.0',
             'pyflakes>=1.6.0',
+            'pylint',
             'rope>=0.10.5',
             'yapf',
         ],
@@ -60,6 +61,7 @@ setup(
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
         'pyflakes': ['pyflakes>=1.6.0'],
+        'pylint': ['pylint'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
         'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov', 'coverage'],
@@ -86,6 +88,7 @@ setup(
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'pylint = pyls.plugins.pylint_lint',
             'rope_completion = pyls.plugins.rope_completion',
             'rope_rename = pyls.plugins.rope_rename',
             'yapf = pyls.plugins.yapf_format',
