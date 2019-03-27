@@ -25,7 +25,8 @@ class ConfigSource(object):
         """Return project-level (i.e. workspace directory) configuration."""
         raise NotImplementedError()
 
-    def read_config_from_files(self, files):
+    @staticmethod
+    def read_config_from_files(files):
         config = configparser.RawConfigParser()
         for filename in files:
             if os.path.exists(filename) and not os.path.isdir(filename):
