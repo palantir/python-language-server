@@ -35,6 +35,7 @@ setup(
         'configparser; python_version<"3.0"',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
+        'backports.functools_lru_cache; python_version<"3.2"',
         'jedi>=0.13.2',
         'python-jsonrpc-server>=0.1.0',
         'pluggy'
