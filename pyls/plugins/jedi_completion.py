@@ -45,10 +45,13 @@ def pyls_completions(config, document, position):
     if not definitions:
         return None
 
-    settings = config.plugin_settings('jedi_completion', document_path=document.path)
-    include_params = settings.get('include_params', True)
+    completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
+    snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
-    return [_format_completion(d, include_params) for d in definitions] or None
+    settings = config.plugin_settings('jedi_completion', document_path=document.path)
+    should_include_params = settings.get('include_params')
+
+    return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
 
 
 def _format_completion(d, include_params=True):
@@ -62,15 +65,18 @@ def _format_completion(d, include_params=True):
     }
 
     if include_params and hasattr(d, 'params') and d.params:
+        positional_args = [param for param in d.params if '=' not in param.description]
+
         # For completions with params, we can generate a snippet instead
         completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
         snippet = d.name + '('
-        for i, param in enumerate(d.params):
+        for i, param in enumerate(positional_args):
             snippet += '${%s:%s}' % (i + 1, param.name)
-            if i < len(d.params) - 1:
+            if i < len(positional_args) - 1:
                 snippet += ', '
         snippet += ')$0'
         completion['insertText'] = snippet
+
     return completion
 
 

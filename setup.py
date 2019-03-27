@@ -25,7 +25,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'test']),
+    packages=find_packages(exclude=['contrib', 'docs', 'test', 'test.*']),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -35,6 +35,7 @@ setup(
         'configparser; python_version<"3.0"',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
+        'backports.functools_lru_cache; python_version<"3.2"',
         'jedi>=0.13.2',
         'python-jsonrpc-server>=0.1.0',
         'pluggy'

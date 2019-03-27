@@ -9,8 +9,8 @@ log = logging.getLogger(__name__)
 def pyls_definitions(config, document, position):
     settings = config.plugin_settings('jedi_definition')
     definitions = document.jedi_script(position).goto_assignments(
-        follow_imports=settings.get('follow_imports', False),
-        follow_builtin_imports=settings.get('follow_builtin_imports', False))
+        follow_imports=settings.get('follow_imports', True),
+        follow_builtin_imports=settings.get('follow_builtin_imports', True))
 
     return [
         {
