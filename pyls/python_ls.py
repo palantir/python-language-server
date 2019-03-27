@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 PARENT_PROCESS_WATCH_INTERVAL = 10  # 10 s
 MAX_WORKERS = 64
+# We also watch for changes in config files
+PYTHON_FILE_EXTENSIONS = ('.py', '.pyi', 'pycodestyle.cfg', 'setup.cfg', 'tox.ini', '.flake8')
 
 
 class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
@@ -45,6 +47,8 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
     )
 
     server = socketserver.TCPServer((bind_addr, port), wrapper_class)
+    server.allow_reuse_address = True
+
     try:
         log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
         server.serve_forever()
@@ -211,10 +215,13 @@ class PythonLanguageServer(MethodDispatcher):
         return self._hook('pyls_hover', doc_uri, position=position) or {'contents': ''}
 
     @_utils.debounce(LINT_DEBOUNCE_S, keyed_by='doc_uri')
-    def lint(self, doc_uri):
+    def lint(self, doc_uri, is_saved):
         # Since we're debounced, the document may no longer be open
         if doc_uri in self.workspace.documents:
-            self.workspace.publish_diagnostics(doc_uri, flatten(self._hook('pyls_lint', doc_uri)))
+            self.workspace.publish_diagnostics(
+                doc_uri,
+                flatten(self._hook('pyls_lint', doc_uri, is_saved=is_saved))
+            )
 
     def references(self, doc_uri, position, exclude_declaration):
         return flatten(self._hook(
@@ -234,7 +241,7 @@ class PythonLanguageServer(MethodDispatcher):
     def m_text_document__did_open(self, textDocument=None, **_kwargs):
         self.workspace.put_document(textDocument['uri'], textDocument['text'], version=textDocument.get('version'))
         self._hook('pyls_document_did_open', textDocument['uri'])
-        self.lint(textDocument['uri'])
+        self.lint(textDocument['uri'], is_saved=False)
 
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **_kwargs):
         for change in contentChanges:
@@ -243,10 +250,10 @@ class PythonLanguageServer(MethodDispatcher):
                 change,
                 version=textDocument.get('version')
             )
-        self.lint(textDocument['uri'])
+        self.lint(textDocument['uri'], is_saved=False)
 
     def m_text_document__did_save(self, textDocument=None, **_kwargs):
-        self.lint(textDocument['uri'])
+        self.lint(textDocument['uri'], is_saved=True)
 
     def m_text_document__code_action(self, textDocument=None, range=None, context=None, **_kwargs):
         return self.code_actions(textDocument['uri'], range, context)
@@ -290,12 +297,19 @@ class PythonLanguageServer(MethodDispatcher):
     def m_workspace__did_change_configuration(self, settings=None):
         self.config.update((settings or {}).get('pyls', {}))
         for doc_uri in self.workspace.documents:
-            self.lint(doc_uri)
+            self.lint(doc_uri, is_saved=False)
 
-    def m_workspace__did_change_watched_files(self, **_kwargs):
-        # Externally changed files may result in changed diagnostics
+    def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
+        changed_py_files = set(d['uri'] for d in changes if d['uri'].endswith(PYTHON_FILE_EXTENSIONS))
+        # Only externally changed python files and lint configs may result in changed diagnostics.
+        if not changed_py_files:
+            return
+        # TODO: We currently don't cache settings therefor we can just lint again.
+        # Here would be the right point to update the settings after a change to config files.
         for doc_uri in self.workspace.documents:
-            self.lint(doc_uri)
+            # Changes in doc_uri are already handled by m_text_document__did_save
+            if doc_uri not in changed_py_files:
+                self.lint(doc_uri, is_saved=False)
 
     def m_workspace__execute_command(self, command=None, arguments=None):
         return self.execute_command(command, arguments)

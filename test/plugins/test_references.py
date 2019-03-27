@@ -15,7 +15,10 @@ DOC1 = """class Test1():
 
 DOC2 = """from test1 import Test1
 
-Test1()
+try:
+    Test1()
+except UnicodeError:
+    pass
 """
 
 
@@ -59,5 +62,18 @@ def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name
     assert doc2_import_ref['range']['end'] == {'line': 0, 'character': 23}
 
     doc2_usage_ref = [u for u in refs if u['uri'] != DOC1_URI][1]
-    assert doc2_usage_ref['range']['start'] == {'line': 2, 'character': 0}
-    assert doc2_usage_ref['range']['end'] == {'line': 2, 'character': 5}
+    assert doc2_usage_ref['range']['start'] == {'line': 3, 'character': 4}
+    assert doc2_usage_ref['range']['end'] == {'line': 3, 'character': 9}
+
+
+def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-name
+    # Over 'UnicodeError':
+    position = {'line': 4, 'character': 7}
+    doc2_uri = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC2_NAME))
+    doc2 = Document(doc2_uri)
+
+    refs = pyls_references(doc2, position)
+    assert len(refs) == 1
+
+    assert refs[0]['range']['start'] == {'line': 4, 'character': 7}
+    assert refs[0]['range']['end'] == {'line': 4, 'character': 19}

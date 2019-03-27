@@ -1,6 +1,6 @@
 {
-    "name": "vscode-client",
-    "description": "VSCode extension for running multiple language servers",
+    "name": "pyls",
+    "description": "Python language server",
     "author": "Sourcegraph",
     "repository": "https://github.com/Microsoft/vscode-languageserver-node",
     "license": "MIT",
@@ -20,6 +20,11 @@
             "title": "Python Language Server Configuration",
             "type": "object",
             "properties": {
+                "pyls.executable": {
+                    "type": "string",
+                    "default": "pyls",
+                    "description": "Language server executable"
+                },
                 "pyls.configurationSources": {
                     "type": "array",
                     "default": ["pycodestyle"],
@@ -47,12 +52,12 @@
                 },
                 "pyls.plugins.jedi_definition.follow_imports": {
                     "type": "boolean",
-                    "default": null,
+                    "default": true,
                     "description": "The goto call will follow imports."
                 },
                 "pyls.plugins.jedi_definition.follow_builtin_imports": {
                     "type": "boolean",
-                    "default": null,
+                    "default": true,
                     "description": "If follow_imports is True will decide if it follow builtin imports."
                 },
                 "pyls.plugins.jedi_hover.enabled": {
