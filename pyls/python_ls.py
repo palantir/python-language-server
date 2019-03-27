@@ -157,7 +157,8 @@ class PythonLanguageServer(MethodDispatcher):
             rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
         self.workspace = Workspace(rootUri, self._endpoint)
-        self.config = config.Config(rootUri, initializationOptions or {}, processId)
+        self.config = config.Config(rootUri, initializationOptions or {},
+                                    processId, _kwargs.get('capabilities', {}))
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
@@ -299,17 +300,17 @@ class PythonLanguageServer(MethodDispatcher):
         for doc_uri in self.workspace.documents:
             self.lint(doc_uri, is_saved=False)
 
-    def m_workspace__did_change_watched_files(self, changes=[], **_kwargs):
+    def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
         changed_py_files = set()
         config_changed = False
-        for d in changes:
+        for d in (changes or []):
             if d['uri'].endswith(PYTHON_FILE_EXTENSIONS):
                 changed_py_files.add(d['uri'])
             elif d['uri'].endswith(CONFIG_FILEs):
                 config_changed = True
 
         if config_changed:
-            self.settings.cache_clear()
+            self.config.settings.cache_clear()
         elif not changed_py_files:
             # Only externally changed python files and lint configs may result in changed diagnostics.
             return

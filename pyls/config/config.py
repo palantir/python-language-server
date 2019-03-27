@@ -18,11 +18,12 @@ DEFAULT_CONFIG_SOURCES = ['pycodestyle']
 
 class Config(object):
 
-    def __init__(self, root_uri, init_opts, process_id):
+    def __init__(self, root_uri, init_opts, process_id, capabilities):
         self._root_path = uris.to_fs_path(root_uri)
         self._root_uri = root_uri
         self._init_opts = init_opts
         self._process_id = process_id
+        self._capabilities = capabilities
 
         self._settings = {}
         self._plugin_settings = {}
@@ -85,6 +86,10 @@ class Config(object):
     @property
     def process_id(self):
         return self._process_id
+
+    @property
+    def capabilities(self):
+        return self._capabilities
 
     @lru_cache(maxsize=32)
     def settings(self, document_path=None):
