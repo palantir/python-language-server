@@ -40,6 +40,12 @@ class Config(object):
         except ImportError:
             pass
 
+        try:
+            from .pylint_conf import PylintConfig
+            self._config_sources['pylint'] = PylintConfig(self._root_path)
+        except ImportError:
+            pass
+
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
         self._pm.enable_tracing()
