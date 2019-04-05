@@ -2,17 +2,21 @@
 """Linter plugin for pylint."""
 import collections
 import json
+import logging
 import sys
 
 from pylint.epylint import py_run
 from pyls import hookimpl, lsp
 
+log = logging.getLogger(__name__)
+
+CONFIG_FILE = 'rcfile'
 
 class PylintLinter(object):
     last_diags = collections.defaultdict(list)
 
     @classmethod
-    def lint(cls, document, is_saved, flags=''):
+    def lint(cls, config, document, is_saved, flags=''):
         """Plugin interface to pyls linter.
 
         Args:
@@ -55,6 +59,11 @@ class PylintLinter(object):
         path = document.path
         if sys.platform.startswith('win'):
             path = path.replace('\\', '/')
+
+        rcfile = config.plugin.settings('pylint').get(CONFIG_FILE, None)
+        if rcfile is not None:
+            flags = flags + ' --rcfile ' + rcfile
+
         out, _err = py_run(
             '{} -f json {}'.format(path, flags), return_std=True
         )
@@ -132,5 +141,5 @@ class PylintLinter(object):
 
 
 @hookimpl
-def pyls_lint(document, is_saved):
-    return PylintLinter.lint(document, is_saved)
+def pyls_lint(config, document, is_saved):
+    return PylintLinter.lint(config, document, is_saved)
