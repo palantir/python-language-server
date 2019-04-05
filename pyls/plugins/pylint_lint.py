@@ -60,7 +60,7 @@ class PylintLinter(object):
         if sys.platform.startswith('win'):
             path = path.replace('\\', '/')
 
-        rcfile = config.plugin.settings('pylint').get(CONFIG_FILE, None)
+        rcfile = config.plugin_settings('pylint').get(CONFIG_FILE, None)
         if rcfile is not None:
             flags = flags + ' --rcfile ' + rcfile
 

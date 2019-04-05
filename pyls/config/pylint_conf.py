@@ -7,20 +7,14 @@ from .source import ConfigSource
 log = logging.getLogger(__name__)
 
 PROJECT_CONFIGS = ['.pylintrc', 'pylintrc']
-
-OPTIONS = [
-    (('MESSAGES CONTROL', 'disable'), 'plugins.pylint.disable', list),
-    # Will need to be expanded later.
-]
-
+RCFILE_CONFIG = 'plugins.pylint.rcfile'
 
 class PylintConfig(ConfigSource):
     """Parse pylint configurations."""
 
     def user_config(self):
         config_file = self._user_config_file()
-        config = self.read_config_from_files([config_file])
-        return self.parse_config(config, OPTIONS)
+        return {RCFILE_CONFIG: config_file}
 
     def _user_config_file(self):
         if self.is_windows:
@@ -29,5 +23,7 @@ class PylintConfig(ConfigSource):
 
     def project_config(self, document_path):
         files = find_parents(self.root_path, document_path, PROJECT_CONFIGS)
-        config = self.read_config_from_files(files)
-        return self.parse_config(config, OPTIONS)
+        if len(files) > 0:
+            return {RCFILE_CONFIG: files[0]}
+        else:
+            return {}
