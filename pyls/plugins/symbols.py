@@ -8,10 +8,13 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_document_symbols(config, document):
-    # all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
+    if not config.capabilities.get("documentSymbol", {}).get("hierarchicalDocumentSymbolSupport", False):
+        return pyls_document_symbols_legacy(config, document)
+    # returns DocumentSymbol[]
+    hide_imports = config.plugin_settings('jedi_symbols').get('hide_imports', False)
     definitions = document.jedi_names(all_scopes=False)
     def transform(d):
-        include_d = _include_def(d)
+        include_d = _include_def(d, hide_imports)
         if include_d is None:
             return None
         children = [dt for dt in (transform(d1) for d1 in d.defined_names()) if dt] if include_d else None
@@ -28,17 +31,33 @@ def pyls_document_symbols(config, document):
         }
     return [dt for dt in (transform(d) for d in definitions) if dt]
 
-def _include_def(definition):
+def pyls_document_symbols_legacy(config, document):
+    # returns SymbolInformation[]
+    all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
+    hide_imports = config.plugin_settings('jedi_symbols').get('hide_imports', False)
+    definitions = document.jedi_names(all_scopes=all_scopes)
+    return [{
+        'name': d.name,
+        'containerName': _container(d),
+        'location': {
+            'uri': document.uri,
+            'range': _range(d),
+        },
+        'kind': _kind(d),
+    } for d in definitions if _include_def(d, hide_imports) is not None]
+
+def _include_def(definition, hide_imports=True):
     # True: include def and sub-defs
     # False: include def but do not include sub-defs
     # None: Do not include def or sub-defs
     if (# Unused vars should also be skipped
             definition.name != '_' and
-            not definition._name.is_import() and
             definition.is_definition() and
             not definition.in_builtin_module() and
             _kind(definition) is not None
     ):
+        if definition._name.is_import():
+            return None if hide_imports else False
         # for `statement`, we do not enumerate its child nodes. It tends to cause Error.
         return definition.type not in ("statement",)
     return None
