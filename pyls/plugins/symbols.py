@@ -13,6 +13,7 @@ def pyls_document_symbols(config, document):
     # returns DocumentSymbol[]
     hide_imports = config.plugin_settings('jedi_symbols').get('hide_imports', False)
     definitions = document.jedi_names(all_scopes=False)
+
     def transform(d):
         include_d = _include_def(d, hide_imports)
         if include_d is None:
@@ -31,6 +32,7 @@ def pyls_document_symbols(config, document):
         }
     return [dt for dt in (transform(d) for d in definitions) if dt]
 
+
 def pyls_document_symbols_legacy(config, document):
     # returns SymbolInformation[]
     all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
@@ -46,11 +48,13 @@ def pyls_document_symbols_legacy(config, document):
         'kind': _kind(d),
     } for d in definitions if _include_def(d, hide_imports) is not None]
 
+
 def _include_def(definition, hide_imports=True):
+    # returns
     # True: include def and sub-defs
     # False: include def but do not include sub-defs
     # None: Do not include def or sub-defs
-    if (# Unused vars should also be skipped
+    if (  # Unused vars should also be skipped
             definition.name != '_' and
             definition.is_definition() and
             not definition.in_builtin_module() and
