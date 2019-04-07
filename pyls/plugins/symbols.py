@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+from jedi.api.classes import Definition
 from pyls import hookimpl
 from pyls.lsp import SymbolKind
 
@@ -8,27 +9,40 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_document_symbols(config, document):
-    all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
-    definitions = document.jedi_names(all_scopes=all_scopes)
-    return [{
-        'name': d.name,
-        'containerName': _container(d),
-        'location': {
-            'uri': document.uri,
+    # all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
+    definitions = document.jedi_names(all_scopes=False)
+    def transform(d: Definition):
+        includeD = _include_def(d)
+        if includeD is None:
+            return None
+        children = [dt for dt in (transform(d1) for d1 in d.defined_names()) if dt] if includeD else None
+        detailName = d.full_name
+        if detailName and detailName.startswith("__main__."):
+            detailName = detailName[9:]
+        return {
+            'name': d.name,
+            'detail': detailName,
             'range': _range(d),
-        },
-        'kind': _kind(d),
-    } for d in definitions if _include_def(d)]
-
+            'selectionRange': _name_range(d),
+            'kind': _kind(d),
+            'children': children
+        }
+    return [dt for dt in (transform(d) for d in definitions) if dt]
 
 def _include_def(definition):
-    return (
-        # Don't tend to include parameters as symbols
-        definition.type != 'param' and
-        # Unused vars should also be skipped
-        definition.name != '_' and
-        _kind(definition) is not None
-    )
+    # True: include def and sub-defs
+    # False: include def but do not include sub-defs
+    # None: Do not include def or sub-defs
+    if (# Unused vars should also be skipped
+            definition.name != '_' and
+            not definition._name.is_import() and
+            definition.is_definition() and
+            not definition.in_builtin_module() and
+            _kind(definition) is not None
+    ):
+        # for `statement`, we do not enumerate its child nodes. It tends to cause Error.
+        return definition.type not in ("statement",)
+    return None
 
 
 def _container(definition):
@@ -48,6 +62,17 @@ def _container(definition):
 def _range(definition):
     # This gets us more accurate end position
     definition = definition._name.tree_name.get_definition()
+    (start_line, start_column) = definition.start_pos
+    (end_line, end_column) = definition.end_pos
+    return {
+        'start': {'line': start_line - 1, 'character': start_column},
+        'end': {'line': end_line - 1, 'character': end_column}
+    }
+
+
+def _name_range(definition):
+    # Gets the range of symbol name (e.g. function name of a function)
+    definition = definition._name.tree_name
     (start_line, start_column) = definition.start_pos
     (end_line, end_column) = definition.end_pos
     return {
@@ -85,7 +110,8 @@ _SYMBOL_KIND_MAP = {
     'constant': SymbolKind.Constant,
     'variable': SymbolKind.Variable,
     'value': SymbolKind.Variable,
-    'param': SymbolKind.Variable,
+    # Don't tend to include parameters as symbols
+    # 'param': SymbolKind.Variable,
     'statement': SymbolKind.Variable,
     'boolean': SymbolKind.Boolean,
     'int': SymbolKind.Number,
