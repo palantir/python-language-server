@@ -78,6 +78,7 @@ def test_symbols_all_scopes(config):
     # Not going to get too in-depth here else we're just testing Jedi
     assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
 
+
 def test_symbols_hierarchical(config):
     doc = Document(DOC_URI, DOC)
 
@@ -95,6 +96,7 @@ def test_symbols_hierarchical(config):
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]
+
     def child_sym(sym, name):
         if not sym['children']:
             return None
