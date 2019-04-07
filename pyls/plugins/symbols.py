@@ -1,6 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from jedi.api.classes import Definition
 from pyls import hookimpl
 from pyls.lsp import SymbolKind
 
@@ -11,11 +10,11 @@ log = logging.getLogger(__name__)
 def pyls_document_symbols(config, document):
     # all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
     definitions = document.jedi_names(all_scopes=False)
-    def transform(d: Definition):
-        includeD = _include_def(d)
-        if includeD is None:
+    def transform(d):
+        include_d = _include_def(d)
+        if include_d is None:
             return None
-        children = [dt for dt in (transform(d1) for d1 in d.defined_names()) if dt] if includeD else None
+        children = [dt for dt in (transform(d1) for d1 in d.defined_names()) if dt] if include_d else None
         detailName = d.full_name
         if detailName and detailName.startswith("__main__."):
             detailName = detailName[9:]
