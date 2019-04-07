@@ -8,7 +8,11 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_document_symbols(config, document):
-    if not config.capabilities.get("documentSymbol", {}).get("hierarchicalDocumentSymbolSupport", False):
+    useHierarchicalSymbols = config.plugin_settings('jedi_symbols').get('hierarchical_symbols', None)
+    if useHierarchicalSymbols is None:
+        useHierarchicalSymbols = config.capabilities.get("documentSymbol", {}).get(
+            "hierarchicalDocumentSymbolSupport", False)
+    if not useHierarchicalSymbols:
         return pyls_document_symbols_legacy(config, document)
     # returns DocumentSymbol[]
     hide_imports = config.plugin_settings('jedi_symbols').get('hide_imports', False)
