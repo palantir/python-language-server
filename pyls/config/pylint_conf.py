@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 PROJECT_CONFIGS = ['.pylintrc', 'pylintrc']
 RCFILE_CONFIG = 'plugins.pylint.rcfile'
 
+
 class PylintConfig(ConfigSource):
     """Parse pylint configurations."""
 
@@ -23,7 +24,6 @@ class PylintConfig(ConfigSource):
 
     def project_config(self, document_path):
         files = find_parents(self.root_path, document_path, PROJECT_CONFIGS)
-        if len(files) > 0:
+        if files:
             return {RCFILE_CONFIG: files[0]}
-        else:
-            return {}
+        return {}

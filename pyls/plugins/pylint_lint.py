@@ -12,8 +12,16 @@ log = logging.getLogger(__name__)
 
 CONFIG_FILE = 'rcfile'
 
+
 class PylintLinter(object):
     last_diags = collections.defaultdict(list)
+
+    @staticmethod
+    def add_rc_to_flags(config, flags):
+        rcfile = config.plugin_settings('pylint').get(CONFIG_FILE, None)
+        if rcfile:
+            return flags + ' --rcfile ' + rcfile
+        return flags
 
     @classmethod
     def lint(cls, config, document, is_saved, flags=''):
@@ -60,9 +68,7 @@ class PylintLinter(object):
         if sys.platform.startswith('win'):
             path = path.replace('\\', '/')
 
-        rcfile = config.plugin_settings('pylint').get(CONFIG_FILE, None)
-        if rcfile is not None:
-            flags = flags + ' --rcfile ' + rcfile
+        flags = PylintLinter.add_rc_to_flags(config, flags)
 
         out, _err = py_run(
             '{} -f json {}'.format(path, flags), return_std=True
@@ -101,20 +107,16 @@ class PylintLinter(object):
             # pylint lines index from 1, pyls lines index from 0
             line = diag['line'] - 1
             # But both index columns from 0
-            col = diag['column']
-
-            # It's possible that we're linting an empty file. Even an empty
-            # file might fail linting if it isn't named properly.
-            end_col = len(document.lines[line]) if document.lines else 0
-
             err_range = {
                 'start': {
                     'line': line,
-                    'character': col,
+                    'character': diag['column']
                 },
                 'end': {
                     'line': line,
-                    'character': end_col,
+                    # It's possible that we're linting an empty file. Even an empty
+                    # file might fail linting if it isn't named properly.
+                    'character': len(document.lines[line]) if document.lines else 0
                 },
             }
 

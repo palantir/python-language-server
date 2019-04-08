@@ -122,8 +122,6 @@ def test_per_file_caching(config):
 
 def test_with_config_file(config):
     with temp_document(DOC) as doc:
-        with named_tempfile(os.path.join(os.path.dirname(doc.path), ".pylintrc"),
-                            PYLINTRC)\
-             as configfile:
+        with named_tempfile(os.path.join(os.path.dirname(doc.path), ".pylintrc"), PYLINTRC) as configfile:
             config.update({'plugins': {'pylint': {'rcfile': configfile.name}}})
             assert not pylint_lint.pyls_lint(config, doc, True)
