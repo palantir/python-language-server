@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import os
-from pyls._utils import find_parents
+from pyls._utils import search
 from .source import ConfigSource
 
 log = logging.getLogger(__name__)
@@ -36,7 +36,10 @@ class PylintConfig(ConfigSource):
         return os.path.join(self.xdg_home, '.pylintrc')
 
     def project_config(self, document_path):
-        files = find_parents(self.root_path, document_path, PROJECT_CONFIGS)
+        log.debug("Searching for config files called %s from %s to %s.",
+                  PROJECT_CONFIGS, document_path, self.root_path)
+        files = search(self.root_path, PROJECT_CONFIGS)
+        log.debug("Found pylint project config files %s.", files)
         if files:
             return set_dict_path({}, RCFILE_CONFIG, files[0])
         return {}
