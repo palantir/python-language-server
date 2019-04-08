@@ -18,8 +18,10 @@ class PylintLinter(object):
 
     @staticmethod
     def add_rc_to_flags(config, flags):
+        log.debug("Trying to set config file flags.")
         rcfile = config.plugin_settings('pylint').get(CONFIG_FILE, None)
         if rcfile:
+            log.debug("Setting pylint configuration file «%s».", rcfile)
             return flags + ' --rcfile ' + rcfile
         return flags
 
@@ -28,6 +30,7 @@ class PylintLinter(object):
         """Plugin interface to pyls linter.
 
         Args:
+            config: The configuration. Used to get configuration file setting.
             document: The document to be linted.
             is_saved: Whether or not the file has been saved to disk.
             flags: Additional flags to pass to pylint. Not exposed to
