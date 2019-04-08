@@ -21,7 +21,7 @@ class PylintLinter(object):
         log.debug("Trying to set config file flags.")
         rcfile = config.plugin_settings('pylint').get(CONFIG_FILE, None)
         if rcfile:
-            log.debug("Setting pylint configuration file «%s».", rcfile)
+            log.debug("Setting pylint configuration file '%s'.", rcfile)
             return flags + ' --rcfile ' + rcfile
         return flags
 
