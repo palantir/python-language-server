@@ -70,6 +70,7 @@ def find_parents(root, path, names):
     # Otherwise nothing
     return []
 
+
 def search(root, names, depth=4):
     """Find the first file matching the given names below the given path.
 
@@ -83,18 +84,20 @@ def search(root, names, depth=4):
         log.warning("find_up called with empty root directory.")
         return []
 
-    if not depth > -1:
+    if depth < 0:
         log.warning("Depth %d smaller than zero.", depth)
         return []
 
     start_seps = root.count(os.sep)
 
     result = []
-    
-    for top, dirs, files in os.walk(root):
+
+    for top, _dirs, files in os.walk(root):
         if top.count(os.sep) - start_seps > depth:
             break
-        [result.append(os.path.join(top, f)) for f in files if f in names]
+        for f in files:
+            if f in names:
+                result.append(os.path.join(top, f))
 
     return result
 
