@@ -59,19 +59,21 @@ class PylintLinter(object):
         path = document.path
         if sys.platform.startswith('win'):
             path = path.replace('\\', '/')
+
         pylint_call = '{} -f json {}'.format(path, flags)
         log.debug("Calling pylint with '%s'", pylint_call)
-        out, _err = py_run(pylint_call, return_std=True)
+        json_out, err = py_run(pylint_call, return_std=True)
 
-        # Handle errors
-        err = _err.getvalue()
+        # Get strings
+        json_out = json_out.getvalue()
+        err = err.getvalue()
+
         if err != '':
             log.error("Error calling pylint: '%s'", err)
 
         # pylint prints nothing rather than [] when there are no diagnostics.
         # json.loads will not parse an empty string, so just return.
-        json_str = out.getvalue()
-        if not json_str.strip():
+        if not json_out.strip():
             cls.last_diags[document.path] = []
             return []
 
@@ -97,24 +99,21 @@ class PylintLinter(object):
         #  * refactor
         #  * warning
         diagnostics = []
-        for diag in json.loads(json_str):
+        for diag in json.loads(json_out):
             # pylint lines index from 1, pyls lines index from 0
             line = diag['line'] - 1
-            # But both index columns from 0
-            col = diag['column']
-
-            # It's possible that we're linting an empty file. Even an empty
-            # file might fail linting if it isn't named properly.
-            end_col = len(document.lines[line]) if document.lines else 0
 
             err_range = {
                 'start': {
                     'line': line,
-                    'character': col,
+                    # Index columns start from 0
+                    'character': diag['column'],
                 },
                 'end': {
                     'line': line,
-                    'character': end_col,
+                    # It's possible that we're linting an empty file. Even an empty
+                    # file might fail linting if it isn't named properly.
+                    'character': len(document.lines[line]) if document.lines else 0,
                 },
             }
 
