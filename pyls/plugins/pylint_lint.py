@@ -2,10 +2,14 @@
 """Linter plugin for pylint."""
 import collections
 import json
+import logging
 import sys
 
 from pylint.epylint import py_run
 from pyls import hookimpl, lsp
+
+
+log = logging.getLogger(__name__)
 
 
 class PylintLinter(object):
@@ -55,9 +59,14 @@ class PylintLinter(object):
         path = document.path
         if sys.platform.startswith('win'):
             path = path.replace('\\', '/')
-        out, _err = py_run(
-            '{} -f json {}'.format(path, flags), return_std=True
-        )
+        pylint_call = '{} -f json {}'.format(path, flags)
+        log.debug("Calling pylint with '%s'", pylint_call)
+        out, _err = py_run(pylint_call, return_std=True)
+
+        # Handle errors
+        err = _err.getvalue()
+        if err != '':
+            log.error("Error calling pylint: '%s'", err)
 
         # pylint prints nothing rather than [] when there are no diagnostics.
         # json.loads will not parse an empty string, so just return.
@@ -131,6 +140,17 @@ class PylintLinter(object):
         return diagnostics
 
 
+def _build_pylint_flags(settings):
+    """Build arguments for calling pylint."""
+    pylint_args = settings.get('args')
+    if pylint_args is None:
+        return ''
+    return ' '.join(pylint_args)
+
+
 @hookimpl
-def pyls_lint(document, is_saved):
-    return PylintLinter.lint(document, is_saved)
+def pyls_lint(config, document, is_saved):
+    settings = config.plugin_settings('pylint')
+    log.debug("Got pylint settings: %s", settings)
+    flags = _build_pylint_flags(settings)
+    return PylintLinter.lint(document, is_saved, flags=flags)

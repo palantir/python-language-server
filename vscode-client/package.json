@@ -225,6 +225,20 @@
                     "default": true,
                     "description": "Enable or disable the plugin."
                 },
+                "pyls.plugins.pylint.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.pylint.args": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": false,
+                    "description": "Arguments to pass to pylint."
+                },
                 "pyls.plugins.rope_completion.enabled": {
                     "type": "boolean",
                     "default": true,
