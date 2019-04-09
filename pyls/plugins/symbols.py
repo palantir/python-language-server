@@ -10,8 +10,10 @@ log = logging.getLogger(__name__)
 def pyls_document_symbols(config, document):
     useHierarchicalSymbols = config.plugin_settings('jedi_symbols').get('hierarchical_symbols', None)
     if useHierarchicalSymbols is None:
-        useHierarchicalSymbols = config.capabilities.get("documentSymbol", {}).get(
-            "hierarchicalDocumentSymbolSupport", False)
+        useHierarchicalSymbols = (config.capabilities
+                                  .get("textDocument", {})
+                                  .get("documentSymbol", {})
+                                  .get("hierarchicalDocumentSymbolSupport", False))
     if not useHierarchicalSymbols:
         return pyls_document_symbols_legacy(config, document)
     # returns DocumentSymbol[]
