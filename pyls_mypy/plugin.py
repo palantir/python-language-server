@@ -43,15 +43,15 @@ def parse_line(line, document=None):
 def pyls_lint(config, document):
     live_mode = config.plugin_settings('pyls_mypy').get('live_mode', True)
     if live_mode:
-        args = ('--incremental',
+        args = ['--incremental',
                 '--show-column-numbers',
                 '--follow-imports', 'silent',
-                '--command', document.source)
+                '--command', document.source]
     else:
-        args = ('--incremental',
+        args = ['--incremental',
                 '--show-column-numbers',
                 '--follow-imports', 'silent',
-                document.path)
+                document.path]
 
     report, errors, _ = mypy_api.run(args)
 
