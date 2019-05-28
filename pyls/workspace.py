@@ -217,8 +217,11 @@ class Document(object):
         # Copy our extra sys path
         path = list(self._extra_sys_path)
 
-        # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
-        environment = jedi.api.environment.get_cached_default_environment()
-        path.extend(environment.get_sys_path())
+        if 'JEDI_SYS_PATH' in os.environ:
+            log.info('Using JEDI_SYS_PATH %s', os.environ['JEDI_SYS_PATH'])
+            path.extend(os.environ['JEDI_SYS_PATH'].split(os.pathsep))
+        else:
+            environment = jedi.api.environment.get_cached_default_environment()
+            path.extend(environment.get_sys_path())
 
         return path
