@@ -26,8 +26,8 @@ def test_symbols(config):
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
     symbols = pyls_document_symbols(config, doc)
 
-    # All four symbols (import sys, a, B, main, y)
-    assert len(symbols) == 5
+    # All four symbols (a, B, main, y)
+    assert len(symbols) == 4
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]
@@ -49,8 +49,8 @@ def test_symbols_all_scopes(config):
     doc = Document(DOC_URI, DOC)
     symbols = pyls_document_symbols(config, doc)
 
-    # All eight symbols (import sys, a, B, __init__, x, y, main, y)
-    assert len(symbols) == 8
+    # All eight symbols (a, B, __init__, x, y, main, y)
+    assert len(symbols) == 7
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]
@@ -63,3 +63,25 @@ def test_symbols_all_scopes(config):
 
     # Not going to get too in-depth here else we're just testing Jedi
     assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
+
+
+def test_symbols_hierarchical(config):
+    # Enable client support
+    config.capabilities['textDocument'] = {'documentSymbol': {'hierarchicalDocumentSymbolSupport': True}}
+
+    doc = Document(DOC_URI, DOC)
+    symbols = pyls_document_symbols(config, doc)
+
+    # All four symbols (a, B, main, y)
+    assert len(symbols) == 4
+
+    # Ensure a has no children
+    sym_a = symbols[0]
+    assert sym_a['name'] == 'a'
+    assert not sym_a['children']
+
+    # Ensure B has a single __init__ function child
+    sym_b = symbols[1]
+    assert sym_b['name'] == 'B'
+    assert len(sym_b['children']) == 1
+    assert sym_b['children'][0]['name'] == '__init__'
