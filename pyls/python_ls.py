@@ -73,7 +73,7 @@ class PythonLanguageServer(MethodDispatcher):
     # pylint: disable=too-many-public-methods,redefined-builtin
 
     def __init__(self, rx, tx, check_parent_process=False):
-        self.root_workspace = None
+        self.workspace = None
         self.config = None
         self.root_uri = None
         self.workspaces = {}
@@ -120,7 +120,7 @@ class PythonLanguageServer(MethodDispatcher):
 
     def _match_uri_to_workspace(self, uri):
         workspace_uri = _utils.match_uri_to_workspace(uri, self.workspaces)
-        return self.workspaces.get(workspace_uri, self.root_workspace)
+        return self.workspaces.get(workspace_uri, self.workspace)
 
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""
@@ -172,8 +172,8 @@ class PythonLanguageServer(MethodDispatcher):
 
         self.workspaces.pop(self.root_uri, None)
         self.root_uri = rootUri
-        self.root_workspace = Workspace(rootUri, self._endpoint)
-        self.workspaces[rootUri] = self.root_workspace
+        self.workspace = Workspace(rootUri, self._endpoint)
+        self.workspaces[rootUri] = self.workspace
         self.config = config.Config(rootUri, initializationOptions or {},
                                     processId, _kwargs.get('capabilities', {}))
         self._dispatchers = self._hook('pyls_dispatchers')
