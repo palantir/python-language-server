@@ -153,6 +153,12 @@ class PythonLanguageServer(MethodDispatcher):
                 'triggerCharacters': ['(', ',', '=']
             },
             'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL,
+            'workspace': {
+                'workspaceFolders': {
+                    'supported': True,
+                    'changeNotifications': True
+                }
+            },
             'experimental': merge(self._hook('pyls_experimental_capabilities'))
         }
         log.info('Server capabilities: %s', server_capabilities)
