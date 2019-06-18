@@ -125,7 +125,7 @@ class PythonLanguageServer(MethodDispatcher):
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""
         workspace = self._match_uri_to_workspace(doc_uri)
-        doc = workspace.get_document(doc_uri) if workspace else None
+        doc = workspace.get_document(doc_uri) if doc_uri else None
         hook_handlers = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
         return hook_handlers(config=self.config, workspace=workspace, document=doc, **kwargs)
 
