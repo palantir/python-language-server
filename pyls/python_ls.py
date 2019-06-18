@@ -242,7 +242,7 @@ class PythonLanguageServer(MethodDispatcher):
     def m_text_document__did_open(self, textDocument=None, **_kwargs):
         self.workspace.put_document(textDocument['uri'], textDocument['text'], version=textDocument.get('version'))
         self._hook('pyls_document_did_open', textDocument['uri'])
-        self.lint(textDocument['uri'], is_saved=False)
+        self.lint(textDocument['uri'], is_saved=True)
 
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **_kwargs):
         for change in contentChanges:
