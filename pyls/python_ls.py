@@ -228,7 +228,7 @@ class PythonLanguageServer(MethodDispatcher):
         # Since we're debounced, the document may no longer be open
         workspace = self._match_uri_to_workspace(doc_uri)
         if doc_uri in workspace.documents:
-            self.workspace.publish_diagnostics(
+            workspace.publish_diagnostics(
                 doc_uri,
                 flatten(self._hook('pyls_lint', doc_uri, is_saved=is_saved))
             )
@@ -309,8 +309,19 @@ class PythonLanguageServer(MethodDispatcher):
 
     def m_workspace__did_change_configuration(self, settings=None):
         self.config.update((settings or {}).get('pyls', {}))
-        for doc_uri in self.workspace.documents:
-            self.lint(doc_uri, is_saved=False)
+        for workspace_uri in self.workspaces:
+            workspace = self.workspaces[workspace_uri]
+            for doc_uri in workspace.documents:
+                self.lint(doc_uri, is_saved=False)
+
+    def m_workspace__did_change_workspace_folders(self, added=None, removed=None, **_kwargs):
+        for removed_info in removed:
+            removed_uri = removed_info['uri']
+            self.workspaces.pop(removed_uri)
+
+        for added_info in added:
+            added_uri = added_info['uri']
+            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint)
 
     def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
         changed_py_files = set()
