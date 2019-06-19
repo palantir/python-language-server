@@ -38,9 +38,9 @@ def write_temp_doc(document, contents):
         temp_file.write(contents)
 
 
-def test_pylint():
+def test_pylint(config):
     with temp_document(DOC) as doc:
-        diags = pylint_lint.pyls_lint(doc, True)
+        diags = pylint_lint.pyls_lint(config, doc, True)
 
         msg = '[unused-import] Unused import sys'
         unused_import = [d for d in diags if d['message'] == msg][0]
@@ -49,9 +49,9 @@ def test_pylint():
         assert unused_import['severity'] == lsp.DiagnosticSeverity.Warning
 
 
-def test_syntax_error_pylint():
+def test_syntax_error_pylint(config):
     with temp_document(DOC_SYNTAX_ERR) as doc:
-        diag = pylint_lint.pyls_lint(doc, True)[0]
+        diag = pylint_lint.pyls_lint(config, doc, True)[0]
 
         assert diag['message'].startswith('[syntax-error] invalid syntax')
         # Pylint doesn't give column numbers for invalid syntax.
@@ -59,12 +59,12 @@ def test_syntax_error_pylint():
         assert diag['severity'] == lsp.DiagnosticSeverity.Error
 
 
-def test_lint_free_pylint():
+def test_lint_free_pylint(config):
     # Can't use temp_document because it might give us a file that doesn't
     # match pylint's naming requirements. We should be keeping this file clean
     # though, so it works for a test of an empty lint.
     assert not pylint_lint.pyls_lint(
-        Document(uris.from_fs_path(__file__)), True)
+        config, Document(uris.from_fs_path(__file__)), True)
 
 
 def test_lint_caching():
@@ -95,10 +95,10 @@ def test_lint_caching():
         assert not pylint_lint.PylintLinter.lint(doc, False, flags)
 
 
-def test_per_file_caching():
+def test_per_file_caching(config):
     # Ensure that diagnostics are cached per-file.
     with temp_document(DOC) as doc:
-        assert pylint_lint.pyls_lint(doc, True)
+        assert pylint_lint.pyls_lint(config, doc, True)
 
     assert not pylint_lint.pyls_lint(
-        Document(uris.from_fs_path(__file__)), False)
+        config, Document(uris.from_fs_path(__file__)), False)
