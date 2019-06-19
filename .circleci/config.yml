@@ -14,7 +14,7 @@ jobs:
 
   python3-test:
     docker:
-      - image: "python:3.4-stretch"
+      - image: "python:3.5-stretch"
     steps:
       - checkout
       - run: pip install -e .[all] .[test]
@@ -32,7 +32,7 @@ jobs:
 
   publish:
     docker:
-      - image: "python:3.4-stretch"
+      - image: "python:3.5-stretch"
     steps:
       - checkout
       - run: ./scripts/circle/pypi.sh

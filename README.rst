@@ -119,7 +119,7 @@ Develop against VS Code
 
 The Python language server can be developed against a local instance of Visual Studio Code.
 
-1. Install `VSCode <https://code.visualstudio.com/download`_
+Install `VSCode <https://code.visualstudio.com/download>`_
 
 .. code-block:: bash
 
