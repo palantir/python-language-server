@@ -2,10 +2,14 @@
 """Linter plugin for pylint."""
 import collections
 import json
+import logging
 import sys
 
 from pylint.epylint import py_run
 from pyls import hookimpl, lsp
+
+
+log = logging.getLogger(__name__)
 
 
 class PylintLinter(object):
@@ -55,14 +59,21 @@ class PylintLinter(object):
         path = document.path
         if sys.platform.startswith('win'):
             path = path.replace('\\', '/')
-        out, _err = py_run(
-            '{} -f json {}'.format(path, flags), return_std=True
-        )
+
+        pylint_call = '{} -f json {}'.format(path, flags)
+        log.debug("Calling pylint with '%s'", pylint_call)
+        json_out, err = py_run(pylint_call, return_std=True)
+
+        # Get strings
+        json_out = json_out.getvalue()
+        err = err.getvalue()
+
+        if err != '':
+            log.error("Error calling pylint: '%s'", err)
 
         # pylint prints nothing rather than [] when there are no diagnostics.
         # json.loads will not parse an empty string, so just return.
-        json_str = out.getvalue()
-        if not json_str.strip():
+        if not json_out.strip():
             cls.last_diags[document.path] = []
             return []
 
@@ -88,24 +99,21 @@ class PylintLinter(object):
         #  * refactor
         #  * warning
         diagnostics = []
-        for diag in json.loads(json_str):
+        for diag in json.loads(json_out):
             # pylint lines index from 1, pyls lines index from 0
             line = diag['line'] - 1
-            # But both index columns from 0
-            col = diag['column']
-
-            # It's possible that we're linting an empty file. Even an empty
-            # file might fail linting if it isn't named properly.
-            end_col = len(document.lines[line]) if document.lines else 0
 
             err_range = {
                 'start': {
                     'line': line,
-                    'character': col,
+                    # Index columns start from 0
+                    'character': diag['column'],
                 },
                 'end': {
                     'line': line,
-                    'character': end_col,
+                    # It's possible that we're linting an empty file. Even an empty
+                    # file might fail linting if it isn't named properly.
+                    'character': len(document.lines[line]) if document.lines else 0,
                 },
             }
 
@@ -131,6 +139,17 @@ class PylintLinter(object):
         return diagnostics
 
 
+def _build_pylint_flags(settings):
+    """Build arguments for calling pylint."""
+    pylint_args = settings.get('args')
+    if pylint_args is None:
+        return ''
+    return ' '.join(pylint_args)
+
+
 @hookimpl
-def pyls_lint(document, is_saved):
-    return PylintLinter.lint(document, is_saved)
+def pyls_lint(config, document, is_saved):
+    settings = config.plugin_settings('pylint')
+    log.debug("Got pylint settings: %s", settings)
+    flags = _build_pylint_flags(settings)
+    return PylintLinter.lint(document, is_saved, flags=flags)
