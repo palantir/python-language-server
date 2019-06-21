@@ -332,6 +332,14 @@ class PythonLanguageServer(MethodDispatcher):
             added_uri = added_info['uri']
             self.workspaces[added_uri] = Workspace(added_uri, self._endpoint)
 
+        # Migrate documents that are on the root workspace and have a better
+        # match now
+        doc_uris = list(self.workspace._docs.keys())
+        for uri in doc_uris:
+            doc = self.workspace._docs.pop(uri)
+            new_workspace = self._match_uri_to_workspace(uri)
+            new_workspace._docs[uri] = doc
+
     def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
         changed_py_files = set()
         config_changed = False
