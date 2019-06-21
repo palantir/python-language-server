@@ -85,7 +85,11 @@ def match_uri_to_workspace(uri, workspaces):
     max_len, chosen_workspace = -1, None
     path = pathlib.Path(uri).parts
     for workspace in workspaces:
-        workspace_parts = pathlib.Path(to_text_string(workspace)).parts
+        try:
+            workspace_parts = pathlib.Path(to_text_string(workspace)).parts
+        except TypeError:
+            # This can happen in Python2 if 'value' is a subclass of string
+            workspace_parts = pathlib.Path(unicode(workspace)).parts
         if len(workspace_parts) > len(path):
             continue
         match_len = 0
