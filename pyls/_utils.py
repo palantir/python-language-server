@@ -86,7 +86,7 @@ def match_uri_to_workspace(uri, workspaces):
     path = pathlib.Path(uri).parts
     for workspace in workspaces:
         try:
-            workspace_parts = pathlib.Path(to_text_string(workspace)).parts
+            workspace_parts = pathlib.Path(workspace).parts
         except TypeError:
             # This can happen in Python2 if 'value' is a subclass of string
             workspace_parts = pathlib.Path(unicode(workspace)).parts
@@ -163,24 +163,3 @@ def is_process_alive(pid):
         return False
     else:
         return True
-
-
-def to_text_string(obj, encoding=None):
-    """Convert `obj` to (unicode) text string"""
-    if PY2:
-        if isinstance(obj, unicode):
-            return obj
-        # Python 2
-        if encoding is None:
-            return unicode(obj)
-        else:
-            return unicode(obj, encoding)
-    else:
-        # Python 3
-        if encoding is None:
-            return str(obj)
-        elif isinstance(obj, str):
-            # In case this function is not used properly, this could happen
-            return obj
-        else:
-            return str(obj, encoding)
