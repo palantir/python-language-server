@@ -85,7 +85,7 @@ def match_uri_to_workspace(uri, workspaces):
     max_len, chosen_workspace = -1, None
     path = pathlib.Path(uri).parts
     for workspace in workspaces:
-        workspace_parts = pathlib.Path(workspace).parts
+        workspace_parts = pathlib.Path(to_text_string(workspace)).parts
         if len(workspace_parts) > len(path):
             continue
         match_len = 0

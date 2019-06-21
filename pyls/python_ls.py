@@ -170,7 +170,6 @@ class PythonLanguageServer(MethodDispatcher):
         if rootUri is None:
             rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
-        rootUri = _utils.to_text_string(rootUri)
         self.workspaces.pop(self.root_uri, None)
         self.root_uri = rootUri
         self.workspace = Workspace(rootUri, self._endpoint)

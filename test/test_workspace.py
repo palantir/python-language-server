@@ -19,6 +19,7 @@ DOC_URI = uris.from_fs_path(__file__)
 def path_as_uri(path):
     return pathlib.Path(osp.abspath(path)).as_uri()
 
+
 def test_local(pyls):
     """ Since the workspace points to the test directory """
     assert pyls.workspace.is_local()
@@ -73,7 +74,7 @@ def test_multiple_workspaces(tmpdir, pyls):
     file2.write('import sys')
 
     msg = {
-        'uri': to_text_string(path_as_uri(to_text_string(file1))),
+        'uri': path_as_uri(to_text_string(file1)),
         'version': 1,
         'text': 'import os'
     }
@@ -81,7 +82,7 @@ def test_multiple_workspaces(tmpdir, pyls):
     pyls.m_text_document__did_open(textDocument=msg)
     assert msg['uri'] in pyls.workspace._docs
 
-    added_workspaces = [{'uri': to_text_string(path_as_uri(to_text_string(x)))}
+    added_workspaces = [{'uri': path_as_uri(to_text_string(x))}
                         for x in (workspace1_dir, workspace2_dir)]
     pyls.m_workspace__did_change_workspace_folders(
         added=added_workspaces, removed=[])
@@ -94,7 +95,7 @@ def test_multiple_workspaces(tmpdir, pyls):
     assert msg['uri'] in pyls.workspaces[workspace1_uri]._docs
 
     msg = {
-        'uri': to_text_string(path_as_uri(to_text_string(file2))),
+        'uri': path_as_uri(to_text_string(file2)),
         'version': 1,
         'text': 'import sys'
     }
