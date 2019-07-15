@@ -52,7 +52,7 @@ def _get_opt(config, key, option, opt_type):
             continue
 
         if opt_type == bool:
-            return config.getbool(key, opt_key)
+            return config.getboolean(key, opt_key)
 
         if opt_type == int:
             return config.getint(key, opt_key)
