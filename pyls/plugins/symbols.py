@@ -8,7 +8,41 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_document_symbols(config, document):
+    useHierarchicalSymbols = config.plugin_settings('jedi_symbols').get('hierarchical_symbols', None)
+    if useHierarchicalSymbols is None:
+        useHierarchicalSymbols = (config.capabilities
+                                  .get("textDocument", {})
+                                  .get("documentSymbol", {})
+                                  .get("hierarchicalDocumentSymbolSupport", False))
+    if not useHierarchicalSymbols:
+        return pyls_document_symbols_legacy(config, document)
+    # returns DocumentSymbol[]
+    hide_imports = config.plugin_settings('jedi_symbols').get('hide_imports', False)
+    definitions = document.jedi_names(all_scopes=False)
+
+    def transform(d):
+        include_d = _include_def(d, hide_imports)
+        if include_d is None:
+            return None
+        children = [dt for dt in (transform(d1) for d1 in d.defined_names()) if dt] if include_d else None
+        detailName = d.full_name
+        if detailName and detailName.startswith("__main__."):
+            detailName = detailName[9:]
+        return {
+            'name': d.name,
+            'detail': detailName,
+            'range': _range(d),
+            'selectionRange': _name_range(d),
+            'kind': _kind(d),
+            'children': children
+        }
+    return [dt for dt in (transform(d) for d in definitions) if dt]
+
+
+def pyls_document_symbols_legacy(config, document):
+    # returns SymbolInformation[]
     all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
+    hide_imports = config.plugin_settings('jedi_symbols').get('hide_imports', False)
     definitions = document.jedi_names(all_scopes=all_scopes)
     return [{
         'name': d.name,
@@ -18,17 +52,25 @@ def pyls_document_symbols(config, document):
             'range': _range(d),
         },
         'kind': _kind(d),
-    } for d in definitions if _include_def(d)]
+    } for d in definitions if _include_def(d, hide_imports) is not None]
 
 
-def _include_def(definition):
-    return (
-        # Don't tend to include parameters as symbols
-        definition.type != 'param' and
-        # Unused vars should also be skipped
-        definition.name != '_' and
-        _kind(definition) is not None
-    )
+def _include_def(definition, hide_imports=True):
+    # returns
+    # True: include def and sub-defs
+    # False: include def but do not include sub-defs
+    # None: Do not include def or sub-defs
+    if (  # Unused vars should also be skipped
+            definition.name != '_' and
+            definition.is_definition() and
+            not definition.in_builtin_module() and
+            _kind(definition) is not None
+    ):
+        if definition._name.is_import():
+            return None if hide_imports else False
+        # for `statement`, we do not enumerate its child nodes. It tends to cause Error.
+        return definition.type not in ("statement",)
+    return None
 
 
 def _container(definition):
@@ -48,6 +90,17 @@ def _container(definition):
 def _range(definition):
     # This gets us more accurate end position
     definition = definition._name.tree_name.get_definition()
+    (start_line, start_column) = definition.start_pos
+    (end_line, end_column) = definition.end_pos
+    return {
+        'start': {'line': start_line - 1, 'character': start_column},
+        'end': {'line': end_line - 1, 'character': end_column}
+    }
+
+
+def _name_range(definition):
+    # Gets the range of symbol name (e.g. function name of a function)
+    definition = definition._name.tree_name
     (start_line, start_column) = definition.start_pos
     (end_line, end_column) = definition.end_pos
     return {
@@ -85,7 +138,8 @@ _SYMBOL_KIND_MAP = {
     'constant': SymbolKind.Constant,
     'variable': SymbolKind.Variable,
     'value': SymbolKind.Variable,
-    'param': SymbolKind.Variable,
+    # Don't tend to include parameters as symbols
+    # 'param': SymbolKind.Variable,
     'statement': SymbolKind.Variable,
     'boolean': SymbolKind.Boolean,
     'int': SymbolKind.Number,
