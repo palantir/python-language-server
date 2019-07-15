@@ -145,7 +145,13 @@ class PythonLanguageServer(MethodDispatcher):
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',', '=']
             },
-            'textDocumentSync': lsp.TextDocumentSyncKind.INCREMENTAL,
+            'textDocumentSync': {
+                'change': lsp.TextDocumentSyncKind.INCREMENTAL,
+                'save': {
+                    'includeText': True,
+                },
+                'openClose': True,
+            },
             'experimental': merge(self._hook('pyls_experimental_capabilities'))
         }
         log.info('Server capabilities: %s', server_capabilities)
