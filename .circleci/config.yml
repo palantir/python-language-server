@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: pip install -e .[all] .[test]
-      - run: py.test test/
+      - run: py.test -v test/
       - run: pylint pyls test
       - run: pycodestyle pyls test
       - run: pyflakes pyls test
@@ -18,7 +18,7 @@ jobs:
     steps:
       - checkout
       - run: pip install -e .[all] .[test]
-      - run: py.test test/
+      - run: py.test -v test/
 
   lint:
     docker:

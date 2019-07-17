@@ -75,6 +75,9 @@ class PythonLanguageServer(MethodDispatcher):
     def __init__(self, rx, tx, check_parent_process=False):
         self.workspace = None
         self.config = None
+        self.root_uri = None
+        self.workspaces = {}
+        self.uri_workspace_mapper = {}
 
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
         self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
@@ -115,11 +118,16 @@ class PythonLanguageServer(MethodDispatcher):
         self._jsonrpc_stream_reader.close()
         self._jsonrpc_stream_writer.close()
 
+    def _match_uri_to_workspace(self, uri):
+        workspace_uri = _utils.match_uri_to_workspace(uri, self.workspaces)
+        return self.workspaces.get(workspace_uri, self.workspace)
+
     def _hook(self, hook_name, doc_uri=None, **kwargs):
         """Calls hook_name and returns a list of results from all registered handlers"""
-        doc = self.workspace.get_document(doc_uri) if doc_uri else None
+        workspace = self._match_uri_to_workspace(doc_uri)
+        doc = workspace.get_document(doc_uri) if doc_uri else None
         hook_handlers = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook_handlers(config=self.config, workspace=self.workspace, document=doc, **kwargs)
+        return hook_handlers(config=self.config, workspace=workspace, document=doc, **kwargs)
 
     def capabilities(self):
         server_capabilities = {
@@ -152,6 +160,12 @@ class PythonLanguageServer(MethodDispatcher):
                 },
                 'openClose': True,
             },
+            'workspace': {
+                'workspaceFolders': {
+                    'supported': True,
+                    'changeNotifications': True
+                }
+            },
             'experimental': merge(self._hook('pyls_experimental_capabilities'))
         }
         log.info('Server capabilities: %s', server_capabilities)
@@ -162,7 +176,10 @@ class PythonLanguageServer(MethodDispatcher):
         if rootUri is None:
             rootUri = uris.from_fs_path(rootPath) if rootPath is not None else ''
 
+        self.workspaces.pop(self.root_uri, None)
+        self.root_uri = rootUri
         self.workspace = Workspace(rootUri, self._endpoint)
+        self.workspaces[rootUri] = self.workspace
         self.config = config.Config(rootUri, initializationOptions or {},
                                     processId, _kwargs.get('capabilities', {}))
         self._dispatchers = self._hook('pyls_dispatchers')
@@ -224,8 +241,9 @@ class PythonLanguageServer(MethodDispatcher):
     @_utils.debounce(LINT_DEBOUNCE_S, keyed_by='doc_uri')
     def lint(self, doc_uri, is_saved):
         # Since we're debounced, the document may no longer be open
-        if doc_uri in self.workspace.documents:
-            self.workspace.publish_diagnostics(
+        workspace = self._match_uri_to_workspace(doc_uri)
+        if doc_uri in workspace.documents:
+            workspace.publish_diagnostics(
                 doc_uri,
                 flatten(self._hook('pyls_lint', doc_uri, is_saved=is_saved))
             )
@@ -243,16 +261,19 @@ class PythonLanguageServer(MethodDispatcher):
         return self._hook('pyls_signature_help', doc_uri, position=position)
 
     def m_text_document__did_close(self, textDocument=None, **_kwargs):
-        self.workspace.rm_document(textDocument['uri'])
+        workspace = self._match_uri_to_workspace(textDocument['uri'])
+        workspace.rm_document(textDocument['uri'])
 
     def m_text_document__did_open(self, textDocument=None, **_kwargs):
-        self.workspace.put_document(textDocument['uri'], textDocument['text'], version=textDocument.get('version'))
+        workspace = self._match_uri_to_workspace(textDocument['uri'])
+        workspace.put_document(textDocument['uri'], textDocument['text'], version=textDocument.get('version'))
         self._hook('pyls_document_did_open', textDocument['uri'])
         self.lint(textDocument['uri'], is_saved=True)
 
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **_kwargs):
+        workspace = self._match_uri_to_workspace(textDocument['uri'])
         for change in contentChanges:
-            self.workspace.update_document(
+            workspace.update_document(
                 textDocument['uri'],
                 change,
                 version=textDocument.get('version')
@@ -303,8 +324,27 @@ class PythonLanguageServer(MethodDispatcher):
 
     def m_workspace__did_change_configuration(self, settings=None):
         self.config.update((settings or {}).get('pyls', {}))
-        for doc_uri in self.workspace.documents:
-            self.lint(doc_uri, is_saved=False)
+        for workspace_uri in self.workspaces:
+            workspace = self.workspaces[workspace_uri]
+            for doc_uri in workspace.documents:
+                self.lint(doc_uri, is_saved=False)
+
+    def m_workspace__did_change_workspace_folders(self, added=None, removed=None, **_kwargs):
+        for removed_info in removed:
+            removed_uri = removed_info['uri']
+            self.workspaces.pop(removed_uri)
+
+        for added_info in added:
+            added_uri = added_info['uri']
+            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint)
+
+        # Migrate documents that are on the root workspace and have a better
+        # match now
+        doc_uris = list(self.workspace._docs.keys())
+        for uri in doc_uris:
+            doc = self.workspace._docs.pop(uri)
+            new_workspace = self._match_uri_to_workspace(uri)
+            new_workspace._docs[uri] = doc
 
     def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
         changed_py_files = set()
@@ -321,10 +361,12 @@ class PythonLanguageServer(MethodDispatcher):
             # Only externally changed python files and lint configs may result in changed diagnostics.
             return
 
-        for doc_uri in self.workspace.documents:
-            # Changes in doc_uri are already handled by m_text_document__did_save
-            if doc_uri not in changed_py_files:
-                self.lint(doc_uri, is_saved=False)
+        for workspace_uri in self.workspaces:
+            workspace = self.workspaces[workspace_uri]
+            for doc_uri in workspace.documents:
+                # Changes in doc_uri are already handled by m_text_document__did_save
+                if doc_uri not in changed_py_files:
+                    self.lint(doc_uri, is_saved=False)
 
     def m_workspace__execute_command(self, command=None, arguments=None):
         return self.execute_command(command, arguments)
