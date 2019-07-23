@@ -90,7 +90,7 @@ def _label(definition):
 
 def _detail(definition):
     try:
-        return definition.parent().full_name or ''
+        return definition.full_name or ''
     except AttributeError:
         return ''
 
