@@ -27,7 +27,7 @@ def test_symbols(config):
     symbols = pyls_document_symbols(config, doc)
 
     # All four symbols (import sys, a, B, main, y)
-    assert len(symbols) == 5
+    assert len(symbols) == 4
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]
