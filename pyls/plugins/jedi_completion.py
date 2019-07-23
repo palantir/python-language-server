@@ -90,9 +90,9 @@ def _label(definition):
 
 def _detail(definition):
     try:
-        return definition.full_name or ''
+        return definition.parent().full_name or ''
     except AttributeError:
-        return ''
+        return definition.full_name or ''
 
 
 def _sort_text(definition):
