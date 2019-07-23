@@ -92,7 +92,7 @@ def _detail(definition):
     try:
         return definition.parent().full_name or ''
     except AttributeError:
-        return '' 
+        return ''
 
 
 def _sort_text(definition):
