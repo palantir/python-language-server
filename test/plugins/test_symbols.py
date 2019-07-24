@@ -26,8 +26,9 @@ def test_symbols(config):
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
     symbols = pyls_document_symbols(config, doc)
 
-    # All four symbols (import sys, a, B, main, y)
-    assert len(symbols) == 5
+    # All four symbols (import sys, a, B, main)
+    # y is not in the root scope, it shouldn't be returned
+    assert len(symbols) == 4
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]
