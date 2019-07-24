@@ -1,8 +1,22 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
+import os.path as osp
+import sys
 from pyls import uris
 
+PY2 = sys.version_info.major == 2
+
+if PY2:
+    import pathlib2 as pathlib
+else:
+    import pathlib
+
+
 DOC_URI = uris.from_fs_path(__file__)
+
+
+def path_as_uri(path):
+    return pathlib.Path(osp.abspath(path)).as_uri()
 
 
 def test_local(pyls):
@@ -48,3 +62,47 @@ def test_non_root_project(pyls):
     pyls.workspace.put_document(test_uri, 'assert True')
     test_doc = pyls.workspace.get_document(test_uri)
     assert project_root in test_doc.sys_path()
+
+
+def test_multiple_workspaces(tmpdir, pyls):
+    workspace1_dir = tmpdir.mkdir('workspace1')
+    workspace2_dir = tmpdir.mkdir('workspace2')
+    file1 = workspace1_dir.join('file1.py')
+    file2 = workspace2_dir.join('file1.py')
+    file1.write('import os')
+    file2.write('import sys')
+
+    msg = {
+        'uri': path_as_uri(str(file1)),
+        'version': 1,
+        'text': 'import os'
+    }
+
+    pyls.m_text_document__did_open(textDocument=msg)
+    assert msg['uri'] in pyls.workspace._docs
+
+    added_workspaces = [{'uri': path_as_uri(str(x))}
+                        for x in (workspace1_dir, workspace2_dir)]
+    pyls.m_workspace__did_change_workspace_folders(
+        added=added_workspaces, removed=[])
+
+    for workspace in added_workspaces:
+        assert workspace['uri'] in pyls.workspaces
+
+    workspace1_uri = added_workspaces[0]['uri']
+    assert msg['uri'] not in pyls.workspace._docs
+    assert msg['uri'] in pyls.workspaces[workspace1_uri]._docs
+
+    msg = {
+        'uri': path_as_uri(str(file2)),
+        'version': 1,
+        'text': 'import sys'
+    }
+    pyls.m_text_document__did_open(textDocument=msg)
+
+    workspace2_uri = added_workspaces[1]['uri']
+    assert msg['uri'] in pyls.workspaces[workspace2_uri]._docs
+
+    pyls.m_workspace__did_change_workspace_folders(
+        added=[], removed=[added_workspaces[0]])
+    assert workspace1_uri not in pyls.workspaces
