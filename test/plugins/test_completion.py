@@ -1,10 +1,13 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
+import jedi
+import pytest
 
 from pyls import uris, lsp
 from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
+from test.test_utils import version_str2tuple as str2tuple
 
 LOCATION = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -42,6 +45,8 @@ def test_rope_import_completion(config, workspace):
     assert items is None
 
 
+@pytest.mark.skipif(str2tuple(jedi.__version__) <= str2tuple('14.0'),
+                    reason='This test fails with previous versions of jedi')
 def test_jedi_completion(config):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}

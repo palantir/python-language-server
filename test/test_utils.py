@@ -87,3 +87,8 @@ def test_clip_column():
     assert _utils.clip_column(2, ['123\n', '123'], 0) == 2
     assert _utils.clip_column(3, ['123\n', '123'], 0) == 3
     assert _utils.clip_column(4, ['123\n', '123'], 1) == 3
+
+
+def version_str2tuple(version_str):
+    """Get the version as an integer tuple for comparison."""
+    return tuple(version_str.split('.'))

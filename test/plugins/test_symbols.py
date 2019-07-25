@@ -1,8 +1,12 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import jedi
+import pytest
+
 from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
 from pyls.workspace import Document
+from test.test_utils import version_str2tuple as str2tuple
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
@@ -21,6 +25,8 @@ def main(x):
 """
 
 
+@pytest.mark.skipif(str2tuple(jedi.__version__) <= str2tuple('14.0'),
+                    reason='This test fails with previous versions of jedi')
 def test_symbols(config):
     doc = Document(DOC_URI, DOC)
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
