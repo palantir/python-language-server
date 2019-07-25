@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from test.test_utils import version_str2tuple as str2tuple
 import jedi
 import pytest
 
@@ -6,7 +7,6 @@ from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
 from pyls.workspace import Document
-from test.test_utils import version_str2tuple as str2tuple
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys

@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
+from test.test_utils import version_str2tuple as str2tuple
 import jedi
 import pytest
 
@@ -7,7 +8,6 @@ from pyls import uris, lsp
 from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
-from test.test_utils import version_str2tuple as str2tuple
 
 LOCATION = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__))

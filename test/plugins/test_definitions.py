@@ -1,11 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from test.test_utils import version_str2tuple as str2tuple
 import jedi
 import pytest
 
 from pyls import uris
 from pyls.plugins.definition import pyls_definitions
 from pyls.workspace import Document
-from test.test_utils import version_str2tuple as str2tuple
 
 
 DOC_URI = uris.from_fs_path(__file__)
