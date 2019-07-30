@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from test.test_utils import version_str2tuple as str2tuple
 import jedi
 import pytest
+from distutils.version import LooseVersion
 
 from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
@@ -25,7 +25,7 @@ def main(x):
 """
 
 
-@pytest.mark.skipif(str2tuple(jedi.__version__) <= str2tuple('14.0'),
+@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('14.0'),
                     reason='This test fails with previous versions of jedi')
 def test_symbols(config):
     doc = Document(DOC_URI, DOC)

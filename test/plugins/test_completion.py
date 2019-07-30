@@ -1,8 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-from test.test_utils import version_str2tuple as str2tuple
 import jedi
 import pytest
+from distutils.version import LooseVersion
 
 from pyls import uris, lsp
 from pyls.workspace import Document
@@ -45,7 +45,7 @@ def test_rope_import_completion(config, workspace):
     assert items is None
 
 
-@pytest.mark.skipif(str2tuple(jedi.__version__) <= str2tuple('14.0'),
+@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('14.0'),
                     reason='This test fails with previous versions of jedi')
 def test_jedi_completion(config):
     # Over 'i' in os.path.isabs(...)
