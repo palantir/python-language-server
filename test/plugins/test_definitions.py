@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from distutils.version import LooseVersion
 import jedi
 import pytest
-from distutils.version import LooseVersion
 
 from pyls import uris
 from pyls.plugins.definition import pyls_definitions

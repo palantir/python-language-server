@@ -1,8 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from distutils.version import LooseVersion
 import os
 import jedi
 import pytest
-from distutils.version import LooseVersion
 
 from pyls import uris, lsp
 from pyls.workspace import Document
