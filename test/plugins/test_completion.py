@@ -45,7 +45,7 @@ def test_rope_import_completion(config, workspace):
     assert items is None
 
 
-@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('14.0'),
+@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.14.0'),
                     reason='This test fails with previous versions of jedi')
 def test_jedi_completion(config):
     # Over 'i' in os.path.isabs(...)
