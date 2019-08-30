@@ -2,6 +2,7 @@
 import logging
 import socketserver
 import threading
+from functools import partial
 
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
@@ -35,7 +36,8 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
         self.delegate.start()
 
 
-def start_tcp_lang_server(bind_addr, port, handler_class):
+def start_tcp_lang_server(bind_addr, port, check_parent_process,
+                          handler_class):
     if not issubclass(handler_class, PythonLanguageServer):
         raise ValueError('Handler class must be an instance of PythonLanguageServer')
 
@@ -43,7 +45,8 @@ def start_tcp_lang_server(bind_addr, port, handler_class):
     wrapper_class = type(
         handler_class.__name__ + 'Handler',
         (_StreamHandlerWrapper,),
-        {'DELEGATE_CLASS': handler_class}
+        {'DELEGATE_CLASS': partial(handler_class,
+                                   check_parent_process=check_parent_process)}
     )
 
     server = socketserver.TCPServer((bind_addr, port), wrapper_class)
