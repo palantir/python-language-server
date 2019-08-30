@@ -3,7 +3,15 @@ import functools
 import inspect
 import logging
 import os
+import sys
 import threading
+
+PY2 = sys.version_info.major == 2
+
+if PY2:
+    import pathlib2 as pathlib
+else:
+    import pathlib
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +77,30 @@ def find_parents(root, path, names):
 
     # Otherwise nothing
     return []
+
+
+def match_uri_to_workspace(uri, workspaces):
+    if uri is None:
+        return None
+    max_len, chosen_workspace = -1, None
+    path = pathlib.Path(uri).parts
+    for workspace in workspaces:
+        try:
+            workspace_parts = pathlib.Path(workspace).parts
+        except TypeError:
+            # This can happen in Python2 if 'value' is a subclass of string
+            workspace_parts = pathlib.Path(unicode(workspace)).parts
+        if len(workspace_parts) > len(path):
+            continue
+        match_len = 0
+        for workspace_part, path_part in zip(workspace_parts, path):
+            if workspace_part == path_part:
+                match_len += 1
+        if match_len > 0:
+            if match_len > max_len:
+                max_len = match_len
+                chosen_workspace = workspace
+    return chosen_workspace
 
 
 def list_to_string(value):

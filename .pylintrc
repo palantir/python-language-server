@@ -15,7 +15,8 @@ disable =
     protected-access,
     too-few-public-methods,
     too-many-arguments,
-    too-many-instance-attributes
+    too-many-instance-attributes,
+    import-error
 
 [REPORTS]
 
@@ -23,4 +24,6 @@ reports = no
 
 [TYPECHECK]
 
-generated-members = pyls_*
+generated-members =
+    pyls_*
+    cache_clear

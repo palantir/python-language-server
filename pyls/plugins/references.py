@@ -14,10 +14,11 @@ def pyls_references(document, position, exclude_declaration=False):
         # Filter out if the usage is the actual declaration of the thing
         usages = [d for d in usages if not d.is_definition()]
 
+    # Filter out builtin modules
     return [{
         'uri': uris.uri_with(document.uri, path=d.module_path) if d.module_path else document.uri,
         'range': {
             'start': {'line': d.line - 1, 'character': d.column},
             'end': {'line': d.line - 1, 'character': d.column + len(d.name)}
         }
-    } for d in usages]
+    } for d in usages if not d.in_builtin_module()]

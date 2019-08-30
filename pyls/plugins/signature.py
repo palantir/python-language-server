@@ -20,8 +20,12 @@ def pyls_signature_help(document, position):
         return {'signatures': []}
 
     s = signatures[0]
+
+    # Docstring contains one or more lines of signature, followed by empty line, followed by docstring
+    function_sig_lines = (s.docstring().split('\n\n') or [''])[0].splitlines()
+    function_sig = ' '.join([line.strip() for line in function_sig_lines])
     sig = {
-        'label': s.docstring().splitlines()[0],
+        'label': function_sig,
         'documentation': _utils.format_docstring(s.docstring(raw=True))
     }
 

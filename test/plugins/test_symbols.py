@@ -1,4 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from distutils.version import LooseVersion
+import jedi
+import pytest
+
 from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
@@ -21,13 +25,16 @@ def main(x):
 """
 
 
+@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.14.0'),
+                    reason='This test fails with previous versions of jedi')
 def test_symbols(config):
     doc = Document(DOC_URI, DOC)
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
     symbols = pyls_document_symbols(config, doc)
 
-    # All four symbols (import sys, a, B, main, y)
-    assert len(symbols) == 5
+    # All four symbols (import sys, a, B, main)
+    # y is not in the root scope, it shouldn't be returned
+    assert len(symbols) == 4
 
     def sym(name):
         return [s for s in symbols if s['name'] == name][0]

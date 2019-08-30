@@ -25,7 +25,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'test']),
+    packages=find_packages(exclude=['contrib', 'docs', 'test', 'test.*']),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -35,8 +35,9 @@ setup(
         'configparser; python_version<"3.0"',
         'future>=0.14.0',
         'futures; python_version<"3.2"',
-        'jedi>=0.12',
-        'python-jsonrpc-server',
+        'backports.functools_lru_cache; python_version<"3.2"',
+        'jedi>=0.14.1,<0.15',
+        'python-jsonrpc-server>=0.1.0',
         'pluggy'
     ],
 
@@ -51,7 +52,8 @@ setup(
             'pycodestyle',
             'pydocstyle>=2.0.0',
             'pyflakes>=1.6.0',
-            'rope>-0.10.5',
+            'pylint',
+            'rope>=0.10.5',
             'yapf',
         ],
         'autopep8': ['autopep8'],
@@ -59,9 +61,10 @@ setup(
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
         'pyflakes': ['pyflakes>=1.6.0'],
+        'pylint': ['pylint'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
-        'test': ['tox', 'versioneer', 'pytest', 'mock', 'pytest-cov', 'coverage'],
+        'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov', 'coverage'],
     },
 
     # To provide executable scripts, use entry points in preference to the
@@ -85,6 +88,7 @@ setup(
             'pycodestyle = pyls.plugins.pycodestyle_lint',
             'pydocstyle = pyls.plugins.pydocstyle_lint',
             'pyflakes = pyls.plugins.pyflakes_lint',
+            'pylint = pyls.plugins.pylint_lint',
             'rope_completion = pyls.plugins.rope_completion',
             'rope_rename = pyls.plugins.rope_rename',
             'yapf = pyls.plugins.yapf_format',

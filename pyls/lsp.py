@@ -39,6 +39,11 @@ class DiagnosticSeverity(object):
     Hint = 4
 
 
+class InsertTextFormat(object):
+    PlainText = 1
+    Snippet = 2
+
+
 class MessageType(object):
     Error = 1
     Warning = 2

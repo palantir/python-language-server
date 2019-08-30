@@ -10,7 +10,7 @@ Python Language Server
 .. image:: https://img.shields.io/github/license/palantir/python-language-server.svg
      :target: https://github.com/palantir/python-language-server/blob/master/LICENSE
 
-A Python 2.7 and 3.4+ implementation of the `Language Server Protocol`_.
+A Python 2.7 and 3.5+ implementation of the `Language Server Protocol`_.
 
 Installation
 ------------
@@ -119,8 +119,7 @@ Develop against VS Code
 
 The Python language server can be developed against a local instance of Visual Studio Code.
 
-1. Install `VSCode for Mac <http://code.visualstudio.com/docs/?dv=osx>`_
-2. From within VSCode View -> Command Palette, then type *shell* and run ``install 'code' command in PATH``
+Install `VSCode <https://code.visualstudio.com/download>`_
 
 .. code-block:: bash
 
