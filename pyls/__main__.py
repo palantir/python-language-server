@@ -55,10 +55,12 @@ def main():
     _configure_logger(args.verbose, args.log_config, args.log_file)
 
     if args.tcp:
-        start_tcp_lang_server(args.host, args.port, PythonLanguageServer)
+        start_tcp_lang_server(args.host, args.port, args.check_parent_process,
+                              PythonLanguageServer)
     else:
         stdin, stdout = _binary_stdio()
-        start_io_lang_server(stdin, stdout, args.check_parent_process, PythonLanguageServer)
+        start_io_lang_server(stdin, stdout, args.check_parent_process,
+                             PythonLanguageServer)
 
 
 def _binary_stdio():
