@@ -36,8 +36,7 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
         self.delegate.start()
 
 
-def start_tcp_lang_server(bind_addr, port, check_parent_process,
-                          handler_class):
+def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
     if not issubclass(handler_class, PythonLanguageServer):
         raise ValueError('Handler class must be an instance of PythonLanguageServer')
 
