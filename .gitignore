@@ -109,3 +109,6 @@ ENV/
 
 # Merge orig files
 *.orig
+
+# Special files
+.DS_Store
