@@ -147,19 +147,49 @@ def clip_column(column, lines, line_number):
     return min(column, max_column)
 
 
-def is_process_alive(pid):
-    """ Check whether the process with the given pid is still alive.
+if os.name == 'nt':
+    import ctypes
 
-    Args:
-        pid (int): process ID
+    kernel32 = ctypes.windll.kernel32
+    PROCESS_QUERY_INFROMATION = 0x1000
 
-    Returns:
-        bool: False if the process is not alive or don't have permission to check, True otherwise.
-    """
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        # no such process or process is already dead
+    def is_process_alive(pid):
+        """Check whether the process with the given pid is still alive.
+
+        Running `os.kill()` on Windows always exits the process, so it can't be used to check for an alive process.
+        see: https://docs.python.org/3/library/os.html?highlight=os%20kill#os.kill
+
+        Hence ctypes is used to check for the process directly via windows API avoiding any other 3rd-party dependency.
+
+        Args:
+            pid (int): process ID
+
+        Returns:
+            bool: False if the process is not alive or don't have permission to check, True otherwise.
+        """
+        process = kernel32.OpenProcess(PROCESS_QUERY_INFROMATION, 0, pid)
+        if process != 0:
+            kernel32.CloseHandle(process)
+            return True
         return False
-    else:
-        return True
+
+else:
+    import errno
+
+    def is_process_alive(pid):
+        """Check whether the process with the given pid is still alive.
+
+        Args:
+            pid (int): process ID
+
+        Returns:
+            bool: False if the process is not alive or don't have permission to check, True otherwise.
+        """
+        if pid < 0:
+            return False
+        try:
+            os.kill(pid, 0)
+        except OSError as e:
+            return e.errno == errno.EPERM
+        else:
+            return True
