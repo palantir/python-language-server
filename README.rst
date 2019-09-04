@@ -112,7 +112,7 @@ Development
 
 To run the test suite:
 
-``pip install .[test] && tox``
+``pip install .[test] && pytest``
 
 Develop against VS Code
 =======================
