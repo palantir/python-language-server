@@ -189,7 +189,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         if self._check_parent_process and processId is not None:
             def watch_parent_process(pid):
-                # exist when the given pid is not alive
+                # exit when the given pid is not alive
                 if not _utils.is_process_alive(pid):
                     log.info("parent process %s is not alive", pid)
                     self.m_exit()
