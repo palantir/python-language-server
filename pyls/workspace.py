@@ -88,8 +88,8 @@ class Workspace(object):
 
     def source_roots(self, document_path):
         """Return the source roots for the given document."""
-        files = _utils.find_parents(self._root_path, document_path, ['setup.py']) or []
-        return [os.path.dirname(setup_py) for setup_py in files]
+        files = _utils.find_parents(self._root_path, document_path, ['setup.py', 'pyproject.toml']) or []
+        return list(set((os.path.dirname(project_file) for project_file in files))) or [self._root_path]
 
     def _create_document(self, doc_uri, source=None, version=None):
         path = uris.to_fs_path(doc_uri)

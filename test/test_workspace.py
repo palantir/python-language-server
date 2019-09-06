@@ -1,7 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-import os.path as osp
 import sys
+
+import pytest
+
 from pyls import uris
 
 PY2 = sys.version_info.major == 2
@@ -16,7 +18,7 @@ DOC_URI = uris.from_fs_path(__file__)
 
 
 def path_as_uri(path):
-    return pathlib.Path(osp.abspath(path)).as_uri()
+    return pathlib.Path(os.path.abspath(path)).as_uri()
 
 
 def test_local(pyls):
@@ -49,19 +51,30 @@ def test_rm_document(pyls):
     assert pyls.workspace.get_document(DOC_URI)._source is None
 
 
-def test_non_root_project(pyls):
+@pytest.mark.parametrize('metafiles', [('setup.py',), ('pyproject.toml',), ('setup.py', 'pyproject.toml')])
+def test_non_root_project(pyls, metafiles):
     repo_root = os.path.join(pyls.workspace.root_path, 'repo-root')
     os.mkdir(repo_root)
     project_root = os.path.join(repo_root, 'project-root')
     os.mkdir(project_root)
 
-    with open(os.path.join(project_root, 'setup.py'), 'w+') as f:
-        f.write('# setup.py')
+    for metafile in metafiles:
+        with open(os.path.join(project_root, metafile), 'w+') as f:
+            f.write('# ' + metafile)
 
     test_uri = uris.from_fs_path(os.path.join(project_root, 'hello/test.py'))
     pyls.workspace.put_document(test_uri, 'assert True')
     test_doc = pyls.workspace.get_document(test_uri)
     assert project_root in test_doc.sys_path()
+
+
+def test_root_project_with_no_setup_py(pyls):
+    """Default to workspace root."""
+    workspace_root = pyls.workspace.root_path
+    test_uri = uris.from_fs_path(os.path.join(workspace_root, 'hello/test.py'))
+    pyls.workspace.put_document(test_uri, 'assert True')
+    test_doc = pyls.workspace.get_document(test_uri)
+    assert workspace_root in test_doc.sys_path()
 
 
 def test_multiple_workspaces(tmpdir, pyls):
