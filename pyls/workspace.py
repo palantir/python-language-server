@@ -1,12 +1,14 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import distutils.spawn
 import io
 import logging
 import os
 import re
+import subprocess
 
 import jedi
 
-from . import lsp, uris, _utils
+from . import _utils, lsp, uris
 
 log = logging.getLogger(__name__)
 
@@ -217,8 +219,45 @@ class Document(object):
         # Copy our extra sys path
         path = list(self._extra_sys_path)
 
+        sys_paths = set()
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
-        environment = jedi.api.environment.get_cached_default_environment()
-        path.extend(environment.get_sys_path())
+        # Support pyenv virtualenv for LSP project roots
+        if distutils.spawn.find_executable(
+                'pyenv') and self._extra_sys_path and len(
+                    self._extra_sys_path) > 0:
+
+            class enter_pyenv_shell_env():
+                def __init__(self):
+                    self.env_pyenv_keys = ['PYENV_VERSION', 'PYENV_DIR']
+                    self.env_pyenv_old_vals = []
+
+                def __enter__(self):
+                    # Remove ENV vars injected by pyenv
+                    for key in self.env_pyenv_keys:
+                        self.env_pyenv_old_vals.append(os.getenv(key))
+                        os.unsetenv(key)
+
+                def __exit__(self, tp, value, traceback):
+                    # Restore pyenv ENV vars
+                    for i in range(len(self.env_pyenv_keys)):
+                        if self.env_pyenv_old_vals[i]:
+                            os.putenv(self.env_pyenv_keys[i],
+                                      self.env_pyenv_old_vals[i])
+
+            with enter_pyenv_shell_env():
+                pyenv_virtualenv_path = subprocess.check_output(
+                    ['pyenv', 'prefix'],
+                    cwd=self._extra_sys_path[0],
+                    encoding='utf8').strip()
+                for p in jedi.api.environment.create_environment(
+                        pyenv_virtualenv_path, safe=False).get_sys_path():
+                    sys_paths.add(p)
+
+        for p in jedi.api.environment.get_cached_default_environment(
+        ).get_sys_path():
+            if p not in sys_paths:
+                sys_paths.add(p)
+
+        path.extend(sys_paths)
 
         return path
