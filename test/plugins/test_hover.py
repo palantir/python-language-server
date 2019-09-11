@@ -21,7 +21,7 @@ def test_hover():
     doc = Document(DOC_URI, DOC)
 
     assert {
-        'contents': 'main()\n\nhello world'
+        'contents': [{'language': 'python', 'value': 'main()'}, 'hello world']
     } == pyls_hover(doc, hov_position)
 
     assert {'contents': ''} == pyls_hover(doc, no_hov_position)

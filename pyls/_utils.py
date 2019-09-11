@@ -136,7 +136,6 @@ def format_docstring(contents):
     """
     contents = contents.replace('\t', u'\u00A0' * 4)
     contents = contents.replace('  ', u'\u00A0' * 2)
-    contents = contents.replace('*', '\\*')
     return contents
 
 
