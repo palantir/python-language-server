@@ -36,7 +36,7 @@ setup(
         'future>=0.14.0',
         'futures; python_version<"3.2"',
         'backports.functools_lru_cache; python_version<"3.2"',
-        'jedi>=0.14.1,<0.15',
+        'jedi>=0.14.1',
         'python-jsonrpc-server>=0.1.0',
         'pluggy'
     ],
