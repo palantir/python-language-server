@@ -78,6 +78,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.workspace = None
         self.config = None
         self.root_uri = None
+        self.watching_thread = None
         self.workspaces = {}
         self.uri_workspace_mapper = {}
 
@@ -119,6 +120,9 @@ class PythonLanguageServer(MethodDispatcher):
         self._endpoint.shutdown()
         self._jsonrpc_stream_reader.close()
         self._jsonrpc_stream_writer.close()
+
+        if self._check_parent_process:
+            _utils.interrupt_process()
 
     def _match_uri_to_workspace(self, uri):
         workspace_uri = _utils.match_uri_to_workspace(uri, self.workspaces)
@@ -187,18 +191,19 @@ class PythonLanguageServer(MethodDispatcher):
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
-        if self._check_parent_process and processId is not None:
+        if self._check_parent_process and processId is not None and self.watching_thread is None:
             def watch_parent_process(pid):
                 # exit when the given pid is not alive
                 if not _utils.is_process_alive(pid):
                     log.info("parent process %s is not alive", pid)
                     self.m_exit()
-                log.debug("parent process %s is still alive", pid)
-                threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
+                else:
+                    log.debug("parent process %s is still alive", pid)
+                    threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
 
-            watching_thread = threading.Thread(target=watch_parent_process, args=(processId,))
-            watching_thread.daemon = True
-            watching_thread.start()
+            self.watching_thread = threading.Thread(target=watch_parent_process, args=(processId,))
+            self.watching_thread.daemon = True
+            self.watching_thread.start()
 
         # Get our capabilities
         return {'capabilities': self.capabilities()}
