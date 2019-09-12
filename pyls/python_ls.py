@@ -45,6 +45,7 @@ def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
         handler_class.__name__ + 'Handler',
         (_StreamHandlerWrapper,),
         {'DELEGATE_CLASS': partial(handler_class,
+                                   is_tcp=True,
                                    check_parent_process=check_parent_process)}
     )
 
@@ -74,7 +75,7 @@ class PythonLanguageServer(MethodDispatcher):
 
     # pylint: disable=too-many-public-methods,redefined-builtin
 
-    def __init__(self, rx, tx, check_parent_process=False):
+    def __init__(self, rx, tx, is_tcp=False, check_parent_process=False):
         self.workspace = None
         self.config = None
         self.root_uri = None
@@ -85,6 +86,7 @@ class PythonLanguageServer(MethodDispatcher):
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
         self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
         self._check_parent_process = check_parent_process
+        self._is_tcp = is_tcp
         self._endpoint = Endpoint(self, self._jsonrpc_stream_writer.write, max_workers=MAX_WORKERS)
         self._dispatchers = []
         self._shutdown = False
@@ -121,7 +123,7 @@ class PythonLanguageServer(MethodDispatcher):
         self._jsonrpc_stream_reader.close()
         self._jsonrpc_stream_writer.close()
 
-        if self._check_parent_process:
+        if self._is_tcp and self._check_parent_process:
             _utils.interrupt_process()
 
     def _match_uri_to_workspace(self, uri):
