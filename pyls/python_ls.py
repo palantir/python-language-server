@@ -34,6 +34,7 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
 
     def handle(self):
         self.delegate.start()
+        # pylint: disable=no-member
         self.SHUTDOWN_CALL()
 
 
@@ -42,6 +43,7 @@ def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
         raise ValueError('Handler class must be an instance of PythonLanguageServer')
 
     def shutdown_server(*args):
+        # pylint: disable=unused-argument
         log.debug('Shutting down server')
         # Shutdown call must be done on a thread, to prevent deadlocks
         stop_thread = threading.Thread(target=server.shutdown)
