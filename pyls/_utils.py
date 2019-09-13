@@ -4,7 +4,6 @@ import inspect
 import logging
 import os
 import sys
-import signal
 import threading
 
 PY2 = sys.version_info.major == 2
@@ -145,15 +144,6 @@ def clip_column(column, lines, line_number):
     # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
     max_column = len(lines[line_number].rstrip('\r\n')) if len(lines) > line_number else 0
     return min(column, max_column)
-
-
-def interrupt_process(pid=None):
-    if pid is None:
-        pid = os.getpid()
-    sig = signal.SIGINT
-    if os.name == 'nt':
-        sig = signal.CTRL_C_EVENT  # pylint: disable=no-member
-    os.kill(pid, sig)
 
 
 if os.name == 'nt':

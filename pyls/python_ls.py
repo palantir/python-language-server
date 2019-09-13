@@ -34,19 +34,26 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
 
     def handle(self):
         self.delegate.start()
+        self.SHUTDOWN_CALL()
 
 
 def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
     if not issubclass(handler_class, PythonLanguageServer):
         raise ValueError('Handler class must be an instance of PythonLanguageServer')
 
+    def shutdown_server(*args):
+        log.debug('Shutting down server')
+        # Shutdown call must be done on a thread, to prevent deadlocks
+        stop_thread = threading.Thread(target=server.shutdown)
+        stop_thread.start()
+
     # Construct a custom wrapper class around the user's handler_class
     wrapper_class = type(
         handler_class.__name__ + 'Handler',
         (_StreamHandlerWrapper,),
         {'DELEGATE_CLASS': partial(handler_class,
-                                   is_tcp=True,
-                                   check_parent_process=check_parent_process)}
+                                   check_parent_process=check_parent_process),
+         'SHUTDOWN_CALL': shutdown_server}
     )
 
     server = socketserver.TCPServer((bind_addr, port), wrapper_class)
@@ -75,7 +82,7 @@ class PythonLanguageServer(MethodDispatcher):
 
     # pylint: disable=too-many-public-methods,redefined-builtin
 
-    def __init__(self, rx, tx, is_tcp=False, check_parent_process=False):
+    def __init__(self, rx, tx, check_parent_process=False):
         self.workspace = None
         self.config = None
         self.root_uri = None
@@ -86,7 +93,6 @@ class PythonLanguageServer(MethodDispatcher):
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
         self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
         self._check_parent_process = check_parent_process
-        self._is_tcp = is_tcp
         self._endpoint = Endpoint(self, self._jsonrpc_stream_writer.write, max_workers=MAX_WORKERS)
         self._dispatchers = []
         self._shutdown = False
@@ -122,9 +128,6 @@ class PythonLanguageServer(MethodDispatcher):
         self._endpoint.shutdown()
         self._jsonrpc_stream_reader.close()
         self._jsonrpc_stream_writer.close()
-
-        if self._is_tcp and self._check_parent_process:
-            _utils.interrupt_process()
 
     def _match_uri_to_workspace(self, uri):
         workspace_uri = _utils.match_uri_to_workspace(uri, self.workspaces)
