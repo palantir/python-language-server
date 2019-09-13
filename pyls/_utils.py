@@ -152,7 +152,7 @@ def interrupt_process(pid=None):
         pid = os.getpid()
     sig = signal.SIGINT
     if os.name == 'nt':
-        sig = signal.CTRL_C_EVENT
+        sig = signal.CTRL_C_EVENT  # pylint: disable=no-member
     os.kill(pid, sig)
 
 

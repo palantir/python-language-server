@@ -58,7 +58,7 @@ def client_exited_server():
     client_server_pair = _ClientServer(True)
 
     # yield client_server_pair.client
-    return client_server_pair
+    yield client_server_pair
 
     assert client_server_pair.process.is_alive() is False
 
