@@ -206,7 +206,6 @@ class PythonLanguageServer(MethodDispatcher):
             self.watching_thread = threading.Thread(target=watch_parent_process, args=(processId,))
             self.watching_thread.daemon = True
             self.watching_thread.start()
-
         # Get our capabilities
         return {'capabilities': self.capabilities()}
 
