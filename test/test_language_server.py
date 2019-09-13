@@ -25,7 +25,9 @@ class _ClientServer(object):
         # Server to client pipe
         scr, scw = os.pipe()
 
-        self.process = multiprocessing.Process(target=start_io_lang_server, args=(
+        ParallelKind = multiprocessing.Process if os.name != 'nt' else Thread
+
+        self.process = ParallelKind(target=start_io_lang_server, args=(
             os.fdopen(csr, 'rb'), os.fdopen(scw, 'wb'), check_parent_process, PythonLanguageServer
         ))
         self.process.start()
