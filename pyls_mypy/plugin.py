@@ -1,8 +1,11 @@
 import re
+import logging
 from mypy import api as mypy_api
 from pyls import hookimpl
 
 line_pattern = r"([^:]+):(?:(\d+):)?(?:(\d+):)? (\w+): (.*)"
+
+log = logging.getLogger(__name__)
 
 
 def parse_line(line, document=None):
@@ -12,7 +15,17 @@ def parse_line(line, document=None):
     '''
     result = re.match(line_pattern, line)
     if result:
-        _, lineno, offset, severity, msg = result.groups()
+        file_path, lineno, offset, severity, msg = result.groups()
+
+        if file_path != "<string>":  # live mode
+            # results from other files can be included, but we cannot return
+            # them.
+            if document and document.path and not document.path.endswith(
+                    file_path):
+                log.warning("discarding result for %s against %s", file_path,
+                            document.path)
+                return None
+
         lineno = int(lineno or 1)
         offset = int(offset or 0)
         errno = 2
