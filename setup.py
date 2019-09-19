@@ -76,6 +76,7 @@ setup(
         ],
         'pyls': [
             'autopep8 = pyls.plugins.autopep8_format',
+            'flake8 = pyls.plugins.flake8_lint',
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',

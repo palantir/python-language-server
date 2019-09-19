@@ -1,0 +1,61 @@
+# Copyright 2017 Palantir Technologies, Inc.
+import logging
+from flake8.api import legacy as flake8
+from pyls import hookimpl, lsp
+
+log = logging.getLogger(__name__)
+
+
+@hookimpl
+def pyls_lint(config, document):
+    settings = config.plugin_settings('flake8')
+    log.debug("Got flake8 settings: %s", settings)
+
+    opts = {
+        'exclude': settings.get('exclude'),
+        'filename': settings.get('filename'),
+        'hang_closing': settings.get('hangClosing'),
+        'ignore': settings.get('ignore'),
+        'max_line_length': settings.get('maxLineLength'),
+        'select': settings.get('select'),
+    }
+
+    kwargs = {k: v for k, v in opts.items() if v}
+    style_guide = flake8.get_style_guide(quiet=4, verbose=0, **kwargs)
+
+    report = style_guide.check_files([document.path])
+    diagnostics = parse_report(document, report)
+
+    return diagnostics
+
+
+def parse_report(document, report):
+    file_checkers = report._application.file_checker_manager.checkers
+    # There should be only one filechecker since we are parsing using a path and not a pattern
+    if len(file_checkers) > 1:
+        log.error("Flake8 parsed more than a file for '%s'", document.path)
+
+    diagnostics = []
+    file_checker = file_checkers[0]
+    for error in file_checker.results:
+        code, line, character, msg, physical_line = error
+        diagnostics.append(
+            {
+                'source': 'flake8',
+                'code': code,
+                'range': {
+                    'start': {
+                        'line': line,
+                        'character': character
+                    },
+                    'end': {
+                        'line': line,
+                        'character': len(physical_line)
+                    }
+                },
+                'message': msg,
+                'severity': lsp.DiagnosticSeverity.Warning,
+            }
+        )
+
+    return diagnostics
