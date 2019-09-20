@@ -1,4 +1,5 @@
 # Copyright 2019 Palantir Technologies, Inc.
+"""Linter pluging for flake8"""
 import logging
 from flake8.api import legacy as flake8
 from pyls import hookimpl, lsp
@@ -29,6 +30,9 @@ def pyls_lint(config, document):
 
 def parse_report(document, report):
     file_checkers = report._application.file_checker_manager.checkers
+    # No file have been checked
+    if not file_checkers:
+        return []
     # There should be only a filechecker since we are parsing using a path and not a pattern
     if len(file_checkers) > 1:
         log.error("Flake8 parsed more than a file for '%s'", document.path)
