@@ -22,11 +22,9 @@ def pyls_lint(config, document):
 
     kwargs = {k: v for k, v in opts.items() if v}
     style_guide = flake8.get_style_guide(quiet=4, verbose=0, **kwargs)
-
     report = style_guide.check_files([document.path])
-    diagnostics = parse_report(document, report)
 
-    return diagnostics
+    return parse_report(document, report)
 
 
 def parse_report(document, report):
