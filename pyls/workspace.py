@@ -222,11 +222,9 @@ class Document(object):
         sys_paths = set()
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
         # Support pyenv virtualenv for LSP project roots
-        if distutils.spawn.find_executable(
-                'pyenv') and self._extra_sys_path and len(
-                    self._extra_sys_path) > 0:
+        if distutils.spawn.find_executable('pyenv') and self._extra_sys_path:
 
-            class enter_pyenv_shell_env():
+            class enter_pyenv_shell_env(object):
                 def __init__(self):
                     self.env_pyenv_keys = ['PYENV_VERSION', 'PYENV_DIR']
                     self.env_pyenv_old_vals = []
