@@ -21,6 +21,7 @@ def pyls_lint(config, document):
         'select': settings.get('select'),
     }
 
+    # Build the flake8 checker and use it to generate a report from the document
     kwargs = {k: v for k, v in opts.items() if v}
     style_guide = flake8.get_style_guide(quiet=4, verbose=0, **kwargs)
     report = style_guide.check_files([document.path])
@@ -29,6 +30,33 @@ def pyls_lint(config, document):
 
 
 def parse_report(document, report):
+    """
+    Build a diagnostics from a report, it should extract every result and format
+    it into a dict that looks like this:
+        {
+            'source': 'flake8',
+            'code': code, # 'E501'
+            'range': {
+                'start': {
+                    'line': start_line,
+                    'character': start_column,
+                },
+                'end': {
+                    'line': end_line,
+                    'character': end_column,
+                },
+            },
+            'message': msg,
+            'severity': lsp.DiagnosticSeverity.*,
+        }
+
+    Args:
+        document: The document to be linted.
+        report: A Report object returned by checking the document.
+    Returns:
+        A list of dictionaries.
+    """
+
     file_checkers = report._application.file_checker_manager.checkers
     # No file have been checked
     if not file_checkers:
@@ -56,6 +84,7 @@ def parse_report(document, report):
                     }
                 },
                 'message': msg,
+                # no way to determine the severity using the legacy api
                 'severity': lsp.DiagnosticSeverity.Warning,
             }
         )
