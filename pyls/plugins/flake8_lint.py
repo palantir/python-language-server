@@ -80,6 +80,7 @@ def parse_report(document, report):
                     },
                     'end': {
                         'line': line,
+                        # no way to determine the column
                         'character': len(physical_line)
                     }
                 },

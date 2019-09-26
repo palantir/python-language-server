@@ -26,7 +26,6 @@ def temp_document(doc_text):
     return name, doc
 
 
-
 def test_flake8_no_checked_file(config):
     # A bad uri or a non-saved file may cause the flake8 linter to do nothing.
     # In this situtation, the linter will return an empty list.
@@ -36,7 +35,7 @@ def test_flake8_no_checked_file(config):
     assert diags == []
 
 
-def test_flake8_lintin(config):
+def test_flake8_lint(config):
     try:
         name, doc = temp_document(DOC)
         diags = flake8_lint.pyls_lint(config, doc)
