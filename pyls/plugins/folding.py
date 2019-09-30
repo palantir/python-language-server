@@ -22,24 +22,24 @@ def __reduce_folding_ranges(folding_ranges):
     i = 0
     while i < len(folding_ranges) - 1:
         ((left_line, _), left_end) = folding_ranges[i]
-        if i + 1 > len(folding_ranges):
+        ((right_line, _), right_end) = folding_ranges[i + 1]
+        left_end_line, _ = left_end
+        right_end_line, _ = right_end
+        if left_line == right_line and left_end == right_end:
+            actual_ranges.append(folding_ranges[i + 1])
+            i += 2
+        elif left_line == right_line and left_end_line >= right_end_line:
             actual_ranges.append(folding_ranges[i])
+            i += 2
+        elif left_line == right_line and left_end_line < right_end_line:
+            actual_ranges.append(folding_ranges[i + 1])
+            i += 2
         else:
-            ((right_line, _), right_end) = folding_ranges[i + 1]
-            left_end_line, _ = left_end
-            right_end_line, _ = right_end
-            if left_line == right_line and left_end == right_end:
-                actual_ranges.append(folding_ranges[i + 1])
-                i += 2
-            elif left_line == right_line and left_end_line >= right_end_line:
-                actual_ranges.append(folding_ranges[i])
-                i += 2
-            elif left_line == right_line and left_end_line < right_end_line:
-                actual_ranges.append(folding_ranges[i + 1])
-                i += 2
-            else:
-                actual_ranges.append(folding_ranges[i])
-                i += 1
+            actual_ranges.append(folding_ranges[i])
+            i += 1
+
+    if i == len(folding_ranges) - 1:
+        actual_ranges.append(folding_ranges[i])
     return actual_ranges
 
 

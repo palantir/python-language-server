@@ -92,6 +92,7 @@ setup(
             'rope_completion = pyls.plugins.rope_completion',
             'rope_rename = pyls.plugins.rope_rename',
             'yapf = pyls.plugins.yapf_format',
+            'folding = pyls.plugins.folding'
         ]
     },
 )

@@ -86,7 +86,8 @@ def test_folding():
                 {'startLine': 24, 'endLine': 25},
                 {'startLine': 27, 'endLine': 28},
                 {'startLine': 30, 'endLine': 34},
-                {'startLine': 31, 'endLine': 34}]
+                {'startLine': 31, 'endLine': 34},
+                {'startLine': 33, 'endLine': 34}]
     assert ranges == expected
 
 
