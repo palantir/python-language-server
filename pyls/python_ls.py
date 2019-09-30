@@ -152,6 +152,7 @@ class PythonLanguageServer(MethodDispatcher):
             'hoverProvider': True,
             'referencesProvider': True,
             'renameProvider': True,
+            'foldingRangeProvider': True,
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',', '=']
             },
@@ -262,6 +263,9 @@ class PythonLanguageServer(MethodDispatcher):
     def signature_help(self, doc_uri, position):
         return self._hook('pyls_signature_help', doc_uri, position=position)
 
+    def folding(self, doc_uri):
+        return self._hook('pyls_folding_range', doc_uri)
+
     def m_text_document__did_close(self, textDocument=None, **_kwargs):
         workspace = self._match_uri_to_workspace(textDocument['uri'])
         workspace.rm_document(textDocument['uri'])
@@ -312,6 +316,9 @@ class PythonLanguageServer(MethodDispatcher):
 
     def m_text_document__rename(self, textDocument=None, position=None, newName=None, **_kwargs):
         return self.rename(textDocument['uri'], position, newName)
+
+    def m_text_document__folding_range(self, textDocument=None, **_kwargs):
+        return self.folding(textDocument['uri'])
 
     def m_text_document__range_formatting(self, textDocument=None, range=None, _options=None, **_kwargs):
         # Again, we'll ignore formatting options for now.
