@@ -55,7 +55,7 @@ def test_syntax_error_pylint(config):
 
         assert diag['message'].startswith('[syntax-error] invalid syntax')
         # Pylint doesn't give column numbers for invalid syntax.
-        assert diag['range']['start'] == {'line': 0, 'character': 0}
+        assert diag['range']['start'] == {'line': 0, 'character': 12}
         assert diag['severity'] == lsp.DiagnosticSeverity.Error
 
 
