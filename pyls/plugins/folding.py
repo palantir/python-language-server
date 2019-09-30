@@ -1,3 +1,4 @@
+# pylint: disable=len-as-condition
 
 import ast
 from pyls import hookimpl
@@ -20,11 +21,11 @@ def __reduce_folding_ranges(folding_ranges):
     actual_ranges = []
     i = 0
     while i < len(folding_ranges) - 1:
-        ((left_line, left_column), left_end) = folding_ranges[i]
+        ((left_line, _), left_end) = folding_ranges[i]
         if i + 1 > len(folding_ranges):
             actual_ranges.append(folding_ranges[i])
         else:
-            ((right_line, right_column), right_end) = folding_ranges[i + 1]
+            ((right_line, _), right_end) = folding_ranges[i + 1]
             left_end_line, _ = left_end
             right_end_line, _ = right_end
             if left_line == right_line and left_end == right_end:
