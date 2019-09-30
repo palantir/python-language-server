@@ -10,6 +10,7 @@ def pyls_folding_range(document):
     program = program + '\n\npass'
     tree = None
     lines = []
+    reparsing = False
     while tree is None:
         try:
             tree = ast.parse(program)
@@ -18,6 +19,12 @@ def pyls_folding_range(document):
             lines = program.splitlines(True)
             lines = lines[:offending_line - 1]
             program = ''.join(lines)
+            reparsing = True
+
+    # Parse again to add additional node
+    if reparsing:
+        program = program + '\n\npass'
+        tree = ast.parse(program)
 
     folding_ranges = []
     folding_starts = {}
@@ -56,7 +63,15 @@ def pyls_folding_range(document):
             actual_ranges.append(folding_ranges[i])
         else:
             ((right_line, right_column), right_end) = folding_ranges[i + 1]
+            left_end_line, _ = left_end
+            right_end_line, _ = right_end
             if left_line == right_line and left_end == right_end:
+                actual_ranges.append(folding_ranges[i + 1])
+                i += 2
+            elif left_line == right_line and left_end_line >= right_end_line:
+                actual_ranges.append(folding_ranges[i])
+                i += 2
+            elif left_line == right_line and left_end_line < right_end_line:
                 actual_ranges.append(folding_ranges[i + 1])
                 i += 2
             else:
