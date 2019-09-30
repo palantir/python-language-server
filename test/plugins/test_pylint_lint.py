@@ -3,6 +3,7 @@ import contextlib
 import os
 import tempfile
 
+from test import py3_only
 from pyls import lsp, uris
 from pyls.workspace import Document
 from pyls.plugins import pylint_lint
@@ -49,6 +50,7 @@ def test_pylint(config):
         assert unused_import['severity'] == lsp.DiagnosticSeverity.Warning
 
 
+@py3_only
 def test_syntax_error_pylint(config):
     with temp_document(DOC_SYNTAX_ERR) as doc:
         diag = pylint_lint.pyls_lint(config, doc, True)[0]
