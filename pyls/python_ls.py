@@ -205,7 +205,6 @@ class PythonLanguageServer(MethodDispatcher):
                     log.info("parent process %s is not alive", pid)
                     self.m_exit()
                 else:
-                    log.debug("parent process %s is still alive", pid)
                     threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
 
             self.watching_thread = threading.Thread(target=watch_parent_process, args=(processId,))
