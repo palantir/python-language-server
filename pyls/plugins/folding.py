@@ -1,14 +1,22 @@
 # pylint: disable=len-as-condition
 
+import sys
 import ast
+
 from pyls import hookimpl
+
+OLD_AST = (sys.version_info.major, sys.version_info.minor) <= (3, 2)
+if OLD_AST:
+    Try = ast.TryExcept
+else:
+    Try = ast.Try
 
 
 def __update_if_try(ctx, tree_nodes, folding_starts, folding_ranges,
                     folding_ends, line, col):
     ctx_id = ctx[0]
     common_node = tree_nodes[ctx_id]
-    if isinstance(common_node, (ast.If, ast.Try)):
+    if isinstance(common_node, (ast.If, Try)):
         if ctx_id in folding_starts:
             node_start = folding_starts[ctx_id]
             ctx_line, _ = node_start
@@ -34,7 +42,7 @@ def __update_folding_ranges(ctx, stack, line, col, folding_starts,
             end_line, end_col = folding_ends[this_ctx]
             folding_ranges.append(((end_line + 1, 0), (line, col)))
             node = tree_nodes[this_ctx]
-            if isinstance(node, ast.Try):
+            if isinstance(node, Try):
                 continue
             else:
                 break
