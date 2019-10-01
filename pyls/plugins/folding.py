@@ -7,7 +7,7 @@ from pyls import hookimpl
 
 OLD_AST = (sys.version_info.major, sys.version_info.minor) <= (3, 2)
 if OLD_AST:
-    Try = ast.TryExcept
+    Try = (ast.TryFinally, ast.TryExcept)
 else:
     Try = ast.Try
 
@@ -63,11 +63,8 @@ def __reduce_folding_ranges(folding_ranges):
         if left_line == right_line and left_end == right_end:
             actual_ranges.append(folding_ranges[i + 1])
             i += 2
-        elif left_line == right_line and left_end_line >= right_end_line:
+        elif left_line == right_line:
             actual_ranges.append(folding_ranges[i])
-            i += 2
-        elif left_line == right_line and left_end_line < right_end_line:
-            actual_ranges.append(folding_ranges[i + 1])
             i += 2
         else:
             actual_ranges.append(folding_ranges[i])
