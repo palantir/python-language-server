@@ -1,4 +1,4 @@
-# pylint: disable=len-as-condition
+# pylint: disable=len-as-condition,no-member
 
 import sys
 import ast
@@ -39,8 +39,8 @@ def __update_folding_ranges(ctx, stack, line, col, folding_starts,
             if ctx_line < line:
                 folding_ranges.append((ctx_start, (line, col)))
         elif this_ctx in folding_ends:
-            end_line, end_col = folding_ends[this_ctx]
-            folding_ranges.append(((end_line + 1, 0), (line, col)))
+            ctx_line, _ = folding_ends[this_ctx]
+            folding_ranges.append(((ctx_line + 1, 0), (line, col)))
             node = tree_nodes[this_ctx]
             if isinstance(node, Try):
                 continue
@@ -58,8 +58,6 @@ def __reduce_folding_ranges(folding_ranges):
     while i < len(folding_ranges) - 1:
         ((left_line, _), left_end) = folding_ranges[i]
         ((right_line, _), right_end) = folding_ranges[i + 1]
-        left_end_line, _ = left_end
-        right_end_line, _ = right_end
         if left_line == right_line and left_end == right_end:
             actual_ranges.append(folding_ranges[i + 1])
             i += 2
