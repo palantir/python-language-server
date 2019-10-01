@@ -4,8 +4,24 @@ import ast
 from pyls import hookimpl
 
 
+def __update_if_try(ctx, tree_nodes, folding_starts, folding_ranges,
+                    folding_ends, line, col):
+    ctx_id = ctx[0]
+    common_node = tree_nodes[ctx_id]
+    if isinstance(common_node, (ast.If, ast.Try)):
+        if ctx_id in folding_starts:
+            node_start = folding_starts[ctx_id]
+            ctx_line, _ = node_start
+            if ctx_line < line:
+                folding_starts.pop(ctx_id)
+                folding_ranges.append((node_start, (line, col)))
+                folding_ends[ctx_id] = (line, col)
+        else:
+            folding_ends[ctx_id] = (line, col)
+
+
 def __update_folding_ranges(ctx, stack, line, col, folding_starts,
-                            folding_ranges):
+                            folding_ends, tree_nodes, folding_ranges):
     _, next_ctx = stack[0]
     while ctx != next_ctx:
         this_ctx = ctx.pop(0)
@@ -14,6 +30,17 @@ def __update_folding_ranges(ctx, stack, line, col, folding_starts,
             ctx_line, _ = ctx_start
             if ctx_line < line:
                 folding_ranges.append((ctx_start, (line, col)))
+        elif this_ctx in folding_ends:
+            end_line, end_col = folding_ends[this_ctx]
+            folding_ranges.append(((end_line + 1, 0), (line, col)))
+            node = tree_nodes[this_ctx]
+            if isinstance(node, ast.Try):
+                continue
+            else:
+                break
+    if ctx == next_ctx:
+        __update_if_try(ctx, tree_nodes, folding_starts, folding_ranges,
+                        folding_ends, line, col)
     return folding_ranges
 
 
@@ -46,17 +73,19 @@ def __reduce_folding_ranges(folding_ranges):
 def __compute_folding_ranges(tree):
     folding_ranges = []
     folding_starts = {}
+    folding_ends = {}
+    tree_nodes = {}
 
     stack = [(tree, [])]
     while len(stack) > 0:
         node, ctx = stack.pop(0)
         node_id = id(node)
+        tree_nodes[node_id] = node
         if hasattr(node, 'lineno'):
             line, col = node.lineno, node.col_offset
             folding_starts[node_id] = (line, col)
-
         nodes = []
-        new_ctx = [node_id] + ctx
+        new_ctx = list([node_id] + ctx)
         for child in ast.iter_child_nodes(node):
             nodes.append((child, new_ctx))
         stack = nodes + stack
@@ -64,7 +93,8 @@ def __compute_folding_ranges(tree):
         if len(nodes) == 0:
             if len(stack) > 0:
                 folding_ranges = __update_folding_ranges(
-                    ctx, stack, line, col, folding_starts, folding_ranges)
+                    ctx, stack, line, col, folding_starts, folding_ends,
+                    tree_nodes, folding_ranges)
 
     folding_ranges = sorted(folding_ranges)
     ranges = __reduce_folding_ranges(folding_ranges)

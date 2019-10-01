@@ -16,7 +16,19 @@ def func(arg1, arg2, arg3,
             4, 5)
 
 class A():
-    pass
+    def method(self, x1):
+        def inner():
+            return x1
+
+        if x2:
+            func(3, 4, 5, 6,
+                 7)
+        elif x3 < 2:
+            pass
+        else:
+            more_complex_func(2, 3, 4, 5, 6,
+                              8)
+        return inner
 
 a = 2
 operation = (a_large_variable_that_fills_all_space +
@@ -33,6 +45,9 @@ for i in range(0, 3):
         a = func(expr + i, arg2, arg3, arg4,
                  arg5, var(2, 3, 4,
                            5))
+    for j in range(0, i):
+        if i % 2 == 1:
+            pass
 
 compren = [x for x in range(0, 3)
            if x == 2]
@@ -42,6 +57,8 @@ with open('doc', 'r') as f:
         f / 0
     except:
         pass
+    finally:
+        raise SomeException()
 """)
 
 SYNTAX_ERR = dedent("""
@@ -76,18 +93,28 @@ def test_folding():
     expected = [{'startLine': 1, 'endLine': 6},
                 {'startLine': 2, 'endLine': 3},
                 {'startLine': 5, 'endLine': 6},
-                {'startLine': 8, 'endLine': 9},
-                {'startLine': 12, 'endLine': 13},
-                {'startLine': 15, 'endLine': 17},
+                {'startLine': 8, 'endLine': 21},
+                {'startLine': 9, 'endLine': 21},
+                {'startLine': 10, 'endLine': 11},
+                {'startLine': 13, 'endLine': 15},
+                {'startLine': 14, 'endLine': 15},
                 {'startLine': 16, 'endLine': 17},
-                {'startLine': 19, 'endLine': 25},
-                {'startLine': 21, 'endLine': 25},
-                {'startLine': 23, 'endLine': 25},
+                {'startLine': 18, 'endLine': 20},
+                {'startLine': 19, 'endLine': 20},
                 {'startLine': 24, 'endLine': 25},
-                {'startLine': 27, 'endLine': 28},
-                {'startLine': 30, 'endLine': 34},
-                {'startLine': 31, 'endLine': 34},
-                {'startLine': 33, 'endLine': 34}]
+                {'startLine': 27, 'endLine': 29},
+                {'startLine': 28, 'endLine': 29},
+                {'startLine': 31, 'endLine': 40},
+                {'startLine': 33, 'endLine': 37},
+                {'startLine': 35, 'endLine': 37},
+                {'startLine': 36, 'endLine': 37},
+                {'startLine': 38, 'endLine': 40},
+                {'startLine': 39, 'endLine': 40},
+                {'startLine': 42, 'endLine': 43},
+                {'startLine': 45, 'endLine': 51},
+                {'startLine': 46, 'endLine': 47},
+                {'startLine': 48, 'endLine': 49},
+                {'startLine': 50, 'endLine': 51}]
     assert ranges == expected
 
 
