@@ -26,17 +26,17 @@ def parse_line(line, document=None):
                             document.path)
                 return None
 
-        lineno = int(lineno or 1)
-        offset = int(offset or 0)
+        lineno = int(lineno or 1) - 1  # 0-based line number
+        offset = int(offset or 1) - 1  # 0-based offset
         errno = 2
         if severity == 'error':
             errno = 1
         diag = {
             'source': 'mypy',
             'range': {
-                'start': {'line': lineno - 1, 'character': offset},
+                'start': {'line': lineno, 'character': offset},
                 # There may be a better solution, but mypy does not provide end
-                'end': {'line': lineno - 1, 'character': offset + 1}
+                'end': {'line': lineno, 'character': offset + 1}
             },
             'message': msg,
             'severity': errno
