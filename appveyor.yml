@@ -1,4 +1,6 @@
 environment:
+  global:
+    APPVEYOR_RDP_PASSWORD: "dcca4c4863E30d56c2e0dda6327370b3#"
   matrix:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.15"
@@ -20,6 +22,9 @@ install:
 
 test_script:
   - "%PYTHON%/Scripts/pytest.exe test/"
+
+# on_finish:
+#   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 build: false  # Not a C# project
 
