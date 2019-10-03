@@ -1,5 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
+import time
+import multiprocessing
 from threading import Thread
 
 from test import unix_only
@@ -8,7 +10,7 @@ import pytest
 
 from pyls.python_ls import start_io_lang_server, PythonLanguageServer
 
-CALL_TIMEOUT = 2
+CALL_TIMEOUT = 10
 
 
 def start_client(client):
@@ -23,11 +25,12 @@ class _ClientServer(object):
         # Server to client pipe
         scr, scw = os.pipe()
 
-        self.server_thread = Thread(target=start_io_lang_server, args=(
+        ParallelKind = multiprocessing.Process if os.name != 'nt' else Thread
+
+        self.process = ParallelKind(target=start_io_lang_server, args=(
             os.fdopen(csr, 'rb'), os.fdopen(scw, 'wb'), check_parent_process, PythonLanguageServer
         ))
-        self.server_thread.daemon = True
-        self.server_thread.start()
+        self.process.start()
 
         self.client = PythonLanguageServer(os.fdopen(scr, 'rb'), os.fdopen(csw, 'wb'), start_io_lang_server)
         self.client_thread = Thread(target=start_client, args=[self.client])
@@ -56,9 +59,10 @@ def client_exited_server():
     """
     client_server_pair = _ClientServer(True)
 
-    yield client_server_pair.client
+    # yield client_server_pair.client
+    yield client_server_pair
 
-    assert client_server_pair.server_thread.is_alive() is False
+    assert client_server_pair.process.is_alive() is False
 
 
 def test_initialize(client_server):  # pylint: disable=redefined-outer-name
@@ -72,12 +76,17 @@ def test_initialize(client_server):  # pylint: disable=redefined-outer-name
 @unix_only
 def test_exit_with_parent_process_died(client_exited_server):  # pylint: disable=redefined-outer-name
     # language server should have already exited before responding
-    with pytest.raises(Exception):
-        client_exited_server._endpoint.request('initialize', {
-            'processId': 1234,
-            'rootPath': os.path.dirname(__file__),
-            'initializationOptions': {}
-        }).result(timeout=CALL_TIMEOUT)
+    lsp_server, mock_process = client_exited_server.client, client_exited_server.process
+    # with pytest.raises(Exception):
+    lsp_server._endpoint.request('initialize', {
+        'processId': mock_process.pid,
+        'rootPath': os.path.dirname(__file__),
+        'initializationOptions': {}
+    }).result(timeout=CALL_TIMEOUT)
+
+    mock_process.terminate()
+    time.sleep(CALL_TIMEOUT)
+    assert not client_exited_server.client_thread.is_alive()
 
 
 def test_not_exit_without_check_parent_process_flag(client_server):  # pylint: disable=redefined-outer-name
