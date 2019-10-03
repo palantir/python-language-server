@@ -53,18 +53,20 @@ def parse_line(line, document=None):
 
 
 @hookimpl
-def pyls_lint(config, document):
+def pyls_lint(config, workspace, document, is_saved):
     live_mode = config.plugin_settings('pyls_mypy').get('live_mode', True)
     if live_mode:
         args = ['--incremental',
                 '--show-column-numbers',
                 '--follow-imports', 'silent',
                 '--command', document.source]
-    else:
+    elif is_saved:
         args = ['--incremental',
                 '--show-column-numbers',
                 '--follow-imports', 'silent',
                 document.path]
+    else:
+        return []
 
     report, errors, _ = mypy_api.run(args)
 
