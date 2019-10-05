@@ -23,7 +23,8 @@ class FakeConfig(object):
 def test_plugin():
     config = FakeConfig()
     doc = Document(DOC_URI, DOC_TYPE_ERR)
-    diags = plugin.pyls_lint(config, doc)
+    workspace = None
+    diags = plugin.pyls_lint(config, workspace, doc, is_saved=False)
 
     assert len(diags) == 1
     diag = diags[0]
