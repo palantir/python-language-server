@@ -22,7 +22,7 @@ Install into the same virtualenv as pyls itself.
 Configuration
 -------------
 
-``live_mode`` (default is True) provides type checking as you type. 
+``live_mode`` (default is True) provides type checking as you type.
 
 As mypy is unaware of what file path is being checked, there are limitations with live_mode
  - Imports cannot be followed correctly
@@ -31,15 +31,17 @@ As mypy is unaware of what file path is being checked, there are limitations wit
 Turning off live_mode means you must save your changes for mypy diagnostics to update correctly.
 
 Depending on your editor, the configuration should be roughly like this:
-.. code-block::
+
+::
+
     "pyls":
-	{
-		"plugins":
-		{
-			"pyls_mypy":
-			{
-				"enabled": true,
-				"live_mode": false
-			}
-		}
-	}
+    {
+        "plugins":
+        {
+            "pyls_mypy":
+            {
+                "enabled": true,
+                "live_mode": false
+            }
+        }
+    }
