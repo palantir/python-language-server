@@ -8,6 +8,12 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
+def pyls_settings():
+    # Default flake8 to disabled
+    return {'plugins': {'flake8': {'enabled': False}}}
+
+
+@hookimpl
 def pyls_lint(config, document):
     settings = config.plugin_settings('flake8')
     log.debug("Got flake8 settings: %s", settings)
