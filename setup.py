@@ -48,7 +48,7 @@ setup(
     extras_require={
         'all': [
             'autopep8',
-            'flake8==3.7.8',
+            'flake8',
             'mccabe',
             'pycodestyle',
             'pydocstyle>=2.0.0',
@@ -58,7 +58,7 @@ setup(
             'yapf',
         ],
         'autopep8': ['autopep8'],
-        'flake8': ['flake8==3.7.8'],
+        'flake8': ['flake8'],
         'mccabe': ['mccabe'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
