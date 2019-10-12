@@ -19,6 +19,13 @@ OPTIONS = [
     ('ignore', 'plugins.pycodestyle.ignore', list),
     ('max-line-length', 'plugins.pycodestyle.maxLineLength', int),
     ('select', 'plugins.pycodestyle.select', list),
+    # flake8
+    ('exclude', 'plugins.flake8.exclude', list),
+    ('filename', 'plugins.flake8.filename', list),
+    ('hang-closing', 'plugins.flake8.hangClosing', bool),
+    ('ignore', 'plugins.flake8.ignore', list),
+    ('max-line-length', 'plugins.flake8.maxLineLength', int),
+    ('select', 'plugins.flake8.select', list),
 ]
 
 
