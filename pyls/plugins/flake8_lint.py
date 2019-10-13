@@ -81,11 +81,11 @@ def parse_report(document, report):
                 'code': code,
                 'range': {
                     'start': {
-                        'line': line,
+                        'line': line - 1,
                         'character': character
                     },
                     'end': {
-                        'line': line,
+                        'line': line - 1,
                         # no way to determine the column
                         'character': len(physical_line)
                     }
