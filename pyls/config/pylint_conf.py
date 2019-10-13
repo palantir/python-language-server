@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 PROJECT_CONFIGS = ['.pylintrc', 'pylintrc']
 
-CONFIG_KEYS = { # 'option': 'section key'
+CONFIG_KEYS = {  # 'option': 'section key'
     'disable': 'MESSAGES CONTROL',
     'ignore': 'MASTER',
     'max-line-length': 'FORMAT',

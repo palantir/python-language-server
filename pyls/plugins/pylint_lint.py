@@ -11,7 +11,7 @@ from pyls import hookimpl, lsp
 
 log = logging.getLogger(__name__)
 
-ARGS = { # 'argument_name': 'name_under_plugin_conf'
+ARGS = {  # 'argument_name': 'name_under_plugin_conf'
     'disable': 'disable',
     'ignore': 'ignore',
     'max-line-length': 'maxLineLength',
