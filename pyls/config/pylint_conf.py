@@ -27,7 +27,7 @@ class PylintConfig(ConfigSource):
     def user_config(self):
         config_file = self._user_config_file()
         config = self.read_config_from_files([config_file])
-        return self.parse_config(config, CONFIG_KEYS, OPTIONS)
+        return self.parse_config_multi_keys(config, CONFIG_KEYS, OPTIONS)
 
     def _user_config_file(self):
         if self.is_windows:
@@ -37,13 +37,12 @@ class PylintConfig(ConfigSource):
     def project_config(self, document_path):
         files = find_parents(self.root_path, document_path, PROJECT_CONFIGS)
         config = self.read_config_from_files(files)
-        return self.parse_config(config, CONFIG_KEYS, OPTIONS)
+        return self.parse_config_multi_keys(config, CONFIG_KEYS, OPTIONS)
 
     @staticmethod
-    def parse_config(config, keys, options):
+    def parse_config_multi_keys(config, keys, options):
         """Parse the config with the given options.
-        This method override its parent to use multiple keys depending
-        on the value we want to get.
+        This method use multiple keys depending on the value we want to get.
         """
         conf = {}
         for source, destination, opt_type in options:
