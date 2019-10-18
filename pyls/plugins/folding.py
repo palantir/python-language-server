@@ -1,4 +1,4 @@
-# pylint: disable=len-as-condition,no-member
+# pylint: disable=len-as-condition
 
 import re
 
@@ -9,6 +9,26 @@ from pyls import hookimpl
 
 SKIP_NODES = (tree_nodes.Module, tree_nodes.IfStmt, tree_nodes.TryStmt)
 IDENTATION_REGEX = re.compile(r'(\s+).+')
+
+
+@hookimpl
+def pyls_folding_range(document):
+    program = str(document.source) + '\n'
+    lines = program.splitlines()
+    tree = parso.parse(program)
+    ranges = __compute_folding_ranges(tree, lines)
+
+    results = []
+    for (start_line, end_line) in ranges:
+        start_line -= 1
+        end_line -= 1
+        # If start/end character is not defined, then it defaults to the
+        # corresponding line last character
+        results.append({
+            'startLine': start_line,
+            'endLine': end_line,
+        })
+    return results
 
 
 def __merge_folding_ranges(left, right):
@@ -147,23 +167,3 @@ def __compute_folding_ranges(tree, lines):
 
     folding_ranges = sorted(folding_ranges.items())
     return folding_ranges
-
-
-@hookimpl
-def pyls_folding_range(document):
-    program = str(document.source) + '\n'
-    lines = program.splitlines()
-    tree = parso.parse(program)
-    ranges = __compute_folding_ranges(tree, lines)
-
-    results = []
-    for (start_line, end_line) in ranges:
-        start_line -= 1
-        end_line -= 1
-        # If start/end character is not defined, then it defaults to the
-        # corresponding line last character
-        results.append({
-            'startLine': start_line,
-            'endLine': end_line,
-        })
-    return results
