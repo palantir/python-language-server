@@ -34,18 +34,28 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
 
     def handle(self):
         self.delegate.start()
+        # pylint: disable=no-member
+        self.SHUTDOWN_CALL()
 
 
 def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
     if not issubclass(handler_class, PythonLanguageServer):
         raise ValueError('Handler class must be an instance of PythonLanguageServer')
 
+    def shutdown_server(*args):
+        # pylint: disable=unused-argument
+        log.debug('Shutting down server')
+        # Shutdown call must be done on a thread, to prevent deadlocks
+        stop_thread = threading.Thread(target=server.shutdown)
+        stop_thread.start()
+
     # Construct a custom wrapper class around the user's handler_class
     wrapper_class = type(
         handler_class.__name__ + 'Handler',
         (_StreamHandlerWrapper,),
         {'DELEGATE_CLASS': partial(handler_class,
-                                   check_parent_process=check_parent_process)}
+                                   check_parent_process=check_parent_process),
+         'SHUTDOWN_CALL': shutdown_server}
     )
 
     server = socketserver.TCPServer((bind_addr, port), wrapper_class)
@@ -78,6 +88,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.workspace = None
         self.config = None
         self.root_uri = None
+        self.watching_thread = None
         self.workspaces = {}
         self.uri_workspace_mapper = {}
 
@@ -188,19 +199,18 @@ class PythonLanguageServer(MethodDispatcher):
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
-        if self._check_parent_process and processId is not None:
+        if self._check_parent_process and processId is not None and self.watching_thread is None:
             def watch_parent_process(pid):
                 # exit when the given pid is not alive
                 if not _utils.is_process_alive(pid):
                     log.info("parent process %s is not alive", pid)
                     self.m_exit()
-                log.debug("parent process %s is still alive", pid)
-                threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
+                else:
+                    threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
 
-            watching_thread = threading.Thread(target=watch_parent_process, args=(processId,))
-            watching_thread.daemon = True
-            watching_thread.start()
-
+            self.watching_thread = threading.Thread(target=watch_parent_process, args=(processId,))
+            self.watching_thread.daemon = True
+            self.watching_thread.start()
         # Get our capabilities
         return {'capabilities': self.capabilities()}
 
