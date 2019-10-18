@@ -48,6 +48,7 @@ setup(
     extras_require={
         'all': [
             'autopep8',
+            'flake8',
             'mccabe',
             'pycodestyle',
             'pydocstyle>=2.0.0',
@@ -57,6 +58,7 @@ setup(
             'yapf',
         ],
         'autopep8': ['autopep8'],
+        'flake8': ['flake8'],
         'mccabe': ['mccabe'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
@@ -77,6 +79,7 @@ setup(
         'pyls': [
             'autopep8 = pyls.plugins.autopep8_format',
             'folding = pyls.plugins.folding',
+            'flake8 = pyls.plugins.flake8_lint',
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',
