@@ -76,6 +76,7 @@ setup(
         ],
         'pyls': [
             'autopep8 = pyls.plugins.autopep8_format',
+            'folding = pyls.plugins.folding',
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',
@@ -91,8 +92,7 @@ setup(
             'pylint = pyls.plugins.pylint_lint',
             'rope_completion = pyls.plugins.rope_completion',
             'rope_rename = pyls.plugins.rope_rename',
-            'yapf = pyls.plugins.yapf_format',
-            'folding = pyls.plugins.folding'
+            'yapf = pyls.plugins.yapf_format'
         ]
     },
 )

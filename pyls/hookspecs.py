@@ -68,6 +68,11 @@ def pyls_experimental_capabilities(config, workspace):
 
 
 @hookspec(firstresult=True)
+def pyls_folding_range(config, workspace, document):
+    pass
+
+
+@hookspec(firstresult=True)
 def pyls_format_document(config, workspace, document):
     pass
 
@@ -109,9 +114,4 @@ def pyls_settings(config):
 
 @hookspec(firstresult=True)
 def pyls_signature_help(config, workspace, document, position):
-    pass
-
-
-@hookspec(firstresult=True)
-def pyls_folding_range(config, workspace, document):
     pass
