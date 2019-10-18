@@ -1,136 +1,163 @@
 # pylint: disable=len-as-condition,no-member
 
-import sys
-import ast
+import re
+
+import parso
+import parso.python.tree as tree_nodes
 
 from pyls import hookimpl
 
-OLD_AST = (sys.version_info.major, sys.version_info.minor) <= (3, 2)
-if OLD_AST:
-    Try = (ast.TryFinally, ast.TryExcept)
-else:
-    Try = ast.Try
+SKIP_NODES = (tree_nodes.Module, tree_nodes.IfStmt, tree_nodes.TryStmt)
+IDENTATION_REGEX = re.compile(r'(\s+).+')
 
 
-def __update_if_try(ctx, tree_nodes, folding_starts, folding_ranges,
-                    folding_ends, line, col):
-    ctx_id = ctx[0]
-    common_node = tree_nodes[ctx_id]
-    if isinstance(common_node, (ast.If, Try)):
-        if ctx_id in folding_starts:
-            node_start = folding_starts[ctx_id]
-            ctx_line, _ = node_start
-            if ctx_line < line:
-                folding_starts.pop(ctx_id)
-                folding_ranges.append((node_start, (line, col)))
-                folding_ends[ctx_id] = (line, col)
-        else:
-            folding_ends[ctx_id] = (line, col)
+def __merge_folding_ranges(left, right):
+    for start in list(left.keys()):
+        right_start = right.pop(start, None)
+        if right_start is not None:
+            left[start] = max(right_start, start)
+    left.update(right)
+    return left
 
 
-def __update_folding_ranges(ctx, stack, line, col, folding_starts,
-                            folding_ends, tree_nodes, folding_ranges):
-    _, next_ctx = stack[0]
-    while ctx != next_ctx:
-        this_ctx = ctx.pop(0)
-        if this_ctx in folding_starts:
-            ctx_start = folding_starts.pop(this_ctx)
-            ctx_line, _ = ctx_start
-            if ctx_line < line:
-                folding_ranges.append((ctx_start, (line, col)))
-        elif this_ctx in folding_ends:
-            ctx_line, _ = folding_ends[this_ctx]
-            folding_ranges.append(((ctx_line + 1, 0), (line, col)))
-            node = tree_nodes[this_ctx]
-            if isinstance(node, Try):
-                continue
-            else:
-                break
-    if ctx == next_ctx:
-        __update_if_try(ctx, tree_nodes, folding_starts, folding_ranges,
-                        folding_ends, line, col)
+def __empty_identation_stack(identation_stack, level_limits,
+                             current_line, folding_ranges):
+    while identation_stack != []:
+        upper_level = identation_stack.pop(0)
+        level_start = level_limits.pop(upper_level)
+        folding_ranges.append((level_start, current_line))
     return folding_ranges
 
 
-def __reduce_folding_ranges(folding_ranges):
-    actual_ranges = []
-    i = 0
-    while i < len(folding_ranges) - 1:
-        ((left_line, _), left_end) = folding_ranges[i]
-        ((right_line, _), right_end) = folding_ranges[i + 1]
-        if left_line == right_line and left_end == right_end:
-            actual_ranges.append(folding_ranges[i + 1])
-            i += 2
-        elif left_line == right_line:
-            actual_ranges.append(folding_ranges[i])
-            i += 2
-        else:
-            actual_ranges.append(folding_ranges[i])
-            i += 1
-
-    if i == len(folding_ranges) - 1:
-        actual_ranges.append(folding_ranges[i])
-    return actual_ranges
+def __match_identation_stack(identation_stack, level, level_limits,
+                             folding_ranges, current_line):
+    upper_level = identation_stack.pop(0)
+    while upper_level >= level:
+        level_start = level_limits.pop(upper_level)
+        folding_ranges.append((level_start, current_line))
+        upper_level = identation_stack.pop(0)
+    identation_stack.insert(0, upper_level)
+    return identation_stack, folding_ranges
 
 
-def __compute_folding_ranges(tree):
+def __compute_folding_ranges_identation(text):
+    lines = text.splitlines()
     folding_ranges = []
-    folding_starts = {}
-    folding_ends = {}
-    tree_nodes = {}
+    identation_stack = []
+    level_limits = {}
+    current_level = 0
+    current_line = 0
+    while lines[current_line] == '':
+        current_line += 1
+    for i, line in enumerate(lines):
+        if i < current_line:
+            continue
+        i += 1
+        identation_match = IDENTATION_REGEX.match(line)
+        if identation_match is not None:
+            whitespace = identation_match.group(1)
+            level = len(whitespace)
+            if level > current_level:
+                level_limits[current_level] = current_line
+                identation_stack.insert(0, current_level)
+                current_level = level
+            elif level < current_level:
+                identation_stack, folding_ranges = __match_identation_stack(
+                    identation_stack, level, level_limits, folding_ranges,
+                    current_line)
+                current_level = level
+        else:
+            folding_ranges = __empty_identation_stack(
+                identation_stack, level_limits, current_line, folding_ranges)
+            current_level = 0
+        if line.strip() != '':
+            current_line = i
+    folding_ranges = __empty_identation_stack(
+        identation_stack, level_limits, current_line, folding_ranges)
+    return dict(folding_ranges)
 
-    stack = [(tree, [])]
-    while len(stack) > 0:
-        node, ctx = stack.pop(0)
-        node_id = id(node)
-        tree_nodes[node_id] = node
-        if hasattr(node, 'lineno'):
-            line, col = node.lineno, node.col_offset
-            folding_starts[node_id] = (line, col)
-        nodes = []
-        new_ctx = list([node_id] + ctx)
-        for child in ast.iter_child_nodes(node):
-            nodes.append((child, new_ctx))
-        stack = nodes + stack
 
-        if len(nodes) == 0:
+def __check_if_node_is_valid(node):
+    valid = True
+    if isinstance(node, tree_nodes.PythonNode):
+        kind = node.type
+        valid = kind not in {'decorated', 'parameters'}
+        if kind == 'suite':
+            if isinstance(node.parent, tree_nodes.Function):
+                valid = False
+    return valid
+
+
+def __compute_start_end_lines(node, stack):
+    start_line, _ = node.start_pos
+    end_line, _ = node.end_pos
+
+    last_leaf = node.get_last_leaf()
+    last_newline = isinstance(last_leaf, tree_nodes.Newline)
+    last_operator = isinstance(last_leaf, tree_nodes.Operator)
+    node_is_operator = isinstance(node, tree_nodes.Operator)
+    last_operator = last_operator or not node_is_operator
+
+    end_line -= 1
+
+    modified = False
+    if isinstance(node.parent, tree_nodes.PythonNode):
+        kind = node.type
+        # print(f'Parent node: {kind}')
+        if kind in {'suite', 'atom', 'atom_expr', 'arglist'}:
             if len(stack) > 0:
-                folding_ranges = __update_folding_ranges(
-                    ctx, stack, line, col, folding_starts, folding_ends,
-                    tree_nodes, folding_ranges)
+                next_node = stack[0]
+                next_line, _ = next_node.start_pos
+                if next_line > end_line:
+                    end_line += 1
+                    modified = True
+    if not last_newline and not modified and not last_operator:
+        end_line += 1
+    return start_line, end_line
 
-    folding_ranges = sorted(folding_ranges)
-    ranges = __reduce_folding_ranges(folding_ranges)
-    return ranges
+
+def __compute_folding_ranges(tree, lines):
+    folding_ranges = {}
+    stack = [tree]
+
+    while len(stack) > 0:
+        node = stack.pop(0)
+        if isinstance(node, tree_nodes.Newline):
+            # Skip newline nodes
+            continue
+        elif isinstance(node, tree_nodes.PythonErrorNode):
+            # Fallback to identation-based (best-effort) folding
+            start_line, _ = node.start_pos
+            start_line -= 1
+            padding = [''] * start_line
+            text = '\n'.join(padding + lines[start_line:]) + '\n'
+            identation_ranges = __compute_folding_ranges_identation(text)
+            folding_ranges = __merge_folding_ranges(
+                folding_ranges, identation_ranges)
+            break
+        elif not isinstance(node, SKIP_NODES):
+            valid = __check_if_node_is_valid(node)
+            if valid:
+                start_line, end_line = __compute_start_end_lines(node, stack)
+                if end_line > start_line:
+                    current_end = folding_ranges.get(start_line, -1)
+                    folding_ranges[start_line] = max(current_end, end_line)
+        if hasattr(node, 'children'):
+            stack = node.children + stack
+
+    folding_ranges = sorted(folding_ranges.items())
+    return folding_ranges
 
 
 @hookimpl
 def pyls_folding_range(document):
-    program = str(document.source)
-    # Add an additional "pass" to ensure that there's always a next node
-    program = program + '\n\npass'
-    tree = None
-    lines = []
-    reparsing = False
-    while tree is None:
-        try:
-            tree = ast.parse(program)
-        except SyntaxError as e:
-            offending_line = e.lineno
-            lines = program.splitlines(True)
-            lines = lines[:offending_line - 1]
-            program = ''.join(lines)
-            reparsing = True
-
-    # Parse again to add additional node
-    if reparsing:
-        program = program + '\n\npass'
-        tree = ast.parse(program)
-
-    ranges = __compute_folding_ranges(tree)
+    program = str(document.source) + '\n'
+    lines = program.splitlines()
+    tree = parso.parse(program)
+    ranges = __compute_folding_ranges(tree, lines)
 
     results = []
-    for ((start_line, _), (end_line, _)) in ranges:
+    for (start_line, end_line) in ranges:
         start_line -= 1
         end_line -= 1
         # If start/end character is not defined, then it defaults to the
