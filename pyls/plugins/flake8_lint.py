@@ -99,8 +99,6 @@ def parse_stdout(document, stdout):
 
     diagnostics = []
     parsed_lines = re.findall(r'(.*):(\d*):(\d*): (\w*) (.*)', stdout)
-    log.debug("doc %s", document.lines)
-    log.debug(dir(document))
     for parsed_line in parsed_lines:
         if not parsed_line:
             continue
