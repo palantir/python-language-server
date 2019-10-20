@@ -1,13 +1,9 @@
 # Copyright 2019 Palantir Technologies, Inc.
 import tempfile
 import os
-import logging
 from pyls import lsp, uris
 from pyls.plugins import flake8_lint
 from pyls.workspace import Document
-
-
-log = logging.getLogger(__name__)
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import pyls
@@ -43,7 +39,6 @@ def test_flake8_lint(config):
     try:
         name, doc = temp_document(DOC)
         diags = flake8_lint.pyls_lint(config, doc)
-        log.debug('diags from flake8 test %s', diags)
         msg = 'local variable \'a\' is assigned to but never used'
         unused_var = [d for d in diags if d['message'] == msg][0]
 

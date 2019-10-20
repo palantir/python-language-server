@@ -39,7 +39,15 @@ def run_flake8(args):
     from stderr if any.
     """
     log.debug("Calling flake8 with args: '%s'", args)
-    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    try:
+        cmd = ['flake8']
+        cmd.extend(args)
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    except:
+        log.debug("Can't execute flake8. Trying with 'python -m flake8'")
+        cmd = ['python', '-m', 'flake8']
+        cmd.extend(args)
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stderr = p.stderr.read().decode()
     if stderr:
         log.error("Error while running flake8 '%s'", stderr)
@@ -54,7 +62,7 @@ def build_args(options, doc_path):
         options: dictionary of argument names and their values.
         doc_path: path of the document to lint.
     """
-    args = ['flake8', doc_path]
+    args = [doc_path]
     for arg_name, arg_val in options.items():
         arg = None
         if isinstance(arg_val, list):
