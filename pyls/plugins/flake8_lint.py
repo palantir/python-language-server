@@ -43,7 +43,7 @@ def run_flake8(args):
         cmd = ['flake8']
         cmd.extend(args)
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    except:
+    except IOError:
         log.debug("Can't execute flake8. Trying with 'python -m flake8'")
         cmd = ['python', '-m', 'flake8']
         cmd.extend(args)
