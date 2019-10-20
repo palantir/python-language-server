@@ -98,8 +98,9 @@ def parse_stdout(document, stdout):
     """
 
     diagnostics = []
-    parsed_lines = re.findall(r'(.*):(\d*):(\d*): (\w*) (.*)', stdout)
-    for parsed_line in parsed_lines:
+    lines = stdout.splitlines()
+    for raw_line in lines:
+        parsed_line = re.findall(r'(.*):(\d*):(\d*): (\w*) (.*)', raw_line)
         if not parsed_line:
             continue
         _, line, character, code, msg = parsed_line
