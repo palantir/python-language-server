@@ -62,6 +62,7 @@ def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
     server.allow_reuse_address = True
 
     try:
+        log.info('WHAT WHAT!')
         log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
         server.serve_forever()
     finally:

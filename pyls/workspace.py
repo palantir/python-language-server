@@ -112,6 +112,7 @@ class Document(object):
         self._source = source
         self._extra_sys_path = extra_sys_path or []
         self._rope_project_builder = rope_project_builder
+        self._environments = {}  # Cache jedi environments
 
     def __str__(self):
         return str(self.uri)
@@ -202,23 +203,42 @@ class Document(object):
             definitions=definitions, references=references
         )
 
-    def jedi_script(self, position=None):
+    def jedi_script(self, position=None, extra_paths=None, environment=None):
+        extra_paths = extra_paths or []
         kwargs = {
             'source': self.source,
             'path': self.path,
-            'sys_path': self.sys_path()
+            'sys_path': self.sys_path(environment) + extra_paths,
+            'environment': environment,
         }
+
+        log.debug('SYS_PATH say what?')
+        log.debug(str(kwargs))
+
         if position:
             kwargs['line'] = position['line'] + 1
             kwargs['column'] = _utils.clip_column(position['character'], self.lines, position['line'])
+
         return jedi.Script(**kwargs)
 
-    def sys_path(self):
+    def sys_path(self, environment_path=None):
         # Copy our extra sys path
         path = list(self._extra_sys_path)
 
+        log.debug('SYS_PATH say what?')
+        log.debug('HELP: ' + str(environment_path))
+
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
-        environment = jedi.api.environment.get_cached_default_environment()
+        if environment_path is None:
+            environment = jedi.api.environment.get_cached_default_environment()
+        else:
+            if environment_path in self._environments:
+                environment = self._environments[environment_path]
+            else:
+                environment = jedi.api.environment.create_environment(path=environment_path,
+                                                                      safe=True)
+                self._environments[environment_path] = environment
+
         path.extend(environment.get_sys_path())
 
         return path
