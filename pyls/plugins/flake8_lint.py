@@ -1,7 +1,8 @@
 # Copyright 2019 Palantir Technologies, Inc.
 """Linter pluging for flake8"""
 import logging
-from flake8.api import legacy as flake8
+import re
+from subprocess import Popen, PIPE
 from pyls import hookimpl, lsp
 
 log = logging.getLogger(__name__)
@@ -21,23 +22,64 @@ def pyls_lint(config, document):
     opts = {
         'exclude': settings.get('exclude'),
         'filename': settings.get('filename'),
-        'hang_closing': settings.get('hangClosing'),
+        'hang-closing': settings.get('hangClosing'),
         'ignore': settings.get('ignore'),
-        'max_line_length': settings.get('maxLineLength'),
+        'max-line-length': settings.get('maxLineLength'),
         'select': settings.get('select'),
     }
 
-    # Build the flake8 checker and use it to generate a report from the document
-    kwargs = {k: v for k, v in opts.items() if v}
-    style_guide = flake8.get_style_guide(quiet=4, verbose=0, **kwargs)
-    report = style_guide.check_files([document.path])
-
-    return parse_report(document, report)
+    # Call the flake8 utility then parse diagnostics from stdout
+    args = build_args(opts, document.path)
+    output = run_flake8(args)
+    return parse_stdout(document, output)
 
 
-def parse_report(document, report):
+def run_flake8(args):
+    """Run flake8 with the provided arguments, logs errors
+    from stderr if any.
     """
-    Build a diagnostics from a report, it should extract every result and format
+    log.debug("Calling flake8 with args: '%s'", args)
+    try:
+        cmd = ['flake8']
+        cmd.extend(args)
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    except IOError:
+        log.debug("Can't execute flake8. Trying with 'python -m flake8'")
+        cmd = ['python', '-m', 'flake8']
+        cmd.extend(args)
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    stderr = p.stderr.read().decode()
+    if stderr:
+        log.error("Error while running flake8 '%s'", stderr)
+    stdout = p.stdout
+    return stdout.read().decode()
+
+
+def build_args(options, doc_path):
+    """Build arguments for calling flake8.
+
+    Args:
+        options: dictionary of argument names and their values.
+        doc_path: path of the document to lint.
+    """
+    args = [doc_path]
+    for arg_name, arg_val in options.items():
+        arg = None
+        if isinstance(arg_val, list):
+            arg = '--{}={}'.format(arg_name, ','.join(arg_val))
+        elif isinstance(arg_val, bool):
+            if arg_val:
+                arg = '--{}'.format(arg_name)
+        elif isinstance(arg_val, int):
+            arg = '--{}={}'.format(arg_name, arg_val)
+        if arg:
+            args.append(arg)
+    return args
+
+
+def parse_stdout(document, stdout):
+    """
+    Build a diagnostics from flake8's output, it should extract every result and format
     it into a dict that looks like this:
         {
             'source': 'flake8',
@@ -58,40 +100,37 @@ def parse_report(document, report):
 
     Args:
         document: The document to be linted.
-        report: A Report object returned by checking the document.
+        stdout: output from flake8
     Returns:
         A list of dictionaries.
     """
 
-    file_checkers = report._application.file_checker_manager.checkers
-    # No file have been checked
-    if not file_checkers:
-        return []
-    # There should be only a filechecker since we are parsing using a path and not a pattern
-    if len(file_checkers) > 1:
-        log.error("Flake8 parsed more than a file for '%s'", document.path)
-
     diagnostics = []
-    file_checker = file_checkers[0]
-    for error in file_checker.results:
-        code, line, character, msg, physical_line = error
+    lines = stdout.splitlines()
+    for raw_line in lines:
+        parsed_line = re.match(r'(.*):(\d*):(\d*): (\w*) (.*)', raw_line).groups()
+        if not parsed_line or len(parsed_line) != 5:
+            log.debug("Flake8 output parser can't parse line '%s'", raw_line)
+            continue
+        _, line, character, code, msg = parsed_line
+        line = int(line) - 1
+        character = int(character) - 1
         diagnostics.append(
             {
                 'source': 'flake8',
                 'code': code,
                 'range': {
                     'start': {
-                        'line': line - 1,
+                        'line': line,
                         'character': character
                     },
                     'end': {
-                        'line': line - 1,
+                        'line': line,
                         # no way to determine the column
-                        'character': len(physical_line)
+                        'character': len(document.lines[line])
                     }
                 },
                 'message': msg,
-                # no way to determine the severity using the legacy api
                 'severity': lsp.DiagnosticSeverity.Warning,
             }
         )
