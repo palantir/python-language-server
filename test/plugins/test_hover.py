@@ -1,5 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from pyls import uris
+from distutils.version import LooseVersion
+
+from pyls import uris, _utils
 from pyls.plugins.hover import pyls_hover
 from pyls.workspace import Document
 
@@ -20,8 +22,13 @@ def test_hover():
 
     doc = Document(DOC_URI, DOC)
 
+    if LooseVersion(_utils.JEDI_VERSION) >= LooseVersion('0.15.0'):
+        contents = [{'language': 'python', 'value': 'main()'}, 'hello world']
+    else:
+        contents = 'main()\n\nhello world'
+
     assert {
-        'contents': [{'language': 'python', 'value': 'main()'}, 'hello world']
+        'contents': contents
     } == pyls_hover(doc, hov_position)
 
     assert {'contents': ''} == pyls_hover(doc, no_hov_position)
