@@ -52,7 +52,7 @@ setup(
             'pycodestyle',
             'pydocstyle>=2.0.0',
             'pyflakes>=1.6.0',
-            'pylint>=2.4.0',
+            'pylint',
             'rope>=0.10.5',
             'yapf',
         ],
