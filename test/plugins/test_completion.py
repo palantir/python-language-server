@@ -46,7 +46,7 @@ def test_rope_import_completion(config, workspace):
 
 
 @pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.14.0'),
-                    reason='This test fails with previous versions of jedi')
+                    reason='This test fails with previous versions of Jedi')
 def test_jedi_completion(config):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
@@ -120,6 +120,8 @@ def test_jedi_method_completion(config):
     assert everyone_method['insertText'] == 'everyone'
 
 
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
+                    reason='This test fails with Jedi 0.15')
 def test_numpy_completions(config):
     doc_numpy = "import numpy as np; np."
     com_position = {'line': 0, 'character': len(doc_numpy)}
@@ -130,6 +132,8 @@ def test_numpy_completions(config):
     assert any(['array' in i['label'] for i in items])
 
 
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
+                    reason='This test fails with Jedi 0.15')
 def test_pandas_completions(config):
     doc_pandas = "import pandas as pd; pd."
     com_position = {'line': 0, 'character': len(doc_pandas)}
