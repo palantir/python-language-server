@@ -48,6 +48,7 @@ setup(
         'all': [
             'autopep8',
             'flake8',
+            'importmagic',
             'mccabe',
             'pycodestyle',
             'pydocstyle>=2.0.0',
@@ -58,6 +59,7 @@ setup(
         ],
         'autopep8': ['autopep8'],
         'flake8': ['flake8'],
+        'importmagic': ['importmagic'],
         'mccabe': ['mccabe'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
@@ -78,6 +80,7 @@ setup(
         'pyls': [
             'autopep8 = pyls.plugins.autopep8_format',
             'flake8 = pyls.plugins.flake8_lint',
+            'importmagic = pyls.plugins.importmagic_lint',
             'jedi_completion = pyls.plugins.jedi_completion',
             'jedi_definition = pyls.plugins.definition',
             'jedi_hover = pyls.plugins.hover',

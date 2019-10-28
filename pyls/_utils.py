@@ -192,3 +192,7 @@ else:
             return e.errno == errno.EPERM
         else:
             return True
+
+
+def camel_to_underscore(camelcase):
+    return re.sub('([A-Z]+)', r'_\1',camelcase).lower()

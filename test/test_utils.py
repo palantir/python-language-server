@@ -87,3 +87,9 @@ def test_clip_column():
     assert _utils.clip_column(2, ['123\n', '123'], 0) == 2
     assert _utils.clip_column(3, ['123\n', '123'], 0) == 3
     assert _utils.clip_column(4, ['123\n', '123'], 1) == 3
+
+
+def test_camel_to_underscore():
+    assert _utils.camel_to_underscore('camelCase') == 'camel_case'
+    assert _utils.camel_to_underscore('hangClosing') == 'hang_closing'
+    assert _utils.camel_to_underscore('ignore') == 'ignore'
