@@ -68,6 +68,11 @@ def pyls_experimental_capabilities(config, workspace):
 
 
 @hookspec(firstresult=True)
+def pyls_folding_range(config, workspace, document):
+    pass
+
+
+@hookspec(firstresult=True)
 def pyls_format_document(config, workspace, document):
     pass
 
