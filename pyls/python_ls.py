@@ -40,6 +40,7 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
             if os.name == 'nt':
                 # Catch and pass on ConnectionResetError when parent process
                 # dies
+                # pylint: disable=no-member, undefined-variable
                 if isinstance(e, WindowsError) and e.winerror == 10054:
                     pass
 
