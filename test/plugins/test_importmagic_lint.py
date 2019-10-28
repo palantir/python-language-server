@@ -55,10 +55,10 @@ def test_importmagic_actions(config):
 
     try:
         name, doc = temp_document(DOC)
-        action = importmagic_lint.pyls_code_actions(config, doc, context)[0]
+        actions = importmagic_lint.pyls_code_actions(config, doc, context)
+        action = [a for a in actions if a['title'] == 'Import "listdir" from "os"'][0]
         arguments = action['arguments']
 
-        assert action['title'] == 'Import "listdir" from "os"'
         assert action['command'] == 'importmagic.addimport'
         assert arguments['startLine'] == 1
         assert arguments['endLine'] == 1
