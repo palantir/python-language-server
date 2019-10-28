@@ -1,8 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from functools import partial
 import logging
+import os
 import socketserver
 import threading
-from functools import partial
 
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
@@ -33,7 +34,16 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
         self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
 
     def handle(self):
-        self.delegate.start()
+        try:
+            self.delegate.start()
+        except OSError as e:
+            if os.name == 'nt':
+                # Catch and pass on ConnectionResetError when parent process
+                # dies
+                # pylint: disable=no-member, undefined-variable
+                if isinstance(e, WindowsError) and e.winerror == 10054:
+                    pass
+
         # pylint: disable=no-member
         self.SHUTDOWN_CALL()
 
@@ -202,7 +212,7 @@ class PythonLanguageServer(MethodDispatcher):
             def watch_parent_process(pid):
                 # exit when the given pid is not alive
                 if not _utils.is_process_alive(pid):
-                    log.info("parent process %s is not alive", pid)
+                    log.info("parent process %s is not alive, exiting!", pid)
                     self.m_exit()
                 else:
                     threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
