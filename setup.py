@@ -33,10 +33,9 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'configparser; python_version<"3.0"',
-        'future>=0.14.0',
-        'futures; python_version<"3.2"',
+        'future>=0.14.0; python_version<"3"',
         'backports.functools_lru_cache; python_version<"3.2"',
-        'jedi>=0.15.0,<0.16',
+        'jedi>=0.14.1,<0.16',
         'python-jsonrpc-server>=0.1.0',
         'pluggy'
     ],
@@ -66,7 +65,8 @@ setup(
         'pylint': ['pylint'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
-        'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov', 'coverage'],
+        'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov',
+                 'coverage', 'numpy', 'pandas', 'matplotlib'],
     },
 
     # To provide executable scripts, use entry points in preference to the
