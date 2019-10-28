@@ -1,3 +1,4 @@
+# Copyright 2019 Palantir Technologies, Inc.
 
 from textwrap import dedent
 

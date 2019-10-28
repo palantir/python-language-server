@@ -1,4 +1,5 @@
 # pylint: disable=len-as-condition
+# Copyright 2019 Palantir Technologies, Inc.
 
 import re
 
@@ -13,7 +14,7 @@ IDENTATION_REGEX = re.compile(r'(\s+).+')
 
 @hookimpl
 def pyls_folding_range(document):
-    program = str(document.source) + '\n'
+    program = document.source + '\n'
     lines = program.splitlines()
     tree = parso.parse(program)
     ranges = __compute_folding_ranges(tree, lines)
@@ -123,7 +124,6 @@ def __compute_start_end_lines(node, stack):
     modified = False
     if isinstance(node.parent, tree_nodes.PythonNode):
         kind = node.type
-        # print(f'Parent node: {kind}')
         if kind in {'suite', 'atom', 'atom_expr', 'arglist'}:
             if len(stack) > 0:
                 next_node = stack[0]
