@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 import threading
+import re
 
 PY2 = sys.version_info.major == 2
 
