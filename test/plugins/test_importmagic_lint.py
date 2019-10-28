@@ -39,7 +39,7 @@ def test_importmagic_lint():
 
 def test_importmagic_actions(config):
     context = {
-        'diagnostict': [
+        'diagnostics': [
             {
                 'range':
                 {
