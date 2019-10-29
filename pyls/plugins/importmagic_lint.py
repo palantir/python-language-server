@@ -129,7 +129,7 @@ def pyls_code_actions(config, document, context):
                 # These tend to be terrible
                 continue
 
-            actions.append(generate_add_action(document.source, index, module, variable))
+            actions.append(generate_add_action(document, index, module, variable))
 
     return actions
 
