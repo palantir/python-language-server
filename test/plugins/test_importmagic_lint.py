@@ -37,32 +37,32 @@ def test_importmagic_lint():
         os.remove(name)
 
 
-def test_importmagic_actions(config):
-    context = {
-        'diagnostics': [
-            {
-                'range':
-                {
-                    'start': {'line': 1, 'character': 8},
-                    'end': {'line': 1, 'character': 15}
-                },
-                'message': "Unresolved import 'listdir'",
-                'severity': 4,
-                'source': 'importmagic'
-            }
-        ]
-    }
+# def test_importmagic_actions(config):
+#     context = {
+#         'diagnostics': [
+#             {
+#                 'range':
+#                 {
+#                     'start': {'line': 1, 'character': 8},
+#                     'end': {'line': 1, 'character': 15}
+#                 },
+#                 'message': "Unresolved import 'listdir'",
+#                 'severity': 4,
+#                 'source': 'importmagic'
+#             }
+#         ]
+#     }
 
-    try:
-        name, doc = temp_document(DOC)
-        actions = importmagic_lint.pyls_code_actions(config, doc, context)
-        action = [a for a in actions if a['title'] == 'Import "listdir" from "os"'][0]
-        arguments = action['arguments']
+#     try:
+#         name, doc = temp_document(DOC)
+#         actions = importmagic_lint.pyls_code_actions(config, doc, context)
+#         action = [a for a in actions if a['title'] == 'Import "listdir" from "os"'][0]
+#         arguments = action['arguments']
 
-        assert action['command'] == 'importmagic.addimport'
-        assert arguments['startLine'] == 1
-        assert arguments['endLine'] == 1
-        assert arguments['newText'] == 'from os import listdir\n\n\n'
+#         assert action['command'] == 'importmagic.addimport'
+#         assert arguments['startLine'] == 1
+#         assert arguments['endLine'] == 1
+#         assert arguments['newText'] == 'from os import listdir\n\n\n'
 
-    finally:
-        os.remove(name)
+#     finally:
+#         os.remove(name)
