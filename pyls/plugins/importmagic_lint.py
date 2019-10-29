@@ -129,26 +129,32 @@ def pyls_code_actions(config, document, context):
                 # These tend to be terrible
                 continue
 
-            # Generate the patch we would need to apply
-            imports = importmagic.Imports(index, document.source)
-            if variable:
-                imports.add_import_from(module, variable)
-            else:
-                imports.add_import(module)
-            start_line, end_line, text = imports.get_update()
+            actions.append(generate_add_action(document.source, index, module, variable))
 
-            actions.append({
-                'title': _command_title(variable, module),
-                'command': ADD_IMPORT_COMMAND,
-                'arguments': [{
-                    'uri': document.uri,
-                    'version': document.version,
-                    'startLine': start_line,
-                    'endLine': end_line,
-                    'newText': text
-                }]
-            })
     return actions
+
+
+def generate_add_action(document, index, module, variable):
+    # Generate the patch we would need to apply
+    imports = importmagic.Imports(index, document.source)
+    if variable:
+        imports.add_import_from(module, variable)
+    else:
+        imports.add_import(module)
+    start_line, end_line, text = imports.get_update()
+
+    action = {
+        'title': _command_title(variable, module),
+        'command': ADD_IMPORT_COMMAND,
+        'arguments': [{
+            'uri': document.uri,
+            'version': document.version,
+            'startLine': start_line,
+            'endLine': end_line,
+            'newText': text
+        }]
+    }
+    return action
 
 
 @hookimpl
