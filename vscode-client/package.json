@@ -35,6 +35,11 @@
                     },
                     "uniqueItems": true
                 },
+                "pyls.plugins.importmagic_lint.minScore": {
+                    "type": "number",
+                    "default": 1,
+                    "description": "The minimum score used to filter module import suggestions."
+                },
                 "pyls.plugins.jedi_completion.enabled": {
                     "type": "boolean",
                     "default": true,

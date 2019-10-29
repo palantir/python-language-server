@@ -108,6 +108,7 @@ def pyls_code_actions(config, document, context):
     """
     # Update the style configuration
     conf = config.plugin_settings('importmagic_lint')
+    min_score = conf.get('minScore', 1)
     log.debug("Got importmagic settings: %s", conf)
     importmagic.Imports.set_style(**{_utils.camel_to_underscore(k): v for k, v in conf.items()})
 
@@ -125,8 +126,8 @@ def pyls_code_actions(config, document, context):
         index = _get_index(sys.path)
 
         for score, module, variable in sorted(index.symbol_scores(unres)[:MAX_COMMANDS], reverse=True):
-            if score < 1:
-                # These tend to be terrible
+            if score < min_score:
+                # Skip low score results
                 continue
 
             actions.append(generate_add_action(document, index, module, variable))
