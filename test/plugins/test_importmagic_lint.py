@@ -7,8 +7,8 @@ from pyls.workspace import Document
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """
-files = listdir()
-print(files)
+time.sleep(10)
+print("test")
 """
 
 
@@ -28,41 +28,41 @@ def test_importmagic_lint():
         diags = importmagic_lint.pyls_lint(doc)
         unres_symbol = [d for d in diags if d['source'] == 'importmagic'][0]
 
-        assert unres_symbol['message'] == "Unresolved import 'listdir'"
-        assert unres_symbol['range']['start'] == {'line': 1, 'character': 8}
-        assert unres_symbol['range']['end'] == {'line': 1, 'character': 15}
+        assert unres_symbol['message'] == "Unresolved import 'time.sleep'"
+        assert unres_symbol['range']['start'] == {'line': 1, 'character': 0}
+        assert unres_symbol['range']['end'] == {'line': 1, 'character': 10}
         assert unres_symbol['severity'] == lsp.DiagnosticSeverity.Hint
 
     finally:
         os.remove(name)
 
 
-# def test_importmagic_actions(config):
-#     context = {
-#         'diagnostics': [
-#             {
-#                 'range':
-#                 {
-#                     'start': {'line': 1, 'character': 8},
-#                     'end': {'line': 1, 'character': 15}
-#                 },
-#                 'message': "Unresolved import 'listdir'",
-#                 'severity': 4,
-#                 'source': 'importmagic'
-#             }
-#         ]
-#     }
+def test_importmagic_actions(config):
+    context = {
+        'diagnostics': [
+            {
+                'range':
+                {
+                    'start': {'line': 1, 'character': 0},
+                    'end': {'line': 1, 'character': 10}
+                },
+                'message': "Unresolved import 'time.sleep'",
+                'severity': lsp.DiagnosticSeverity.Hint,
+                'source': importmagic_lint.SOURCE
+            }
+        ]
+    }
 
-#     try:
-#         name, doc = temp_document(DOC)
-#         actions = importmagic_lint.pyls_code_actions(config, doc, context)
-#         action = [a for a in actions if a['title'] == 'Import "listdir" from "os"'][0]
-#         arguments = action['arguments']
+    try:
+        name, doc = temp_document(DOC)
+        actions = importmagic_lint.pyls_code_actions(config, doc, context)
+        action = [a for a in actions if a['title'] == 'Import "time"'][0]
+        arguments = action['arguments'][0]
 
-#         assert action['command'] == 'importmagic.addimport'
-#         assert arguments['startLine'] == 1
-#         assert arguments['endLine'] == 1
-#         assert arguments['newText'] == 'from os import listdir\n\n\n'
+        assert action['command'] == importmagic_lint.ADD_IMPORT_COMMAND
+        assert arguments['startLine'] == 1
+        assert arguments['endLine'] == 1
+        assert arguments['newText'] == 'import time\n\n\n'
 
-#     finally:
-#         os.remove(name)
+    finally:
+        os.remove(name)
