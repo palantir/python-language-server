@@ -21,5 +21,5 @@ def pyls_definitions(config, document, position):
             }
         }
         for d in definitions
-        if d.is_definition() and d.line is not None and d.column is not None and d.module_path is not None
+        if d.is_definition() and d.line is not None and d.column is not None and d.module_path is not None and not d.in_builtin_module()
     ]
