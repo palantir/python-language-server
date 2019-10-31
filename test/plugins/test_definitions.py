@@ -40,7 +40,7 @@ def test_builtin_definition(config):
 
     # No go-to def for builtins
     doc = Document(DOC_URI, DOC)
-    assert [] == pyls_definitions(config, doc, cursor_pos)
+    assert not pyls_definitions(config, doc, cursor_pos)
 
 
 def test_assignment(config):

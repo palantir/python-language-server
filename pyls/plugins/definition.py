@@ -20,7 +20,14 @@ def pyls_definitions(config, document, position):
                 'end': {'line': d.line - 1, 'character': d.column + len(d.name)},
             }
         }
-        for d in definitions
-        if d.is_definition() and d.line is not None and d.column is not None and
-        d.module_path is not None and not d.in_builtin_module()
+        for d in definitions if d.is_definition() and not_internal_definition(d)
     ]
+
+
+def not_internal_definition(definition):
+    return (
+        definition.line is not None and
+        definition.column is not None and
+        definition.module_path is not None and
+        not definition.in_builtin_module()
+    )
