@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from distutils.version import LooseVersion
 import functools
 import inspect
 import logging
@@ -7,7 +8,10 @@ import sys
 import threading
 import re
 
+import jedi
+
 PY2 = sys.version_info.major == 2
+JEDI_VERSION = jedi.__version__
 
 if PY2:
     import pathlib2 as pathlib
@@ -137,6 +141,8 @@ def format_docstring(contents):
     """
     contents = contents.replace('\t', u'\u00A0' * 4)
     contents = contents.replace('  ', u'\u00A0' * 2)
+    if LooseVersion(JEDI_VERSION) < LooseVersion('0.15.0'):
+        contents = contents.replace('*', '\\*')
     return contents
 
 

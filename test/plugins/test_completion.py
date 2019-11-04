@@ -45,8 +45,6 @@ def test_rope_import_completion(config, workspace):
     assert items is None
 
 
-@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.14.0'),
-                    reason='This test fails with previous versions of jedi')
 def test_jedi_completion(config):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
@@ -118,3 +116,37 @@ def test_jedi_method_completion(config):
 
     assert 'insertTextFormat' not in everyone_method
     assert everyone_method['insertText'] == 'everyone'
+
+
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
+                    reason='This test fails with Jedi 0.15')
+def test_numpy_completions(config):
+    doc_numpy = "import numpy as np; np."
+    com_position = {'line': 0, 'character': len(doc_numpy)}
+    doc = Document(DOC_URI, doc_numpy)
+    items = pyls_jedi_completions(config, doc, com_position)
+
+    assert items
+    assert any(['array' in i['label'] for i in items])
+
+
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
+                    reason='This test fails with Jedi 0.15')
+def test_pandas_completions(config):
+    doc_pandas = "import pandas as pd; pd."
+    com_position = {'line': 0, 'character': len(doc_pandas)}
+    doc = Document(DOC_URI, doc_pandas)
+    items = pyls_jedi_completions(config, doc, com_position)
+
+    assert items
+    assert any(['DataFrame' in i['label'] for i in items])
+
+
+def test_matplotlib_completions(config):
+    doc_mpl = "import matplotlib.pyplot as plt; plt."
+    com_position = {'line': 0, 'character': len(doc_mpl)}
+    doc = Document(DOC_URI, doc_mpl)
+    items = pyls_jedi_completions(config, doc, com_position)
+
+    assert items
+    assert any(['plot' in i['label'] for i in items])

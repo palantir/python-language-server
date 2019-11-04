@@ -1,8 +1,4 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from distutils.version import LooseVersion
-import jedi
-import pytest
-
 from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
@@ -25,8 +21,6 @@ def main(x):
 """
 
 
-@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.14.0'),
-                    reason='This test fails with previous versions of jedi')
 def test_symbols(config):
     doc = Document(DOC_URI, DOC)
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
