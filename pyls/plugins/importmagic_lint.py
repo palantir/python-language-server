@@ -130,12 +130,12 @@ def pyls_code_actions(config, document, context):
                 # Skip low score results
                 continue
 
-            actions.append(generate_add_action(document, index, module, variable))
+            actions.append(_generate_add_action(document, index, module, variable))
 
     return actions
 
 
-def generate_add_action(document, index, module, variable):
+def _generate_add_action(document, index, module, variable):
     # Generate the patch we would need to apply
     imports = importmagic.Imports(index, document.source)
     if variable:
