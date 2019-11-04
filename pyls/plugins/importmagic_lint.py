@@ -22,14 +22,12 @@ def _get_index(sys_path):
     """
     key = tuple(sys_path)
     if key not in _index_cache:
-        log.debug("Started building importmagic index")
+        log.info("Started building importmagic index")
         index = importmagic.SymbolIndex()
         # The build tend to be noisy
-        logging.getLogger('importmagic.index').setLevel(logging.ERROR)
         index.build_index(paths=sys_path)
         _index_cache[key] = index
-        logging.getLogger('importmagic.index').setLevel(logging.DEBUG)
-        log.debug("Finished building importmagic index")
+        log.info("Finished building importmagic index")
     return _index_cache[key]
 
 
