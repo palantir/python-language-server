@@ -38,7 +38,8 @@ def pyls_commands():
 
 @hookimpl
 def pyls_lint(document):
-    """Build a diagnostics of unresolved symbols. Every entry follows this format:
+    """Build a diagnostics of unresolved and unreferenced symbols.
+    Every entry follows this format:
         {
             'source': 'importmagic',
             'range': {
@@ -51,8 +52,8 @@ def pyls_lint(document):
                     'character': end_column,
                 },
             },
-            'message': 'Unresolved import <symbol>',
-            'severity': lsp.DiagnosticSeverity.Hint,
+            'message': message_to_be_displayed,
+            'severity': sevirity_level,
         }
 
     Args:
@@ -61,12 +62,13 @@ def pyls_lint(document):
         A list of dictionaries.
     """
     scope = importmagic.Scope.from_source(document.source)
-    unresolved, _unreferenced = scope.find_unresolved_and_unreferenced_symbols()
+    unresolved, unreferenced = scope.find_unresolved_and_unreferenced_symbols()
 
     diagnostics = []
 
     # Annoyingly, we only get the text of an unresolved import, so we'll look for it ourselves
     for unres in unresolved:
+        # TODO (youben): delete this test as it double execution time (next for loop will do the same)
         if unres not in document.source:
             continue
 
@@ -83,6 +85,30 @@ def pyls_lint(document):
                 },
                 'message': "Unresolved import '%s'" % unres,
                 'severity': lsp.DiagnosticSeverity.Hint,
+            })
+
+    for unref in unreferenced:
+        for line_no, line in enumerate(document.lines):
+            pos = line.find(unref)
+            if pos < 0:
+                continue
+
+            # Find out if the unref is a module or a variable/func
+            imports = importmagic.Imports(importmagic.SymbolIndex(), document.source)
+            modules = [m.name for m in list(imports._imports)]
+            if unref in modules:
+                message = "Unreferenced import '%s'" % unref
+            else:
+                message = "Unreferenced variable/function '%s'" % unref
+
+            diagnostics.append({
+                'source': SOURCE,
+                'range': {
+                    'start': {'line': line_no, 'character': pos},
+                    'end': {'line': line_no, 'character': pos + len(unref)}
+                },
+                'message': message,
+                'severity': lsp.DiagnosticSeverity.Warning,
             })
 
     return diagnostics
@@ -121,7 +147,7 @@ def pyls_code_actions(config, document, context):
 
         unres = m.group('unresolved')
         # Might be slow but is cached once built
-        index = _get_index(sys.path)
+        index = _get_index(sys.path) # TODO (youben): add project path for indexing
 
         for score, module, variable in sorted(index.symbol_scores(unres)[:MAX_COMMANDS], reverse=True):
             if score < min_score:
