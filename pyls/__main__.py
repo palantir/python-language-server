@@ -55,8 +55,11 @@ def main():
     _configure_logger(args.verbose, args.log_config, args.log_file)
 
     if args.tcp:
-        start_tcp_lang_server(args.host, args.port, args.check_parent_process,
+        import time
+        while True:
+            start_tcp_lang_server(args.host, args.port, args.check_parent_process,
                               PythonLanguageServer)
+            time.sleep(0.500)
     else:
         stdin, stdout = _binary_stdio()
         start_io_lang_server(stdin, stdout, args.check_parent_process,
