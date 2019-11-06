@@ -1,9 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from functools import partial
+import json
 import logging
 import os
 import socketserver
 import threading
+from functools import partial
+from hashlib import sha256
 
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
@@ -34,18 +36,35 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
         self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
 
     def handle(self):
-        try:
-            self.delegate.start()
-        except OSError as e:
-            if os.name == 'nt':
-                # Catch and pass on ConnectionResetError when parent process
-                # dies
-                # pylint: disable=no-member, undefined-variable
-                if isinstance(e, WindowsError) and e.winerror == 10054:
-                    pass
-
+        self.auth(self.delegate.start)
         # pylint: disable=no-member
         self.SHUTDOWN_CALL()
+
+    def auth(self, cb):
+        token = ''
+        if "JUPYTER_TOKEN" in os.environ:
+          token = os.environ["JUPYTER_TOKEN"]
+        else:
+          log.warn('! Missing jupyter token !')
+
+        data = self.rfile.readline()
+        try:
+            auth_req = json.loads(data.decode().split('\n')[0])
+        except:
+            log.error('Error parsing authentication message')
+            auth_error_msg = { 'msg': 'AUTH_ERROR' }
+            self.wfile.write(json.dumps(auth_error_msg).encode())
+            return
+
+        hashed_token = sha256(token.encode()).hexdigest()
+        if auth_req.get('token') == hashed_token:
+            auth_success_msg = { 'msg': 'AUTH_SUCCESS' }
+            self.wfile.write(json.dumps(auth_success_msg).encode())
+            cb()
+        else:
+            log.info('Failed to authenticate: invalid credentials')
+            auth_invalid_msg = { 'msg': 'AUTH_INVALID_CRED' }
+            self.wfile.write(json.dumps(auth_invalid_msg).encode())
 
 
 def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
