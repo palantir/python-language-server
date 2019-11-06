@@ -26,6 +26,9 @@ def pyls_commands(config, workspace):
 def pyls_completions(config, workspace, document, position):
     pass
 
+@hookspec
+def pyls_completion_detail(config, item):
+    pass
 
 @hookspec
 def pyls_definitions(config, workspace, document, position):

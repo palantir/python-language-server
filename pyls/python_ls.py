@@ -68,8 +68,8 @@ def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
          'SHUTDOWN_CALL': shutdown_server}
     )
 
+    socketserver.TCPServer.allow_reuse_address = True
     server = socketserver.TCPServer((bind_addr, port), wrapper_class)
-    server.allow_reuse_address = True
 
     try:
         log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
@@ -159,7 +159,7 @@ class PythonLanguageServer(MethodDispatcher):
                 'resolveProvider': False,  # We may need to make this configurable
             },
             'completionProvider': {
-                'resolveProvider': False,  # We know everything ahead of time
+                'resolveProvider': True,
                 'triggerCharacters': ['.']
             },
             'documentFormattingProvider': True,
@@ -236,9 +236,13 @@ class PythonLanguageServer(MethodDispatcher):
     def completions(self, doc_uri, position):
         completions = self._hook('pyls_completions', doc_uri, position=position)
         return {
-            'isIncomplete': False,
+            'isIncomplete': True,
             'items': flatten(completions)
         }
+
+    def completion_detail(self, item):
+        detail = self._hook('pyls_completion_detail', item=item)
+        return detail
 
     def definitions(self, doc_uri, position):
         return flatten(self._hook('pyls_definitions', doc_uri, position=position))
@@ -317,6 +321,9 @@ class PythonLanguageServer(MethodDispatcher):
 
     def m_text_document__completion(self, textDocument=None, position=None, **_kwargs):
         return self.completions(textDocument['uri'], position)
+
+    def m_completion_item__resolve(self, label=None, **_kwargs):
+        return self.completion_detail(label)
 
     def m_text_document__definition(self, textDocument=None, position=None, **_kwargs):
         return self.definitions(textDocument['uri'], position)

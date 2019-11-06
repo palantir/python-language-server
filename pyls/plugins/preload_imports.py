@@ -5,13 +5,11 @@ from pyls import hookimpl
 log = logging.getLogger(__name__)
 
 MODULES = [
-    "OpenGL", "PIL",
-    "array", "audioop", "binascii", "cPickle", "cStringIO", "cmath", "collections",
+    "numpy", "tensorflow", "sklearn", "array", "binascii", "cmath", "collections",
     "datetime", "errno", "exceptions", "gc", "imageop", "imp", "itertools",
     "marshal", "math", "matplotlib", "mmap", "mpmath", "msvcrt", "networkx", "nose", "nt",
-    "numpy", "operator", "os", "os.path", "pandas", "parser", "rgbimg", "scipy", "signal",
-    "skimage", "sklearn", "statsmodels", "strop", "sympy", "sys", "thread", "time",
-    "wx", "xxsubtype", "zipimport", "zlib"
+    "operator", "os", "os.path", "pandas", "parser", "scipy", "signal",
+    "skimage", "statsmodels", "strop", "sympy", "sys", "thread", "time", "wx", "zlib"
 ]
 
 

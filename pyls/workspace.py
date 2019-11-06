@@ -113,6 +113,10 @@ class Document(object):
         self._extra_sys_path = extra_sys_path or []
         self._rope_project_builder = rope_project_builder
 
+        jedi.settings.cache_directory = '.cache/jedi/'
+        jedi.settings.use_filesystem_cache = True
+        jedi.api.preload_module(['numpy', 'matplotlib.pyplot', 'tensorflow'])
+
     def __str__(self):
         return str(self.uri)
 

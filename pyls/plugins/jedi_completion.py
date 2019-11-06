@@ -1,6 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import time
 from pyls import hookimpl, lsp, _utils
+from contextlib import contextmanager
+import signal
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +41,27 @@ _TYPE_MAP = {
     'statement': lsp.CompletionItemKind.Keyword,
 }
 
+COMPLETION_CACHE = {}
+
+@contextmanager
+def timeout(time):
+    # Register a function to raise a TimeoutError on the signal.
+    signal.signal(signal.SIGALRM, raise_timeout)
+    # Schedule the signal to be sent after ``time``.
+    signal.setitimer(signal.SIGALRM, time)
+
+    try:
+        yield
+    except TimeoutError:
+        pass
+    finally:
+        # Unregister the signal so it won't be triggered
+        # if the timeout is not reached.
+        signal.signal(signal.SIGALRM, signal.SIG_IGN)
+
+
+def raise_timeout(signum, frame):
+    raise TimeoutError
 
 @hookimpl
 def pyls_completions(config, document, position):
@@ -45,37 +69,57 @@ def pyls_completions(config, document, position):
     if not definitions:
         return None
 
+    if len(definitions) > 40:
+      definitions = definitions[:40]
+
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
 
-    return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
+    result = [_format_completion(d, i, snippet_support and should_include_params) for i, d in enumerate(definitions)] or None
+    return result
 
-
-def _format_completion(d, include_params=True):
-    completion = {
-        'label': _label(d),
-        'kind': _TYPE_MAP.get(d.type),
-        'detail': _detail(d),
+@hookimpl
+def pyls_completion_detail(config, item):
+    d = COMPLETION_CACHE.get(item)
+    if d:
+      completion = {
+        'label': '', #_label(d),
+        'kind': _TYPE_MAP[d.type],
+        'detail': '', #_detail(d),
         'documentation': _utils.format_docstring(d.docstring()),
-        'sortText': _sort_text(d),
+        'sortText': '', #_sort_text(d),
+        'insertText': d.name
+      }
+      return completion
+    else:
+      print('Completion missing')
+      return None
+
+def _format_completion(d, i, include_params=True):
+    COMPLETION_CACHE[d.name] = d
+    completion = {
+        'label': '', #_label(d),
+        'kind': '',
+        'detail': '', #_detail(d),
+        'documentation': _utils.format_docstring(d.docstring()) if i == 0 else '',
+        'sortText': '', #_sort_text(d),
         'insertText': d.name
     }
+#     if include_params and hasattr(d, 'params') and d.params:
+        # positional_args = [param for param in d.params if '=' not in param.description]
 
-    if include_params and hasattr(d, 'params') and d.params:
-        positional_args = [param for param in d.params if '=' not in param.description]
-
-        # For completions with params, we can generate a snippet instead
-        completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
-        snippet = d.name + '('
-        for i, param in enumerate(positional_args):
-            snippet += '${%s:%s}' % (i + 1, param.name)
-            if i < len(positional_args) - 1:
-                snippet += ', '
-        snippet += ')$0'
-        completion['insertText'] = snippet
+        # # For completions with params, we can generate a snippet instead
+        # completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
+        # snippet = d.name + '('
+        # for i, param in enumerate(positional_args):
+            # snippet += '${%s:%s}' % (i + 1, param.name)
+            # if i < len(positional_args) - 1:
+                # snippet += ', '
+        # snippet += ')$0'
+        # completion['insertText'] = snippet
 
     return completion
 
