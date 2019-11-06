@@ -174,6 +174,14 @@ class Document(object):
 
         self._source = new.getvalue()
 
+    def position_at_offset(self, offset):
+        lines = self.source[:offset].splitlines(True)
+        last_line = lines[-1]
+        if last_line.rstrip() == last_line:
+            return {'line': len(lines) -1, 'character': len(last_line)}
+
+        return {'line': len(lines), 'character': 0}
+
     def offset_at_position(self, position):
         """Return the byte-offset pointed at by the given position."""
         return position['character'] + len(''.join(self.lines[:position['line']]))

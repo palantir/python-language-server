@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from rope.contrib.codeassist import code_assist, sorted_proposals
+from rope.contrib.codeassist import code_assist, sorted_proposals, starting_offset
 
 from pyls import hookimpl, lsp
 
@@ -37,6 +37,7 @@ def pyls_completions(config, workspace, document, position):
         return []
 
     definitions = sorted_proposals(definitions)
+    start = document.position_at_offset(starting_offset(document.source, offset))
     new_definitions = []
     for d in definitions:
         try:
@@ -48,7 +49,14 @@ def pyls_completions(config, workspace, document, position):
             'kind': _kind(d),
             'detail': '{0} {1}'.format(d.scope or "", d.name),
             'documentation': doc or "",
-            'sortText': _sort_text(d)
+            'sortText': _sort_text(d),
+            'textEdit': {
+                'range': {
+                    'start': start,
+                    'end': position,
+                },
+                'newText': d.name,
+            }
         })
     definitions = new_definitions
 
@@ -97,10 +105,10 @@ def _kind(d):
         'property': lsp.CompletionItemKind.Property,
         'import': lsp.CompletionItemKind.Module,
         'keyword': lsp.CompletionItemKind.Keyword,
-        'constant': lsp.CompletionItemKind.Variable,
+        'constant': lsp.CompletionItemKind.Constant,
         'variable': lsp.CompletionItemKind.Variable,
         'value': lsp.CompletionItemKind.Value,
-        'param': lsp.CompletionItemKind.Variable,
+        'param': lsp.CompletionItemKind.TypeParameter,
         'statement': lsp.CompletionItemKind.Keyword,
     }
 
