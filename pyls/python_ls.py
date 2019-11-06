@@ -296,6 +296,14 @@ class PythonLanguageServer(MethodDispatcher):
         self._hook('pyls_document_did_open', textDocument['uri'])
         self.lint(textDocument['uri'], is_saved=True)
 
+    def m_text_document__info(self, textDocument=None, **_kwargs):
+        workspace = self._match_uri_to_workspace(textDocument['uri'])
+        doc = workspace.documents[textDocument['uri']]
+        return {
+            'version': doc.version,
+            'text': doc.source
+        }
+
     def m_text_document__did_change(self, contentChanges=None, textDocument=None, **_kwargs):
         workspace = self._match_uri_to_workspace(textDocument['uri'])
         for change in contentChanges:
