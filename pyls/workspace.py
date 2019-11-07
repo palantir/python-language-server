@@ -177,7 +177,7 @@ class Document(object):
     def position_at_offset(self, offset):
         lines = self.source[:offset].splitlines(True)
         last_line = lines[-1]
-        if last_line.rstrip() == last_line:
+        if last_line.rstrip('\r\n') == last_line:
             return {'line': len(lines) -1, 'character': len(last_line)}
 
         return {'line': len(lines), 'character': 0}
