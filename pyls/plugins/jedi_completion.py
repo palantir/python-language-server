@@ -31,10 +31,10 @@ _TYPE_MAP = {
     'property': lsp.CompletionItemKind.Property,
     'import': lsp.CompletionItemKind.Module,
     'keyword': lsp.CompletionItemKind.Keyword,
-    'constant': lsp.CompletionItemKind.Variable,
+    'constant': lsp.CompletionItemKind.Constant,
     'variable': lsp.CompletionItemKind.Variable,
     'value': lsp.CompletionItemKind.Value,
-    'param': lsp.CompletionItemKind.Variable,
+    'param': lsp.CompletionItemKind.TypeParameter,
     'statement': lsp.CompletionItemKind.Keyword,
 }
 
@@ -51,17 +51,27 @@ def pyls_completions(config, document, position):
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
 
-    return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
+    return [_format_completion(d, position, snippet_support and should_include_params) for d in definitions] or None
 
 
-def _format_completion(d, include_params=True):
+def _format_completion(d, position, include_params=True):
+    insert_text = _utils.merge_string(d.name, d.complete)
+    start_character = position['character'] + len(d.complete) - len(insert_text)
+
     completion = {
         'label': _label(d),
         'kind': _TYPE_MAP.get(d.type),
         'detail': _detail(d),
         'documentation': _utils.format_docstring(d.docstring()),
         'sortText': _sort_text(d),
-        'insertText': d.name
+        'insertText': insert_text,
+        'textEdit': {
+            'range': {
+                'start': {'line': position['line'], 'character': start_character},
+                'end': position,
+            },
+            'newText': insert_text,
+        }
     }
 
     if include_params and hasattr(d, 'params') and d.params:
@@ -75,7 +85,9 @@ def _format_completion(d, include_params=True):
             if i < len(positional_args) - 1:
                 snippet += ', '
         snippet += ')$0'
+
         completion['insertText'] = snippet
+        completion['textEdit']['newText'] = snippet
 
     return completion
 
@@ -84,6 +96,9 @@ def _label(definition):
     if definition.type in ('function', 'method') and hasattr(definition, 'params'):
         params = ', '.join([param.name for param in definition.params])
         return '{}({})'.format(definition.name, params)
+
+    if definition.type == 'param':
+        return definition.name + '='
 
     return definition.name
 

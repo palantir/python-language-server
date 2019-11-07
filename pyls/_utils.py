@@ -111,6 +111,26 @@ def list_to_string(value):
     return ",".join(value) if isinstance(value, list) else value
 
 
+def merge_string(a, b):
+    if len(a) < len(b):
+        if b.startswith(a):
+            return b
+
+        for i in range(len(a)):
+            if b.startswith(a[i:]):
+                return a[:i] + b
+
+    else:
+        if a.endswith(b):
+            return a
+
+        for i in range(len(b) - 1, -1, -1):
+            if a.endswith(b[:i]):
+                return a[:-i] + b
+
+    return a + b
+
+
 def merge_dicts(dict_a, dict_b):
     """Recursively merge dictionary b into dictionary a.
 
