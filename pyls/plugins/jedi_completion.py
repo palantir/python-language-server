@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import parso
 from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
@@ -51,7 +52,26 @@ def pyls_completions(config, document, position):
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
 
-    return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
+    if use_snippets(document, position):
+        return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
+    else:
+        return [_format_completion(d, False) for d in definitions] or None
+
+
+def use_snippets(document, position):
+    """
+    Determine if returning snippets in code completions.
+
+    Returns False if the completion is running on an import statement
+    Returns True otherwise
+    """
+    lines = document.source.split('\n')
+    act_line = lines[position['line']]
+    tokens = parso.parse(act_line)
+    act_statement = tokens.children[0].get_code()
+    if act_statement.startswith('import') or act_statement.startswith('from'):
+        return False
+    return True
 
 
 def _format_completion(d, include_params=True):
