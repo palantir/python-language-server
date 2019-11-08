@@ -51,10 +51,9 @@ def pyls_completions(config, document, position):
 
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
-
-    if use_snippets(document, position):
-        return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
-    return [_format_completion(d, False) for d in definitions] or None
+    include_params = (use_snippets(document, position) and
+                      snippet_support and should_include_params)
+    return [_format_completion(d, include_params) for d in definitions] or None
 
 
 def use_snippets(document, position):
