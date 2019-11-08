@@ -54,8 +54,7 @@ def pyls_completions(config, document, position):
 
     if use_snippets(document, position):
         return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
-    else:
-        return [_format_completion(d, False) for d in definitions] or None
+    return [_format_completion(d, False) for d in definitions] or None
 
 
 def use_snippets(document, position):
