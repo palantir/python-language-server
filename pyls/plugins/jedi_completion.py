@@ -58,10 +58,10 @@ def pyls_completions(config, document, position):
 
 def use_snippets(document, position):
     """
-    Determine if returning snippets in code completions.
+    Determine if it's necessary to return snippets in code completions.
 
-    Returns False if the completion is running on an import statement
-    Returns True otherwise
+    This returns `False` if a completion is being requested on an import
+    statement, `True` otherwise.
     """
     lines = document.source.split('\n')
     act_line = lines[position['line']]
