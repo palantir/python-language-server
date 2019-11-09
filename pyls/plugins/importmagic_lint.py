@@ -10,8 +10,10 @@ log = logging.getLogger(__name__)
 
 SOURCE = 'importmagic'
 ADD_IMPORT_COMMAND = 'importmagic.addimport'
+REMOVE_IMPORT_COMMAND = 'importmagic.removeimport'
 MAX_COMMANDS = 4
 UNRES_RE = re.compile(r"Unresolved import '(?P<unresolved>[\w.]+)'")
+UNREF_RE = re.compile(r"Unreferenced import '(?P<unreferenced>[\w.]+)'")
 
 _index_cache = {}
 
@@ -31,9 +33,22 @@ def _get_index(sys_path):
     return _index_cache[key]
 
 
+def _get_imports_list(source, index=None):
+    """Get modules, functions and variables that are imported.
+    """
+    if index is None:
+        index = importmagic.SymbolIndex()
+    imports = importmagic.Imports(index, source)
+    imported = [i.name for i in list(imports._imports)]
+    # Go over from imports
+    for from_import in list(imports._imports_from.values()):
+        imported.extend([i.name for i in list(from_import)])
+    return imported
+
+
 @hookimpl
 def pyls_commands():
-    return [ADD_IMPORT_COMMAND]
+    return [ADD_IMPORT_COMMAND, REMOVE_IMPORT_COMMAND]
 
 
 @hookimpl
@@ -68,10 +83,6 @@ def pyls_lint(document):
 
     # Annoyingly, we only get the text of an unresolved import, so we'll look for it ourselves
     for unres in unresolved:
-        # TODO (youben): delete this test as it double execution time (next for loop will do the same)
-        if unres not in document.source:
-            continue
-
         for line_no, line in enumerate(document.lines):
             pos = line.find(unres)
             if pos < 0:
@@ -93,10 +104,9 @@ def pyls_lint(document):
             if pos < 0:
                 continue
 
-            # Find out if the unref is a module or a variable/func
-            imports = importmagic.Imports(importmagic.SymbolIndex(), document.source)
-            modules = [m.name for m in list(imports._imports)]
-            if unref in modules:
+            # Find out if the unref is an import or a variable/func
+            imports = _get_imports_list(document.source)
+            if unref in imports:
                 message = "Unreferenced import '%s'" % unref
             else:
                 message = "Unreferenced variable/function '%s'" % unref
@@ -119,7 +129,7 @@ def pyls_code_actions(config, document, context):
     """Build a list of actions to be suggested to the user. Each action follow this format:
         {
             'title': 'importmagic',
-            'command': command ('importmagic.add_import'),
+            'command': command,
             'arguments':
                 {
                     'uri': document.uri,
@@ -136,31 +146,49 @@ def pyls_code_actions(config, document, context):
     log.debug("Got importmagic settings: %s", conf)
     importmagic.Imports.set_style(**{_utils.camel_to_underscore(k): v for k, v in conf.items()})
 
+    # Might be slow but is cached once built
+    # TODO (youben): add project path for indexing
+    index = _get_index(sys.path)
     actions = []
     diagnostics = context.get('diagnostics', [])
     for diagnostic in diagnostics:
         if diagnostic.get('source') != SOURCE:
             continue
-        m = UNRES_RE.match(diagnostic['message'])
-        if not m:
-            continue
-
-        unres = m.group('unresolved')
-        # Might be slow but is cached once built
-        index = _get_index(sys.path) # TODO (youben): add project path for indexing
-
-        for score, module, variable in sorted(index.symbol_scores(unres)[:MAX_COMMANDS], reverse=True):
-            if score < min_score:
-                # Skip low score results
+        message = diagnostic.get('message', '')
+        if message.startswith('Unreferenced'):
+            m = UNREF_RE.match(message)
+            if not m:
                 continue
+            unref = m.group('unreferenced')
+            actions.append(_generate_remove_action(document, index, unref))
+        elif message.startswith('Unresolved'):
+            m = UNRES_RE.match(message)
+            if not m:
+                continue
+            unres = m.group('unresolved')
+            actions.extend(_get_actions_for_unres(document, index, min_score, unres))
 
-            actions.append(_generate_add_action(document, index, module, variable))
+    return actions
+
+
+def _get_actions_for_unres(document, index, min_score, unres):
+    """Get the list of possible actions to be applied to solve an unresolved symbol.
+    Get a maximun of MAX_COMMANDS actions with the highest score, also filter low score actions
+    using the min_score value.
+    """
+    actions = []
+    for score, module, variable in sorted(index.symbol_scores(unres)[:MAX_COMMANDS], reverse=True):
+        if score < min_score:
+            # Skip low score results
+            continue
+        actions.append(_generate_add_action(document, index, module, variable))
 
     return actions
 
 
 def _generate_add_action(document, index, module, variable):
-    # Generate the patch we would need to apply
+    """Generate the patch we would need to apply to import a module.
+    """
     imports = importmagic.Imports(index, document.source)
     if variable:
         imports.add_import_from(module, variable)
@@ -169,8 +197,29 @@ def _generate_add_action(document, index, module, variable):
     start_line, end_line, text = imports.get_update()
 
     action = {
-        'title': _command_title(variable, module),
+        'title': _add_command_title(variable, module),
         'command': ADD_IMPORT_COMMAND,
+        'arguments': [{
+            'uri': document.uri,
+            'version': document.version,
+            'startLine': start_line,
+            'endLine': end_line,
+            'newText': text
+        }]
+    }
+    return action
+
+
+def _generate_remove_action(document, index, unref):
+    """Generate the patch we would need to apply to remove an import.
+    """
+    imports = importmagic.Imports(index, document.source)
+    imports.remove(unref)
+    start_line, end_line, text = imports.get_update()
+
+    action = {
+        'title': _remove_command_title(unref),
+        'command': REMOVE_IMPORT_COMMAND,
         'arguments': [{
             'uri': document.uri,
             'version': document.version,
@@ -184,7 +233,7 @@ def _generate_add_action(document, index, module, variable):
 
 @hookimpl
 def pyls_execute_command(workspace, command, arguments):
-    if command != ADD_IMPORT_COMMAND:
+    if command not in [ADD_IMPORT_COMMAND, REMOVE_IMPORT_COMMAND]:
         return
 
     args = arguments[0]
@@ -205,7 +254,11 @@ def pyls_execute_command(workspace, command, arguments):
     workspace.apply_edit(edit)
 
 
-def _command_title(variable, module):
+def _add_command_title(variable, module):
     if not variable:
         return 'Import "%s"' % module
     return 'Import "%s" from "%s"' % (variable, module)
+
+
+def _remove_command_title(import_name):
+    return 'Remove import of "%s"' % import_name
