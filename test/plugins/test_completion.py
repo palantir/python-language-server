@@ -150,3 +150,19 @@ def test_matplotlib_completions(config):
 
     assert items
     assert any(['plot' in i['label'] for i in items])
+
+
+def test_snippets_completion(config):
+    doc_snippets = 'from collections import defaultdict \na=defaultdict'
+    com_position = {'line': 0, 'character': 35}
+    doc = Document(DOC_URI, doc_snippets)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions[0]['insertText'] == 'defaultdict'
+
+    com_position = {'line': 1, 'character': len(doc_snippets)}
+    completions = pyls_jedi_completions(config, doc, com_position)
+    out = 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
+    assert completions[0]['insertText'] == out
