@@ -166,3 +166,19 @@ def test_snippets_completion(config):
     completions = pyls_jedi_completions(config, doc, com_position)
     out = 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
     assert completions[0]['insertText'] == out
+
+
+def test_multiline_snippets(config):
+    document = 'from datetime import\\\n date,\\\n datetime \na=date'
+    doc = Document(DOC_URI, document)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+
+    position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date'
+
+    position = {'line': 2, 'character': 9}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'datetime'

@@ -51,9 +51,12 @@ def pyls_completions(config, document, position):
 
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
-    include_params = (use_snippets(document, position) and
-                      snippet_support and should_include_params)
+    include_params = (snippet_support and should_include_params and
+                      use_snippets(document, position))
     return [_format_completion(d, include_params) for d in definitions] or None
+
+
+_IMPORTS = ('import_name', 'import_from')
 
 
 def use_snippets(document, position):
@@ -63,13 +66,19 @@ def use_snippets(document, position):
     This returns `False` if a completion is being requested on an import
     statement, `True` otherwise.
     """
-    lines = document.source.split('\n')
-    act_line = lines[position['line']]
-    tokens = parso.parse(act_line)
-    act_statement = tokens.children[0].get_code()
-    if act_statement.startswith('import') or act_statement.startswith('from'):
-        return False
-    return True
+    line = position['line']
+    lines = document.source.split('\n', line)
+    act_lines = [lines[line][:position['character']]]
+    line -= 1
+    while line > -1:
+        act_line = lines[line]
+        if act_line.rstrip()[-1] == '\\':
+            act_lines.insert(0, act_line)
+            line -= 1
+        else:
+            break
+    tokens = parso.parse('\n'.join(act_lines))
+    return tokens.children[0].type not in _IMPORTS
 
 
 def _format_completion(d, include_params=True):
