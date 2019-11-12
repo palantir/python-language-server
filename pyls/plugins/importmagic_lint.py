@@ -261,4 +261,4 @@ def _add_command_title(variable, module):
 
 
 def _remove_command_title(import_name):
-    return 'Remove import of "%s"' % import_name
+    return 'Remove unused import of "%s"' % import_name
