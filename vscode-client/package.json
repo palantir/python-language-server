@@ -35,6 +35,11 @@
                     },
                     "uniqueItems": true
                 },
+                "pyls.plugins.importmagic_lint.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable the plugin."
+                },
                 "pyls.plugins.importmagic_lint.minScore": {
                     "type": "number",
                     "default": 1,
