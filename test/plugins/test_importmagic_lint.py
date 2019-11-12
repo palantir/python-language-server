@@ -38,24 +38,9 @@ def test_importmagic_lint():
 
 
 def test_importmagic_actions(config):
-    context = {
-        'diagnostics': [
-            {
-                'range':
-                {
-                    'start': {'line': 1, 'character': 0},
-                    'end': {'line': 1, 'character': 10}
-                },
-                'message': "Unresolved import 'time.sleep'",
-                'severity': lsp.DiagnosticSeverity.Hint,
-                'source': importmagic_lint.SOURCE
-            }
-        ]
-    }
-
     try:
         name, doc = temp_document(DOC)
-        actions = importmagic_lint.pyls_code_actions(config, doc, context)
+        actions = importmagic_lint.pyls_code_actions(config, doc)
         action = [a for a in actions if a['title'] == 'Import "time"'][0]
         arguments = action['arguments'][0]
 

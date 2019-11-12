@@ -125,7 +125,7 @@ def pyls_lint(document):
 
 
 @hookimpl
-def pyls_code_actions(config, document, context):
+def pyls_code_actions(config, document):
     """Build a list of actions to be suggested to the user. Each action follow this format:
         {
             'title': 'importmagic',
@@ -150,11 +150,9 @@ def pyls_code_actions(config, document, context):
     # TODO (youben): add project path for indexing
     index = _get_index(sys.path)
     actions = []
-    diagnostics = context.get('diagnostics', [])
-    for diagnostic in diagnostics:
-        if diagnostic.get('source') != SOURCE:
-            continue
 
+    diagnostics = pyls_lint(document)
+    for diagnostic in diagnostics:
         message = diagnostic.get('message', '')
         unref_match = UNREF_RE.match(message)
         unres_match = UNRES_RE.match(message)
