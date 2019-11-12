@@ -154,18 +154,16 @@ def pyls_code_actions(config, document, context):
     for diagnostic in diagnostics:
         if diagnostic.get('source') != SOURCE:
             continue
+
         message = diagnostic.get('message', '')
-        if message.startswith('Unreferenced'):
-            m = UNREF_RE.match(message)
-            if not m:
-                continue
-            unref = m.group('unreferenced')
+        unref_match = UNREF_RE.match(message)
+        unres_match = UNRES_RE.match(message)
+
+        if unref_match:
+            unref = unref_match.group('unreferenced')
             actions.append(_generate_remove_action(document, index, unref))
-        elif message.startswith('Unresolved'):
-            m = UNRES_RE.match(message)
-            if not m:
-                continue
-            unres = m.group('unresolved')
+        elif unres_match:
+            unres = unres_match.group('unresolved')
             actions.extend(_get_actions_for_unres(document, index, min_score, unres))
 
     return actions
