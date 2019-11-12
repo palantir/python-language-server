@@ -202,4 +202,5 @@ else:
 
 
 def camel_to_underscore(camelcase):
-    return re.sub('([A-Z]+)', r'_\1', camelcase).lower()
+    s1 = re.sub('([^_])([A-Z][a-z]+)', r'\1_\2', camelcase)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
