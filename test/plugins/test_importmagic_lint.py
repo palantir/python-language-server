@@ -1,6 +1,7 @@
 # Copyright 2019 Palantir Technologies, Inc.
 import tempfile
 import os
+from time import sleep
 from pyls import lsp, uris
 from pyls.plugins import importmagic_lint
 from pyls.workspace import Document
@@ -39,7 +40,11 @@ def test_importmagic_lint():
 
 def test_importmagic_actions(config):
     try:
+        importmagic_lint.pyls_initialize()
         name, doc = temp_document(DOC)
+        while importmagic_lint._index_cache is None:
+            # wait for the index to be ready
+            sleep(1)
         actions = importmagic_lint.pyls_code_actions(config, doc)
         action = [a for a in actions if a['title'] == 'Import "time"'][0]
         arguments = action['arguments'][0]
@@ -51,3 +56,5 @@ def test_importmagic_actions(config):
 
     finally:
         os.remove(name)
+
+# TODO(youben) write test for remove action

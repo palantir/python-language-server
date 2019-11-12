@@ -2,6 +2,7 @@
 import logging
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor
 import importmagic
 from pyls import hookimpl, lsp, _utils
 
@@ -15,22 +16,37 @@ MAX_COMMANDS = 4
 UNRES_RE = re.compile(r"Unresolved import '(?P<unresolved>[\w.]+)'")
 UNREF_RE = re.compile(r"Unreferenced import '(?P<unreferenced>[\w.]+)'")
 
-_index_cache = {}
+_index_cache = None
 
 
-def _get_index(sys_path):
+def _build_index(paths):
     """Build index of symbols from python modules.
-    Cache the index so we don't build it multiple times unnecessarily.
     """
-    key = tuple(sys_path)
-    if key not in _index_cache:
-        log.info("Started building importmagic index")
-        index = importmagic.SymbolIndex()
-        # The build tend to be noisy
-        index.build_index(paths=sys_path)
-        _index_cache[key] = index
-        log.info("Finished building importmagic index")
-    return _index_cache[key]
+    log.info("Started building importmagic index")
+    index = importmagic.SymbolIndex()
+    index.build_index(paths=paths)
+    log.info("Finished building importmagic index")
+    return index
+
+
+def _cache_index_callback(future):
+    global _index_cache
+    # Cache the index
+    _index_cache = future.result()
+
+
+def _get_index():
+    """Get the cached index if built and index project files on each call.
+    Return an empty index if not built yet.
+    """
+    # Index haven't been built yet
+    if _index_cache is None:
+        return importmagic.SymbolIndex()
+
+    # Index project files
+    # TODO(youben) index project files
+    #index.build_index(paths=[])
+    return _index_cache
 
 
 def _get_imports_list(source, index=None):
@@ -44,6 +60,13 @@ def _get_imports_list(source, index=None):
     for from_import in list(imports._imports_from.values()):
         imported.extend([i.name for i in list(from_import)])
     return imported
+
+
+@hookimpl
+def pyls_initialize():
+    pool = ThreadPoolExecutor()
+    builder = pool.submit(_build_index, (sys.path))
+    builder.add_done_callback(_cache_index_callback)
 
 
 @hookimpl
@@ -146,9 +169,8 @@ def pyls_code_actions(config, document):
     log.debug("Got importmagic settings: %s", conf)
     importmagic.Imports.set_style(**{_utils.camel_to_underscore(k): v for k, v in conf.items()})
 
-    # Might be slow but is cached once built
-    # TODO (youben): add project path for indexing
-    index = _get_index(sys.path)
+    # Get empty index while it's building so we don't block here
+    index = _get_index()
     actions = []
 
     diagnostics = pyls_lint(document)
