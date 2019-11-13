@@ -39,6 +39,9 @@ _TYPE_MAP = {
     'statement': lsp.CompletionItemKind.Keyword,
 }
 
+# Types of parso nodes for which snippet is not included in the completion
+_IMPORTS = ('import_name', 'import_from')
+
 
 @hookimpl
 def pyls_completions(config, document, position):
@@ -54,9 +57,6 @@ def pyls_completions(config, document, position):
     include_params = (snippet_support and should_include_params and
                       use_snippets(document, position))
     return [_format_completion(d, include_params) for d in definitions] or None
-
-
-_IMPORTS = ('import_name', 'import_from')
 
 
 def use_snippets(document, position):
