@@ -42,7 +42,7 @@ def test_importmagic_actions(config):
     try:
         importmagic_lint.pyls_initialize()
         name, doc = temp_document(DOC)
-        while importmagic_lint._index_cache is None:
+        while importmagic_lint._index_cache.get('default') is None:
             # wait for the index to be ready
             sleep(1)
         actions = importmagic_lint.pyls_code_actions(config, doc)

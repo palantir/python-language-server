@@ -16,7 +16,7 @@ MAX_COMMANDS = 4
 UNRES_RE = re.compile(r"Unresolved import '(?P<unresolved>[\w.]+)'")
 UNREF_RE = re.compile(r"Unreferenced import '(?P<unreferenced>[\w.]+)'")
 
-_index_cache = None
+_index_cache = {}
 
 
 def _build_index(paths):
@@ -30,9 +30,8 @@ def _build_index(paths):
 
 
 def _cache_index_callback(future):
-    global _index_cache
     # Cache the index
-    _index_cache = future.result()
+    _index_cache['default'] = future.result()
 
 
 def _get_index():
@@ -40,13 +39,14 @@ def _get_index():
     Return an empty index if not built yet.
     """
     # Index haven't been built yet
-    if _index_cache is None:
+    index = _index_cache.get('default')
+    if index is None:
         return importmagic.SymbolIndex()
 
     # Index project files
     # TODO(youben) index project files
-    #index.build_index(paths=[])
-    return _index_cache
+    # index.build_index(paths=[])
+    return _index_cache['default']
 
 
 def _get_imports_list(source, index=None):
