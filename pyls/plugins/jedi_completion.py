@@ -77,7 +77,7 @@ def use_snippets(document, position):
             line -= 1
         else:
             break
-    tokens = parso.parse('\n'.join(act_lines))
+    tokens = parso.parse('\n'.join(act_lines).split(';')[-1].strip())
     return tokens.children[0].type not in _IMPORTS
 
 
