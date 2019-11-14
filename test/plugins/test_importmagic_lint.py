@@ -7,9 +7,13 @@ from pyls.plugins import importmagic_lint
 from pyls.workspace import Document
 
 DOC_URI = uris.from_fs_path(__file__)
-DOC = """
+DOC_ADD = """
 time.sleep(10)
 print("test")
+"""
+DOC_REMOVE = """
+import time
+print("useless import")
 """
 
 
@@ -38,10 +42,10 @@ def test_importmagic_lint():
         os.remove(name)
 
 
-def test_importmagic_actions(config):
+def test_importmagic_add_import_action(config):
     try:
         importmagic_lint.pyls_initialize()
-        name, doc = temp_document(DOC)
+        name, doc = temp_document(DOC_ADD)
         while importmagic_lint._index_cache.get('default') is None:
             # wait for the index to be ready
             sleep(1)
@@ -57,4 +61,22 @@ def test_importmagic_actions(config):
     finally:
         os.remove(name)
 
-# TODO(youben) write test for remove action
+
+def test_importmagic_remove_import_action(config):
+    try:
+        importmagic_lint.pyls_initialize()
+        name, doc = temp_document(DOC_REMOVE)
+        while importmagic_lint._index_cache.get('default') is None:
+            # wait for the index to be ready
+            sleep(1)
+        actions = importmagic_lint.pyls_code_actions(config, doc)
+        action = [a for a in actions if a['title'] == 'Remove unused import "time"'][0]
+        arguments = action['arguments'][0]
+
+        assert action['command'] == importmagic_lint.REMOVE_IMPORT_COMMAND
+        assert arguments['startLine'] == 1
+        assert arguments['endLine'] == 2
+        assert arguments['newText'] == ''
+
+    finally:
+        os.remove(name)

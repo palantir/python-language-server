@@ -64,6 +64,7 @@ def _get_imports_list(source, index=None):
 
 @hookimpl
 def pyls_initialize():
+    _index_cache['default'] = None
     pool = ThreadPoolExecutor()
     builder = pool.submit(_build_index, (sys.path))
     builder.add_done_callback(_cache_index_callback)
