@@ -1,13 +1,12 @@
 # Copyright 2018 Google LLC.
 """Linter plugin for pylint."""
 import collections
-import json
 import logging
 import sys
 
+import ujson as json
 from pylint.epylint import py_run
 from pyls import hookimpl, lsp
-
 
 log = logging.getLogger(__name__)
 
