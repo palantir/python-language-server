@@ -7,14 +7,44 @@ from pyls.plugins import importmagic_lint
 from pyls.workspace import Document
 
 DOC_URI = uris.from_fs_path(__file__)
+
+DOC_LINT = """
+import os
+time.sleep(10)
+t = 5
+
+def useless_func():
+    pass
+"""
+
 DOC_ADD = """
 time.sleep(10)
 print("test")
 """
+
 DOC_REMOVE = """
 import time
 print("useless import")
 """
+
+LINT_DIAGS = {
+    "Unresolved import 'time.sleep'": {
+        'range': {'start': {'line': 2, 'character': 0}, 'end': {'line': 2, 'character': 10}},
+        'severity': lsp.DiagnosticSeverity.Hint,
+    },
+    "Unreferenced variable/function 'useless_func'": {
+        'range': {'start': {'line': 5, 'character': 4}, 'end': {'line': 5, 'character': 16}},
+        'severity': lsp.DiagnosticSeverity.Warning,
+    },
+    "Unreferenced variable/function 't'": {
+        'range': {'start': {'line': 3, 'character': 0}, 'end': {'line': 3, 'character': 1}},
+        'severity': lsp.DiagnosticSeverity.Warning,
+    },
+    "Unreferenced import 'os'": {
+        'range': {'start': {'line': 1, 'character': 7}, 'end': {'line': 1, 'character': 9}},
+        'severity': lsp.DiagnosticSeverity.Warning,
+    },
+}
 
 
 def temp_document(doc_text):
@@ -29,14 +59,16 @@ def temp_document(doc_text):
 
 def test_importmagic_lint():
     try:
-        name, doc = temp_document(DOC)
+        name, doc = temp_document(DOC_LINT)
         diags = importmagic_lint.pyls_lint(doc)
-        unres_symbol = [d for d in diags if d['source'] == 'importmagic'][0]
+        importmagic_diags = [d for d in diags if d['source'] == 'importmagic']
+        assert len(importmagic_diags) == len(LINT_DIAGS)
 
-        assert unres_symbol['message'] == "Unresolved import 'time.sleep'"
-        assert unres_symbol['range']['start'] == {'line': 1, 'character': 0}
-        assert unres_symbol['range']['end'] == {'line': 1, 'character': 10}
-        assert unres_symbol['severity'] == lsp.DiagnosticSeverity.Hint
+        for diag in importmagic_diags:
+            expected_diag = LINT_DIAGS.get(diag['message'])
+            assert expected_diag is not None, "Didn't expect diagnostic with message '{}'".format(diag['message'])
+            assert expected_diag['range'] == diag['range']
+            assert expected_diag['severity'] == diag['severity']
 
     finally:
         os.remove(name)
