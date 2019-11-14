@@ -7,7 +7,6 @@ import re
 import jedi
 
 from . import lsp, uris, _utils
-from plugins.preload_imports import MODULES
 
 log = logging.getLogger(__name__)
 
@@ -116,7 +115,6 @@ class Document(object):
 
         jedi.settings.cache_directory = '.cache/jedi/'
         jedi.settings.use_filesystem_cache = True
-        jedi.preload_module(MODULES)
 
     def __str__(self):
         return str(self.uri)
