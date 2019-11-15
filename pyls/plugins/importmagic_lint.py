@@ -23,7 +23,7 @@ _index_cache = {}
 class _SourceReader():
     # Used to tokenize python source code
     def __init__(self, source):
-        self.lines = re.findall(r'[^\n]*\n', source)
+        self.lines = re.findall(r'[^\n]*\n?', source)
         # To pop lines later
         self.lines.reverse()
 
@@ -118,12 +118,12 @@ def _search_symbol(source, symbol):
         if source_tokens_str[i:i+symbol_len] == symbol_tokens_str:
             location_range = {
                 'start': {
-                    'line': source_tokens[2][0] - 1,
-                    'character': source_tokens[2][1],
+                    'line': source_tokens[i][2][0] - 1,
+                    'character': source_tokens[i][2][1],
                 },
                 'end': {
-                    'line': source_tokens[3][0] - 1,
-                    'character': source_tokens[3][1],
+                    'line': source_tokens[i + symbol_len - 1][3][0] - 1,
+                    'character': source_tokens[i + symbol_len - 1][3][1],
                 }
             }
             locations.append(location_range)
