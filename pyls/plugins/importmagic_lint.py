@@ -81,8 +81,7 @@ def _tokenize(source):
     Returns only NAME tokens.
     """
     readline = _SourceReader(source).readline
-    filter_name = lambda token: token[0] == tokenize.NAME
-    return filter(filter_name, tokenize.generate_tokens(readline))
+    return [token for token in tokenize.generate_tokens(readline) if token[0] == tokenize.NAME]
 
 
 def _search_symbol(source, symbol):
@@ -105,12 +104,11 @@ def _search_symbol(source, symbol):
                 }
             }
     """
-    symbol_tokens = list(_tokenize(symbol))
-    source_tokens = list(_tokenize(source))
+    symbol_tokens = _tokenize(symbol)
+    source_tokens = _tokenize(source)
 
-    get_str = lambda token: token[1]
-    symbol_tokens_str = list(map(get_str, symbol_tokens))
-    source_tokens_str = list(map(get_str, source_tokens))
+    symbol_tokens_str = [token[1] for token in symbol_tokens]
+    source_tokens_str = [token[1] for token in source_tokens]
 
     symbol_len = len(symbol_tokens)
     locations = []
