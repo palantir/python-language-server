@@ -102,7 +102,7 @@ def test_importmagic_remove_import_action(config):
             # wait for the index to be ready
             sleep(1)
         actions = importmagic_lint.pyls_code_actions(config, doc)
-        action = [a for a in actions if a['title'] == 'Remove unused import "time"'][0]
+        action = [a for a in actions if a['title'] == 'Remove unused import of "time"'][0]
         arguments = action['arguments'][0]
 
         assert action['command'] == importmagic_lint.REMOVE_IMPORT_COMMAND

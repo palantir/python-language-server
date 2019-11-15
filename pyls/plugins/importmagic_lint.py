@@ -186,6 +186,7 @@ def pyls_lint(document):
 
     for unref in unreferenced:
         for location_range in _search_symbol(document.source, unref):
+            # TODO(youben) use jedi.names to get the type of unref
             # Find out if the unref is an import or a variable/func
             imports = _get_imports_list(document.source)
             if unref in imports:
