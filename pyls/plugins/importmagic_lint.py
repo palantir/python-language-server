@@ -20,7 +20,7 @@ UNREF_RE = re.compile(r"Unreferenced import '(?P<unreferenced>[\w.]+)'")
 _index_cache = {}
 
 
-class _SourceReader():
+class _SourceReader(object):
     # Used to tokenize python source code
     def __init__(self, source):
         self.lines = re.findall(r'[^\n]*\n?', source)
