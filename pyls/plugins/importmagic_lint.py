@@ -2,6 +2,8 @@
 import logging
 import re
 import sys
+import tokenize
+from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 import importmagic
 from pyls import hookimpl, lsp, _utils
@@ -62,6 +64,59 @@ def _get_imports_list(source, index=None):
     return imported
 
 
+def _tokenize(source):
+    """Tokenize python source code.
+    """
+    stream = BytesIO(source.encode())
+    return list(tokenize.tokenize(stream.readline))
+
+
+def _search_symbol(source, symbol):
+    """Search symbol in python source code.
+
+    Args:
+        source: str object of the source code
+        symbol: str object of the symbol to search
+
+    Returns:
+        list of locations where the symbol was found. Each element have the following format
+            {
+                'start': {
+                    'line': int,
+                    'character': int
+                },
+                'end': {
+                    'line': int,
+                    'character': int
+                }
+            }
+    """
+    symbol_tokens = _tokenize(symbol)
+    source_tokens = _tokenize(source)
+
+    get_str = lambda token: token[1]
+    symbol_tokens_str = list(map(get_str, symbol_tokens))
+    source_tokens_str = list(map(get_str, source_tokens))
+
+    symbol_len = len(symbol_tokens)
+    locations = []
+    for i in len(source_tokens):
+        if source_tokens_str[i:i+symbol_len] == symbol_tokens_str:
+            location_range = {
+                'start': {
+                    'line': source_tokens[2][0] - 1,
+                    'character': source_tokens[2][1],
+                },
+                'end': {
+                    'line': source_tokens[3][0] - 1,
+                    'character': source_tokens[3][1],
+                }
+            }
+            locations.append(location_range)
+
+    return locations
+
+
 @hookimpl
 def pyls_initialize():
     _index_cache['default'] = None
@@ -107,27 +162,16 @@ def pyls_lint(document):
 
     # Annoyingly, we only get the text of an unresolved import, so we'll look for it ourselves
     for unres in unresolved:
-        for line_no, line in enumerate(document.lines):
-            pos = line.find(unres)
-            if pos < 0:
-                continue
-
+        for location_range in _search_symbol(document.source, unres):
             diagnostics.append({
                 'source': SOURCE,
-                'range': {
-                    'start': {'line': line_no, 'character': pos},
-                    'end': {'line': line_no, 'character': pos + len(unres)}
-                },
+                'range': location_range,
                 'message': "Unresolved import '%s'" % unres,
                 'severity': lsp.DiagnosticSeverity.Hint,
             })
 
     for unref in unreferenced:
-        for line_no, line in enumerate(document.lines):
-            pos = line.find(unref)
-            if pos < 0:
-                continue
-
+        for location_range in _search_symbol(document.source, unref):
             # Find out if the unref is an import or a variable/func
             imports = _get_imports_list(document.source)
             if unref in imports:
@@ -137,10 +181,7 @@ def pyls_lint(document):
 
             diagnostics.append({
                 'source': SOURCE,
-                'range': {
-                    'start': {'line': line_no, 'character': pos},
-                    'end': {'line': line_no, 'character': pos + len(unref)}
-                },
+                'range': location_range,
                 'message': message,
                 'severity': lsp.DiagnosticSeverity.Warning,
             })
