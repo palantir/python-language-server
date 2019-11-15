@@ -87,3 +87,15 @@ def test_clip_column():
     assert _utils.clip_column(2, ['123\n', '123'], 0) == 2
     assert _utils.clip_column(3, ['123\n', '123'], 0) == 3
     assert _utils.clip_column(4, ['123\n', '123'], 1) == 3
+
+
+def test_camel_to_underscore():
+    assert _utils.camel_to_underscore('camelCase') == 'camel_case'
+    assert _utils.camel_to_underscore('hangClosing') == 'hang_closing'
+    assert _utils.camel_to_underscore('ignore') == 'ignore'
+    assert _utils.camel_to_underscore('CamelCase') == 'camel_case'
+    assert _utils.camel_to_underscore('SomeLongCamelCase') == 'some_long_camel_case'
+    assert _utils.camel_to_underscore('already_using_underscore') == 'already_using_underscore'
+    assert _utils.camel_to_underscore('Using_only_someUnderscore') == 'using_only_some_underscore'
+    assert _utils.camel_to_underscore('Using_Only_Some_underscore') == 'using_only_some_underscore'
+    assert _utils.camel_to_underscore('ALL_UPPER_CASE') == 'all_upper_case'

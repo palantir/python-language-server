@@ -1,0 +1,337 @@
+# Copyright 2017 Palantir Technologies, Inc.
+import logging
+import re
+import sys
+import tokenize
+from concurrent.futures import ThreadPoolExecutor
+import importmagic
+from pyls import hookimpl, lsp, _utils
+
+
+log = logging.getLogger(__name__)
+
+SOURCE = 'importmagic'
+ADD_IMPORT_COMMAND = 'importmagic.addimport'
+REMOVE_IMPORT_COMMAND = 'importmagic.removeimport'
+MAX_COMMANDS = 4
+UNRES_RE = re.compile(r"Unresolved import '(?P<unresolved>[\w.]+)'")
+UNREF_RE = re.compile(r"Unreferenced import '(?P<unreferenced>[\w.]+)'")
+
+_index_cache = {}
+
+
+class _SourceReader(object):
+    # Used to tokenize python source code
+    def __init__(self, source):
+        self.lines = re.findall(r'[^\n]*\n?', source)
+        # To pop lines later
+        self.lines.reverse()
+
+    def readline(self):
+        if self.lines:
+            return self.lines.pop()
+        return ''
+
+
+def _build_index(paths):
+    """Build index of symbols from python modules.
+    """
+    log.info("Started building importmagic index")
+    index = importmagic.SymbolIndex()
+    index.build_index(paths=paths)
+    log.info("Finished building importmagic index")
+    return index
+
+
+def _cache_index_callback(future):
+    # Cache the index
+    _index_cache['default'] = future.result()
+
+
+def _get_index():
+    """Get the cached index if built and index project files on each call.
+    Return an empty index if not built yet.
+    """
+    # Index haven't been built yet
+    index = _index_cache.get('default')
+    if index is None:
+        return importmagic.SymbolIndex()
+
+    # Index project files
+    # TODO(youben) index project files
+    # index.build_index(paths=[])
+    return _index_cache['default']
+
+
+def _get_imports_list(source, index=None):
+    """Get modules, functions and variables that are imported.
+    """
+    if index is None:
+        index = importmagic.SymbolIndex()
+    imports = importmagic.Imports(index, source)
+    imported = [i.name for i in list(imports._imports)]
+    # Go over from imports
+    for from_import in list(imports._imports_from.values()):
+        imported.extend([i.name for i in list(from_import)])
+    return imported
+
+
+def _tokenize(source):
+    """Tokenize python source code.
+    Returns only NAME tokens.
+    """
+    readline = _SourceReader(source).readline
+    return [token for token in tokenize.generate_tokens(readline) if token[0] == tokenize.NAME]
+
+
+def _search_symbol(source, symbol):
+    """Search symbol in python source code.
+
+    Args:
+        source: str object of the source code
+        symbol: str object of the symbol to search
+
+    Returns:
+        list of locations where the symbol was found. Each element have the following format
+            {
+                'start': {
+                    'line': int,
+                    'character': int
+                },
+                'end': {
+                    'line': int,
+                    'character': int
+                }
+            }
+    """
+    symbol_tokens = _tokenize(symbol)
+    source_tokens = _tokenize(source)
+
+    symbol_tokens_str = [token[1] for token in symbol_tokens]
+    source_tokens_str = [token[1] for token in source_tokens]
+
+    symbol_len = len(symbol_tokens)
+    locations = []
+    for i in range(len(source_tokens) - symbol_len + 1):
+        if source_tokens_str[i:i+symbol_len] == symbol_tokens_str:
+            location_range = {
+                'start': {
+                    'line': source_tokens[i][2][0] - 1,
+                    'character': source_tokens[i][2][1],
+                },
+                'end': {
+                    'line': source_tokens[i + symbol_len - 1][3][0] - 1,
+                    'character': source_tokens[i + symbol_len - 1][3][1],
+                }
+            }
+            locations.append(location_range)
+
+    return locations
+
+
+@hookimpl
+def pyls_initialize():
+    _index_cache['default'] = None
+    pool = ThreadPoolExecutor()
+    builder = pool.submit(_build_index, (sys.path))
+    builder.add_done_callback(_cache_index_callback)
+
+
+@hookimpl
+def pyls_commands():
+    return [ADD_IMPORT_COMMAND, REMOVE_IMPORT_COMMAND]
+
+
+@hookimpl
+def pyls_lint(document):
+    """Build a diagnostics of unresolved and unreferenced symbols.
+    Every entry follows this format:
+        {
+            'source': 'importmagic',
+            'range': {
+                'start': {
+                    'line': start_line,
+                    'character': start_column,
+                },
+                'end': {
+                    'line': end_line,
+                    'character': end_column,
+                },
+            },
+            'message': message_to_be_displayed,
+            'severity': sevirity_level,
+        }
+
+    Args:
+        document: The document to be linted.
+    Returns:
+        A list of dictionaries.
+    """
+    scope = importmagic.Scope.from_source(document.source)
+    unresolved, unreferenced = scope.find_unresolved_and_unreferenced_symbols()
+
+    diagnostics = []
+
+    # Annoyingly, we only get the text of an unresolved import, so we'll look for it ourselves
+    for unres in unresolved:
+        for location_range in _search_symbol(document.source, unres):
+            diagnostics.append({
+                'source': SOURCE,
+                'range': location_range,
+                'message': "Unresolved import '%s'" % unres,
+                'severity': lsp.DiagnosticSeverity.Hint,
+            })
+
+    for unref in unreferenced:
+        for location_range in _search_symbol(document.source, unref):
+            # TODO(youben) use jedi.names to get the type of unref
+            # Find out if the unref is an import or a variable/func
+            imports = _get_imports_list(document.source)
+            if unref in imports:
+                message = "Unreferenced import '%s'" % unref
+            else:
+                message = "Unreferenced variable/function '%s'" % unref
+
+            diagnostics.append({
+                'source': SOURCE,
+                'range': location_range,
+                'message': message,
+                'severity': lsp.DiagnosticSeverity.Warning,
+            })
+
+    return diagnostics
+
+
+@hookimpl
+def pyls_code_actions(config, document):
+    """Build a list of actions to be suggested to the user. Each action follow this format:
+        {
+            'title': 'importmagic',
+            'command': command,
+            'arguments':
+                {
+                    'uri': document.uri,
+                    'version': document.version,
+                    'startLine': start_line,
+                    'endLine': end_line,
+                    'newText': text,
+                }
+        }
+    """
+    # Update the style configuration
+    conf = config.plugin_settings('importmagic_lint')
+    min_score = conf.get('minScore', 1)
+    log.debug("Got importmagic settings: %s", conf)
+    importmagic.Imports.set_style(**{_utils.camel_to_underscore(k): v for k, v in conf.items()})
+
+    # Get empty index while it's building so we don't block here
+    index = _get_index()
+    actions = []
+
+    diagnostics = pyls_lint(document)
+    for diagnostic in diagnostics:
+        message = diagnostic.get('message', '')
+        unref_match = UNREF_RE.match(message)
+        unres_match = UNRES_RE.match(message)
+
+        if unref_match:
+            unref = unref_match.group('unreferenced')
+            actions.append(_generate_remove_action(document, index, unref))
+        elif unres_match:
+            unres = unres_match.group('unresolved')
+            actions.extend(_get_actions_for_unres(document, index, min_score, unres))
+
+    return actions
+
+
+def _get_actions_for_unres(document, index, min_score, unres):
+    """Get the list of possible actions to be applied to solve an unresolved symbol.
+    Get a maximun of MAX_COMMANDS actions with the highest score, also filter low score actions
+    using the min_score value.
+    """
+    actions = []
+    for score, module, variable in sorted(index.symbol_scores(unres)[:MAX_COMMANDS], reverse=True):
+        if score < min_score:
+            # Skip low score results
+            continue
+        actions.append(_generate_add_action(document, index, module, variable))
+
+    return actions
+
+
+def _generate_add_action(document, index, module, variable):
+    """Generate the patch we would need to apply to import a module.
+    """
+    imports = importmagic.Imports(index, document.source)
+    if variable:
+        imports.add_import_from(module, variable)
+    else:
+        imports.add_import(module)
+    start_line, end_line, text = imports.get_update()
+
+    action = {
+        'title': _add_command_title(variable, module),
+        'command': ADD_IMPORT_COMMAND,
+        'arguments': [{
+            'uri': document.uri,
+            'version': document.version,
+            'startLine': start_line,
+            'endLine': end_line,
+            'newText': text
+        }]
+    }
+    return action
+
+
+def _generate_remove_action(document, index, unref):
+    """Generate the patch we would need to apply to remove an import.
+    """
+    imports = importmagic.Imports(index, document.source)
+    imports.remove(unref)
+    start_line, end_line, text = imports.get_update()
+
+    action = {
+        'title': _remove_command_title(unref),
+        'command': REMOVE_IMPORT_COMMAND,
+        'arguments': [{
+            'uri': document.uri,
+            'version': document.version,
+            'startLine': start_line,
+            'endLine': end_line,
+            'newText': text
+        }]
+    }
+    return action
+
+
+@hookimpl
+def pyls_execute_command(workspace, command, arguments):
+    if command not in [ADD_IMPORT_COMMAND, REMOVE_IMPORT_COMMAND]:
+        return
+
+    args = arguments[0]
+
+    edit = {'documentChanges': [{
+        'textDocument': {
+            'uri': args['uri'],
+            'version': args['version']
+        },
+        'edits': [{
+            'range': {
+                'start': {'line': args['startLine'], 'character': 0},
+                'end': {'line': args['endLine'], 'character': 0},
+            },
+            'newText': args['newText']
+        }]
+    }]}
+    workspace.apply_edit(edit)
+
+
+def _add_command_title(variable, module):
+    if not variable:
+        return 'Import "%s"' % module
+    return 'Import "%s" from "%s"' % (variable, module)
+
+
+def _remove_command_title(import_name):
+    return 'Remove unused import of "%s"' % import_name

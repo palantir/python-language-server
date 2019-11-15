@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import threading
+import re
 
 import jedi
 
@@ -198,3 +199,8 @@ else:
             return e.errno == errno.EPERM
         else:
             return True
+
+
+def camel_to_underscore(camelcase):
+    s1 = re.sub('([^_])([A-Z][a-z]+)', r'\1_\2', camelcase)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
