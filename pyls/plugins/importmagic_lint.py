@@ -68,7 +68,10 @@ def _tokenize(source):
     """Tokenize python source code.
     """
     stream = BytesIO(source.encode())
-    return list(tokenize.tokenize(stream.readline))
+    tokens = tokenize.tokenize(stream.readline)
+    if tokens is None:
+        return []
+    return list(tokens)
 
 
 def _search_symbol(source, symbol):
