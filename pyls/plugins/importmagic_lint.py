@@ -3,7 +3,6 @@ import logging
 import re
 import sys
 import tokenize
-from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 import importmagic
 from pyls import hookimpl, lsp, _utils
@@ -19,6 +18,19 @@ UNRES_RE = re.compile(r"Unresolved import '(?P<unresolved>[\w.]+)'")
 UNREF_RE = re.compile(r"Unreferenced import '(?P<unreferenced>[\w.]+)'")
 
 _index_cache = {}
+
+
+class _SourceReader():
+    # Used to tokenize python source code
+    def __init__(self, source):
+        self.lines = re.findall(r'[^\n]*\n', source)
+        # To pop lines later
+        self.lines.reverse()
+
+    def readline(self):
+        if self.lines:
+            return self.lines.pop()
+        return ''
 
 
 def _build_index(paths):
@@ -66,12 +78,11 @@ def _get_imports_list(source, index=None):
 
 def _tokenize(source):
     """Tokenize python source code.
+    Returns only NAME tokens.
     """
-    stream = BytesIO(source.encode())
-    tokens = tokenize.tokenize(stream.readline)
-    if tokens is None:
-        return []
-    return list(tokens)
+    readline = _SourceReader(source).readline
+    filter_name = lambda token: token[0] == tokenize.NAME
+    return filter(filter_name, tokenize.generate_tokens(readline))
 
 
 def _search_symbol(source, symbol):
@@ -94,8 +105,8 @@ def _search_symbol(source, symbol):
                 }
             }
     """
-    symbol_tokens = _tokenize(symbol)
-    source_tokens = _tokenize(source)
+    symbol_tokens = list(_tokenize(symbol))
+    source_tokens = list(_tokenize(source))
 
     get_str = lambda token: token[1]
     symbol_tokens_str = list(map(get_str, symbol_tokens))
