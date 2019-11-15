@@ -103,7 +103,7 @@ def _search_symbol(source, symbol):
 
     symbol_len = len(symbol_tokens)
     locations = []
-    for i in len(source_tokens):
+    for i in range(len(source_tokens) - symbol_len + 1):
         if source_tokens_str[i:i+symbol_len] == symbol_tokens_str:
             location_range = {
                 'start': {
