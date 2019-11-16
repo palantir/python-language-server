@@ -1,6 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 from distutils.version import LooseVersion
 import os
+import sys
+
 import jedi
 import pytest
 
@@ -9,6 +11,10 @@ from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
+
+PY2 = sys.version[0] == '2'
+LINUX = sys.platform.startswith('linux')
+CI = os.environ.get('CI')
 LOCATION = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__))
 )
@@ -233,3 +239,38 @@ foo.s"""
     com_position = {'line': 1, 'character': 5}
     completions = pyls_jedi_completions(config, doc, com_position)
     assert completions[0]['label'] == 'spam()'
+
+
+class MockWorkspace(object):
+
+    def __init__(self):
+        self._environments = {}
+        sys.stdout.write(str(self._environments))
+
+
+@pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
+def test_jedi_completion_environment(config):
+    # Content of doc to test completion
+    doc_content = '''import logh
+'''
+    doc = Document(DOC_URI, doc_content, workspace=MockWorkspace())
+
+    # After 'import logh' with default environment
+    com_position = {'line': 0, 'character': 11}
+
+    assert os.path.isdir('/tmp/pyenv/')
+
+    config.update({'plugins': {'jedi': {'environment': None}}})
+    doc.update_config(config)
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions is None
+
+    # Update config extra environment
+    env_path = '/tmp/pyenv/bin/python'
+    config.update({'plugins': {'jedi': {'environment': env_path}}})
+    doc.update_config(config)
+
+    # After 'import logh' with new environment
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions[0]['label'] == 'loghub'
+    assert 'changelog generator' in completions[0]['documentation'].lower()

@@ -220,17 +220,21 @@ class Document(object):
         )
 
     def jedi_script(self, position=None):
-        environment, extra_paths = None, []
+        extra_paths = []
+        environment_path = None
+
         if self._config:
             jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
-            environment = jedi_settings.get('environment')
-            extra_paths = jedi_settings.get('extra_paths')
+            environment_path = jedi_settings.get('environment')
+            extra_paths = jedi_settings.get('extra_paths') or []
 
-        extra_paths = extra_paths or []
+        sys_path = self.sys_path(environment_path) + extra_paths
+        environment = self.get_enviroment(environment_path) if environment_path else None
+
         kwargs = {
             'source': self.source,
             'path': self.path,
-            'sys_path': self.sys_path(environment) + extra_paths,
+            'sys_path': sys_path,
             'environment': environment,
         }
 
@@ -243,10 +247,7 @@ class Document(object):
 
         return jedi.Script(**kwargs)
 
-    def sys_path(self, environment_path=None):
-        # Copy our extra sys path
-        path = list(self._extra_sys_path)
-
+    def get_enviroment(self, environment_path=None):
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
         if environment_path is None:
             environment = jedi.api.environment.get_cached_default_environment()
@@ -254,9 +255,14 @@ class Document(object):
             if environment_path in self._workspace._environments:
                 environment = self._workspace._environments[environment_path]
             else:
-                environment = jedi.api.environment.create_environment(path=environment_path, safe=True)
+                environment = jedi.api.environment.create_environment(path=environment_path, safe=False)
                 self._workspace._environments[environment_path] = environment
 
-        path.extend(environment.get_sys_path())
+        return environment
 
+    def sys_path(self, environment_path=None):
+        # Copy our extra sys path
+        path = list(self._extra_sys_path)
+        environment = self.get_enviroment(environment_path=environment_path)
+        path.extend(environment.get_sys_path())
         return path
