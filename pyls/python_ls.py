@@ -61,8 +61,8 @@ def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
     server = socketserver.TCPServer((bind_addr, port), wrapper_class)
     server.allow_reuse_address = True
 
+
     try:
-        log.info('WHAT WHAT!')
         log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
         server.serve_forever()
     finally:
@@ -312,7 +312,7 @@ class PythonLanguageServer(MethodDispatcher):
         return self.highlight(textDocument['uri'], position)
 
     def m_text_document__hover(self, textDocument=None, position=None, **_kwargs):
-        return self.hover(config, textDocument['uri'], position)
+        return self.hover(textDocument['uri'], position)
 
     def m_text_document__document_symbol(self, textDocument=None, **_kwargs):
         return self.document_symbols(textDocument['uri'])
@@ -341,7 +341,6 @@ class PythonLanguageServer(MethodDispatcher):
             workspace = self.workspaces[workspace_uri]
             workspace.update_config(self.config)
             for doc_uri in workspace.documents:
-                workspace.get_document(doc_uri).update_config(self.config)
                 self.lint(doc_uri, is_saved=False)
 
     def m_workspace__did_change_workspace_folders(self, added=None, removed=None, **_kwargs):
