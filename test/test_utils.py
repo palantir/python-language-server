@@ -1,7 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import time
-import mock
 import sys
+
+import mock
 
 from pyls import _utils
 

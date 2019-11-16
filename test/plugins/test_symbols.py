@@ -2,13 +2,13 @@
 import os
 import sys
 
+from test.test_utils import MockWorkspace
 import pytest
 
 from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
 from pyls.workspace import Document
-from test.test_utils import MockWorkspace
 
 
 PY2 = sys.version[0] == '2'
@@ -30,6 +30,7 @@ def main(x):
 
 """
 
+
 def helper_check_symbols_all_scope(symbols):
     # All eight symbols (import sys, a, B, __init__, x, y, main, y)
     assert len(symbols) == 8
@@ -45,7 +46,6 @@ def helper_check_symbols_all_scope(symbols):
 
     # Not going to get too in-depth here else we're just testing Jedi
     assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
-
 
 
 def test_symbols(config):
