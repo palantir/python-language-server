@@ -243,9 +243,6 @@ class Document(object):
             'environment': environment,
         }
 
-        log.debug('JEDI SCRIPT?')
-        log.debug(str(kwargs))
-
         if position:
             kwargs['line'] = position['line'] + 1
             kwargs['column'] = _utils.clip_column(position['character'], self.lines, position['line'])
