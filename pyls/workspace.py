@@ -212,11 +212,16 @@ class Document(object):
 
         return m_start[0] + m_end[-1]
 
-    def jedi_names(self, all_scopes=False, definitions=True, references=False, environment=None):
+    def jedi_names(self, all_scopes=False, definitions=True, references=False):
+        environment_path = None
+        if self._config:
+            jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
+            environment_path = jedi_settings.get('environment')
+        environment = self.get_enviroment(environment_path) if environment_path else None
+
         return jedi.api.names(
             source=self.source, path=self.path, all_scopes=all_scopes,
-            definitions=definitions, references=references,
-            environment=environment,
+            definitions=definitions, references=references, environment=environment,
         )
 
     def jedi_script(self, position=None):
