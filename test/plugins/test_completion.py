@@ -120,14 +120,32 @@ def test_jedi_method_completion(config):
     assert everyone_method['insertText'] == 'everyone'
 
 
-def test_jedi_completion_extra_paths(config):
+def test_jedi_completion_extra_paths(config, tmpdir):
+    # Create a tempfile with some content and pass to extra_paths
+    temp_doc_content = '''
+def spam():
     pass
-    # # Over the 'w' in 'print Hello().world'
-    # com_position = {'line': 18, 'character': 15}
-    # doc = Document(DOC_URI, DOC)
-    # completions = pyls_jedi_completions(config, doc, com_position)
+'''
+    p = tmpdir.mkdir("extra_path")
+    extra_paths = [str(p)]
+    p = p.join("foo.py")
+    p.write(temp_doc_content)
 
-    # items = {c['label']: c['sortText'] for c in completions}
+    # Content of doc to test completion
+    doc_content = """import foo
+foo.s"""
+    doc = Document(DOC_URI, doc_content)
 
-    # # Ensure we can complete the 'world' property
-    # assert 'world' in list(items.keys())[0]
+    # After 'foo.s' without extra paths
+    com_position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions is None
+
+    # Update config extra paths
+    config.update({'plugins': {'jedi': {'extra_paths': extra_paths}}})
+    doc.update_config(config)
+
+    # After 'foo.s' with extra paths
+    com_position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions[0]['label'] == 'spam()'
