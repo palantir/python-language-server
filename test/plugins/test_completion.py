@@ -10,6 +10,7 @@ from pyls import uris, lsp
 from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
+from test.test_utils import MockWorkspace
 
 
 PY2 = sys.version[0] == '2'
@@ -18,7 +19,6 @@ CI = os.environ.get('CI')
 LOCATION = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__))
 )
-
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import os
 print os.path.isabs("/tmp")
@@ -42,15 +42,6 @@ print Hello().world
 
 print Hello().every
 """
-
-
-class MockWorkspace(object):
-    """Mock workspace used by test_jedi_completion_environment."""
-
-    def __init__(self):
-        self._environments = {}
-        # This is to avoid pyling tests of the variable not being used
-        sys.stdout.write(str(self._environments))
 
 
 def test_rope_import_completion(config, workspace):

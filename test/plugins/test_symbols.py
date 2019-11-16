@@ -1,9 +1,19 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import os
+import sys
+
+import pytest
+
 from pyls import uris
 from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
 from pyls.workspace import Document
+from test.test_utils import MockWorkspace
 
+
+PY2 = sys.version[0] == '2'
+LINUX = sys.platform.startswith('linux')
+CI = os.environ.get('CI')
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
 
@@ -19,6 +29,23 @@ def main(x):
     return y
 
 """
+
+def helper_check_symbols_all_scope(symbols):
+    # All eight symbols (import sys, a, B, __init__, x, y, main, y)
+    assert len(symbols) == 8
+
+    def sym(name):
+        return [s for s in symbols if s['name'] == name][0]
+
+    # Check we have some sane mappings to VSCode constants
+    assert sym('a')['kind'] == SymbolKind.Variable
+    assert sym('B')['kind'] == SymbolKind.Class
+    assert sym('__init__')['kind'] == SymbolKind.Function
+    assert sym('main')['kind'] == SymbolKind.Function
+
+    # Not going to get too in-depth here else we're just testing Jedi
+    assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
+
 
 
 def test_symbols(config):
@@ -49,18 +76,16 @@ def test_symbols(config):
 def test_symbols_all_scopes(config):
     doc = Document(DOC_URI, DOC)
     symbols = pyls_document_symbols(config, doc)
+    helper_check_symbols_all_scope(symbols)
 
-    # All eight symbols (import sys, a, B, __init__, x, y, main, y)
-    assert len(symbols) == 8
 
-    def sym(name):
-        return [s for s in symbols if s['name'] == name][0]
+@pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
+def test_symbols_all_scopes_with_jedi_environment(config):
+    doc = Document(DOC_URI, DOC, workspace=MockWorkspace())
 
-    # Check we have some sane mappings to VSCode constants
-    assert sym('a')['kind'] == SymbolKind.Variable
-    assert sym('B')['kind'] == SymbolKind.Class
-    assert sym('__init__')['kind'] == SymbolKind.Function
-    assert sym('main')['kind'] == SymbolKind.Function
-
-    # Not going to get too in-depth here else we're just testing Jedi
-    assert sym('a')['location']['range']['start'] == {'line': 2, 'character': 0}
+    # Update config extra environment
+    env_path = '/tmp/pyenv/bin/python'
+    config.update({'plugins': {'jedi': {'environment': env_path}}})
+    doc.update_config(config)
+    symbols = pyls_document_symbols(config, doc)
+    helper_check_symbols_all_scope(symbols)
