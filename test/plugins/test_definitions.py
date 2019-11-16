@@ -1,8 +1,4 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from distutils.version import LooseVersion
-import jedi
-import pytest
-
 from pyls import uris
 from pyls.plugins.definition import pyls_definitions
 from pyls.workspace import Document
@@ -38,15 +34,13 @@ def test_definitions(config):
     assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(config, doc, cursor_pos)
 
 
-@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.14.0'),
-                    reason='This test fails with previous versions of jedi')
 def test_builtin_definition(config):
     # Over 'i' in dict
     cursor_pos = {'line': 8, 'character': 24}
 
     # No go-to def for builtins
     doc = Document(DOC_URI, DOC)
-    assert len(pyls_definitions(config, doc, cursor_pos)) == 1
+    assert not pyls_definitions(config, doc, cursor_pos)
 
 
 def test_assignment(config):

@@ -1,8 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from functools import partial
 import logging
+import os
 import socketserver
 import threading
-from functools import partial
 
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
@@ -33,7 +34,16 @@ class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
         self.delegate = self.DELEGATE_CLASS(self.rfile, self.wfile)
 
     def handle(self):
-        self.delegate.start()
+        try:
+            self.delegate.start()
+        except OSError as e:
+            if os.name == 'nt':
+                # Catch and pass on ConnectionResetError when parent process
+                # dies
+                # pylint: disable=no-member, undefined-variable
+                if isinstance(e, WindowsError) and e.winerror == 10054:
+                    pass
+
         # pylint: disable=no-member
         self.SHUTDOWN_CALL()
 
@@ -163,6 +173,7 @@ class PythonLanguageServer(MethodDispatcher):
             'hoverProvider': True,
             'referencesProvider': True,
             'renameProvider': True,
+            'foldingRangeProvider': True,
             'signatureHelpProvider': {
                 'triggerCharacters': ['(', ',', '=']
             },
@@ -202,7 +213,7 @@ class PythonLanguageServer(MethodDispatcher):
             def watch_parent_process(pid):
                 # exit when the given pid is not alive
                 if not _utils.is_process_alive(pid):
-                    log.info("parent process %s is not alive", pid)
+                    log.info("parent process %s is not alive, exiting!", pid)
                     self.m_exit()
                 else:
                     threading.Timer(PARENT_PROCESS_WATCH_INTERVAL, watch_parent_process, args=[pid]).start()
@@ -272,6 +283,9 @@ class PythonLanguageServer(MethodDispatcher):
     def signature_help(self, doc_uri, position):
         return self._hook('pyls_signature_help', doc_uri, position=position)
 
+    def folding(self, doc_uri):
+        return self._hook('pyls_folding_range', doc_uri)
+
     def m_text_document__did_close(self, textDocument=None, **_kwargs):
         workspace = self._match_uri_to_workspace(textDocument['uri'])
         workspace.rm_document(textDocument['uri'])
@@ -322,6 +336,9 @@ class PythonLanguageServer(MethodDispatcher):
 
     def m_text_document__rename(self, textDocument=None, position=None, newName=None, **_kwargs):
         return self.rename(textDocument['uri'], position, newName)
+
+    def m_text_document__folding_range(self, textDocument=None, **_kwargs):
+        return self.folding(textDocument['uri'])
 
     def m_text_document__range_formatting(self, textDocument=None, range=None, _options=None, **_kwargs):
         # Again, we'll ignore formatting options for now.

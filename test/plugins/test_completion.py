@@ -120,6 +120,90 @@ def test_jedi_method_completion(config):
     assert everyone_method['insertText'] == 'everyone'
 
 
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
+                    reason='This test fails with Jedi 0.15')
+def test_numpy_completions(config):
+    doc_numpy = "import numpy as np; np."
+    com_position = {'line': 0, 'character': len(doc_numpy)}
+    doc = Document(DOC_URI, doc_numpy)
+    items = pyls_jedi_completions(config, doc, com_position)
+
+    assert items
+    assert any(['array' in i['label'] for i in items])
+
+
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
+                    reason='This test fails with Jedi 0.15')
+def test_pandas_completions(config):
+    doc_pandas = "import pandas as pd; pd."
+    com_position = {'line': 0, 'character': len(doc_pandas)}
+    doc = Document(DOC_URI, doc_pandas)
+    items = pyls_jedi_completions(config, doc, com_position)
+
+    assert items
+    assert any(['DataFrame' in i['label'] for i in items])
+
+
+def test_matplotlib_completions(config):
+    doc_mpl = "import matplotlib.pyplot as plt; plt."
+    com_position = {'line': 0, 'character': len(doc_mpl)}
+    doc = Document(DOC_URI, doc_mpl)
+    items = pyls_jedi_completions(config, doc, com_position)
+
+    assert items
+    assert any(['plot' in i['label'] for i in items])
+
+
+def test_snippets_completion(config):
+    doc_snippets = 'from collections import defaultdict \na=defaultdict'
+    com_position = {'line': 0, 'character': 35}
+    doc = Document(DOC_URI, doc_snippets)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions[0]['insertText'] == 'defaultdict'
+
+    com_position = {'line': 1, 'character': len(doc_snippets)}
+    completions = pyls_jedi_completions(config, doc, com_position)
+    out = 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
+    assert completions[0]['insertText'] == out
+
+
+def test_multiline_snippets(config):
+    document = 'from datetime import\\\n date,\\\n datetime \na=date'
+    doc = Document(DOC_URI, document)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+
+    position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date'
+
+    position = {'line': 2, 'character': 9}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'datetime'
+
+
+def test_multistatement_snippet(config):
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+
+    document = 'a = 1; from datetime import date'
+    doc = Document(DOC_URI, document)
+    position = {'line': 0, 'character': len(document)}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date'
+
+    document = 'from datetime import date; a = date'
+    doc = Document(DOC_URI, document)
+    position = {'line': 0, 'character': len(document)}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date(${1:year}, ${2:month}, ${3:day})$0'
+
+
 def test_jedi_completion_extra_paths(config, tmpdir):
     # Create a tempfile with some content and pass to extra_paths
     temp_doc_content = '''
