@@ -202,10 +202,10 @@ class PythonLanguageServer(MethodDispatcher):
 
         self.workspaces.pop(self.root_uri, None)
         self.root_uri = rootUri
-        self.workspace = Workspace(rootUri, self._endpoint)
-        self.workspaces[rootUri] = self.workspace
         self.config = config.Config(rootUri, initializationOptions or {},
                                     processId, _kwargs.get('capabilities', {}))
+        self.workspace = Workspace(rootUri, self._endpoint, self.config)
+        self.workspaces[rootUri] = self.workspace
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
@@ -355,6 +355,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.config.update((settings or {}).get('pyls', {}))
         for workspace_uri in self.workspaces:
             workspace = self.workspaces[workspace_uri]
+            workspace.update_config(self.config)
             for doc_uri in workspace.documents:
                 self.lint(doc_uri, is_saved=False)
 
@@ -365,7 +366,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         for added_info in added:
             added_uri = added_info['uri']
-            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint)
+            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint, self.config)
 
         # Migrate documents that are on the root workspace and have a better
         # match now
