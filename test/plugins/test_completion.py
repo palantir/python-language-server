@@ -118,3 +118,16 @@ def test_jedi_method_completion(config):
 
     assert 'insertTextFormat' not in everyone_method
     assert everyone_method['insertText'] == 'everyone'
+
+
+def test_jedi_completion_extra_paths(config):
+    pass
+    # # Over the 'w' in 'print Hello().world'
+    # com_position = {'line': 18, 'character': 15}
+    # doc = Document(DOC_URI, DOC)
+    # completions = pyls_jedi_completions(config, doc, com_position)
+
+    # items = {c['label']: c['sortText'] for c in completions}
+
+    # # Ensure we can complete the 'world' property
+    # assert 'world' in list(items.keys())[0]

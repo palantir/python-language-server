@@ -84,7 +84,7 @@ class Workspace(object):
     def update_config(self, config):
         self._config = config
         for doc_uri in self.documents:
-            self.get_document(doc_uri).update_config(self.config)
+            self.get_document(doc_uri).update_config(config)
 
     def apply_edit(self, edit):
         return self._endpoint.request(self.M_APPLY_EDIT, {'edit': edit})
@@ -112,7 +112,8 @@ class Workspace(object):
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None, config=None, workspace=None):
+    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None,
+                 config=None, workspace=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
@@ -251,7 +252,7 @@ class Document(object):
             environment = jedi.api.environment.get_cached_default_environment()
         else:
             if environment_path in self._workspace._environments:
-                environment = self._environments[environment_path]
+                environment = self._workspace._environments[environment_path]
             else:
                 environment = jedi.api.environment.create_environment(path=environment_path, safe=True)
                 self._workspace._environments[environment_path] = environment
