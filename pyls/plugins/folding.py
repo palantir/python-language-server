@@ -102,7 +102,8 @@ def __check_if_node_is_valid(node):
     valid = True
     if isinstance(node, tree_nodes.PythonNode):
         kind = node.type
-        valid = kind not in {'decorated', 'parameters', 'dictorsetmaker'}
+        valid = kind not in {'decorated', 'parameters', 'dictorsetmaker',
+                             'testlist_comp'}
         if kind == 'suite':
             if isinstance(node.parent, tree_nodes.Function):
                 valid = False
