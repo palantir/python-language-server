@@ -44,6 +44,15 @@ print Hello().every
 """
 
 
+class MockWorkspace(object):
+    """Mock workspace used by test_jedi_completion_environment."""
+
+    def __init__(self):
+        self._environments = {}
+        # This is to avoid pyling tests of the variable not being used
+        sys.stdout.write(str(self._environments))
+
+
 def test_rope_import_completion(config, workspace):
     com_position = {'line': 0, 'character': 7}
     doc = Document(DOC_URI, DOC)
@@ -51,8 +60,6 @@ def test_rope_import_completion(config, workspace):
     assert items is None
 
 
-@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.14.0'),
-                    reason='This test fails with previous versions of jedi')
 def test_jedi_completion(config):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
@@ -239,13 +246,6 @@ foo.s"""
     com_position = {'line': 1, 'character': 5}
     completions = pyls_jedi_completions(config, doc, com_position)
     assert completions[0]['label'] == 'spam()'
-
-
-class MockWorkspace(object):
-
-    def __init__(self):
-        self._environments = {}
-        sys.stdout.write(str(self._environments))
 
 
 @pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
