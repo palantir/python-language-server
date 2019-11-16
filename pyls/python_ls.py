@@ -192,10 +192,10 @@ class PythonLanguageServer(MethodDispatcher):
 
         self.workspaces.pop(self.root_uri, None)
         self.root_uri = rootUri
-        self.workspace = Workspace(rootUri, self._endpoint)
-        self.workspaces[rootUri] = self.workspace
         self.config = config.Config(rootUri, initializationOptions or {},
                                     processId, _kwargs.get('capabilities', {}))
+        self.workspace = Workspace(rootUri, self._endpoint, self.config)
+        self.workspaces[rootUri] = self.workspace
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
@@ -312,7 +312,7 @@ class PythonLanguageServer(MethodDispatcher):
         return self.highlight(textDocument['uri'], position)
 
     def m_text_document__hover(self, textDocument=None, position=None, **_kwargs):
-        return self.hover(textDocument['uri'], position)
+        return self.hover(config, textDocument['uri'], position)
 
     def m_text_document__document_symbol(self, textDocument=None, **_kwargs):
         return self.document_symbols(textDocument['uri'])
@@ -339,7 +339,9 @@ class PythonLanguageServer(MethodDispatcher):
         self.config.update((settings or {}).get('pyls', {}))
         for workspace_uri in self.workspaces:
             workspace = self.workspaces[workspace_uri]
+            workspace.update_config(self.config)
             for doc_uri in workspace.documents:
+                workspace.get_document(doc_uri).update_config(self.config)
                 self.lint(doc_uri, is_saved=False)
 
     def m_workspace__did_change_workspace_folders(self, added=None, removed=None, **_kwargs):
@@ -349,7 +351,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         for added_info in added:
             added_uri = added_info['uri']
-            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint)
+            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint, self.config)
 
         # Migrate documents that are on the root workspace and have a better
         # match now

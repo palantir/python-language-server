@@ -42,10 +42,7 @@ _TYPE_MAP = {
 @hookimpl
 def pyls_completions(config, document, position):
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
-    environment = settings.get('environment')
-    extra_paths = settings.get('extra_paths')
-    definitions = document.jedi_script(position, extra_paths=extra_paths,
-                                       environment=environment).completions()
+    definitions = document.jedi_script(position).completions()
     if not definitions:
         return None
 
