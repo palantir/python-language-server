@@ -237,7 +237,7 @@
                 },
                 "pyls.plugins.pylint.enabled": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Enable or disable the plugin."
                 },
                 "pyls.plugins.pylint.args": {

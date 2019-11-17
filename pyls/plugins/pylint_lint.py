@@ -147,6 +147,13 @@ def _build_pylint_flags(settings):
 
 
 @hookimpl
+def pyls_settings():
+    # Default pylint to disabled because it requires a config
+    # file to be useful.
+    return {'plugins': {'pylint': {'enabled': False, 'args': []}}}
+
+
+@hookimpl
 def pyls_lint(config, document, is_saved):
     settings = config.plugin_settings('pylint')
     log.debug("Got pylint settings: %s", settings)
