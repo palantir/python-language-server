@@ -1,6 +1,7 @@
 # Copyright 2019 Palantir Technologies, Inc.
 """Linter pluging for flake8"""
 import logging
+from os import path
 import re
 from subprocess import Popen, PIPE
 from pyls import hookimpl, lsp
@@ -20,6 +21,7 @@ def pyls_lint(config, document):
     log.debug("Got flake8 settings: %s", settings)
 
     opts = {
+        'config': settings.get('config'),
         'exclude': settings.get('exclude'),
         'filename': settings.get('filename'),
         'hang-closing': settings.get('hangClosing'),
@@ -27,6 +29,14 @@ def pyls_lint(config, document):
         'max-line-length': settings.get('maxLineLength'),
         'select': settings.get('select'),
     }
+
+    # flake takes only absolute path to the config. So we should check and
+    # convert if necessary
+    if opts.get('config') and not path.isabs(opts.get('config')):
+        opts['config'] = path.abspath(path.expanduser(path.expandvars(
+            opts.get('config')
+        )))
+        log.debug("using flake8 with config: %s", opts['config'])
 
     # Call the flake8 utility then parse diagnostics from stdout
     args = build_args(opts, document.path)
@@ -64,16 +74,17 @@ def build_args(options, doc_path):
     """
     args = [doc_path]
     for arg_name, arg_val in options.items():
+        if arg_val is None:
+            continue
         arg = None
         if isinstance(arg_val, list):
             arg = '--{}={}'.format(arg_name, ','.join(arg_val))
         elif isinstance(arg_val, bool):
             if arg_val:
                 arg = '--{}'.format(arg_name)
-        elif isinstance(arg_val, int):
+        else:
             arg = '--{}={}'.format(arg_name, arg_val)
-        if arg:
-            args.append(arg)
+        args.append(arg)
     return args
 
 
