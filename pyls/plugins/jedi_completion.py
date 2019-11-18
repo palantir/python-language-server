@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import parso
 from itertools import chain
+import parso
 from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
