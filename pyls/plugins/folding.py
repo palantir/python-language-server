@@ -110,14 +110,11 @@ def __check_if_node_is_valid(node):
     return valid
 
 
-def __compute_start_end_lines(node, stack):
-    start_line, _ = node.start_pos
-    end_line, _ = node.end_pos
-    modified = False
+def __handle_flow_nodes(node, end_line, stack):
     from_keyword = False
     if isinstance(node, tree_nodes.Keyword):
         from_keyword = True
-        if node.value in {'if', 'elif', 'while', 'for', 'except'}:
+        if node.value in {'if', 'elif', 'with', 'while', 'for', 'except'}:
             body = stack[2]
             children = [body]
             if hasattr(body, 'children'):
@@ -133,6 +130,15 @@ def __compute_start_end_lines(node, stack):
             stack = stack[:1] + children + stack[2:]
             node = body
             end_line, _ = body.end_pos
+    return end_line, from_keyword, node, stack
+
+
+def __compute_start_end_lines(node, stack):
+    start_line, _ = node.start_pos
+    end_line, _ = node.end_pos
+    modified = False
+    end_line, from_keyword, node, stack = __handle_flow_nodes(
+        node, end_line, stack)
 
     last_leaf = node.get_last_leaf()
     last_newline = isinstance(last_leaf, tree_nodes.Newline)
