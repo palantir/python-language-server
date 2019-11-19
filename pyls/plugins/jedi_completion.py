@@ -98,10 +98,12 @@ def _format_completion(d, include_params=True):
         completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
         snippet = d.name + '('
         for i, param in enumerate(positional_args):
-            snippet += '${%s:%s}' % (i + 1, param.name)
+            name = param.name if param.name != '/' else '\\/'
+            snippet += '${%s:%s}' % (i + 1, name)
             if i < len(positional_args) - 1:
                 snippet += ', '
         snippet += ')$0'
+        print(snippet)
         completion['insertText'] = snippet
 
     return completion
