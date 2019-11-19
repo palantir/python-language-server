@@ -114,12 +114,20 @@ def __handle_flow_nodes(node, end_line, stack):
     from_keyword = False
     if isinstance(node, tree_nodes.Keyword):
         from_keyword = True
-        if node.value in {'if', 'elif', 'with', 'while', 'for', 'except'}:
+        if node.value in {'if', 'elif', 'with', 'while', 'except'}:
             body = stack[2]
             children = [body]
             if hasattr(body, 'children'):
                 children = body.children
             stack = stack[:2] + children + stack[3:]
+            node = body
+            end_line, _ = body.end_pos
+        elif node.value in {'for'}:
+            body = stack[4]
+            children = [body]
+            if hasattr(body, 'children'):
+                children = body.children
+            stack = stack[:4] + children + stack[5:]
             node = body
             end_line, _ = body.end_pos
         elif node.value in {'else'}:
