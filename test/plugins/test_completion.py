@@ -1,6 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
 from distutils.version import LooseVersion
 import os
+import sys
+
+from test.test_utils import MockWorkspace
 import jedi
 import pytest
 
@@ -9,10 +12,13 @@ from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
+
+PY2 = sys.version[0] == '2'
+LINUX = sys.platform.startswith('linux')
+CI = os.environ.get('CI')
 LOCATION = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__))
 )
-
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import os
 print os.path.isabs("/tmp")
@@ -150,3 +156,112 @@ def test_matplotlib_completions(config):
 
     assert items
     assert any(['plot' in i['label'] for i in items])
+
+
+def test_snippets_completion(config):
+    doc_snippets = 'from collections import defaultdict \na=defaultdict'
+    com_position = {'line': 0, 'character': 35}
+    doc = Document(DOC_URI, doc_snippets)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions[0]['insertText'] == 'defaultdict'
+
+    com_position = {'line': 1, 'character': len(doc_snippets)}
+    completions = pyls_jedi_completions(config, doc, com_position)
+    out = 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
+    assert completions[0]['insertText'] == out
+
+
+def test_multiline_snippets(config):
+    document = 'from datetime import\\\n date,\\\n datetime \na=date'
+    doc = Document(DOC_URI, document)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+
+    position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date'
+
+    position = {'line': 2, 'character': 9}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'datetime'
+
+
+def test_multistatement_snippet(config):
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+
+    document = 'a = 1; from datetime import date'
+    doc = Document(DOC_URI, document)
+    position = {'line': 0, 'character': len(document)}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date'
+
+    document = 'from datetime import date; a = date'
+    doc = Document(DOC_URI, document)
+    position = {'line': 0, 'character': len(document)}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date(${1:year}, ${2:month}, ${3:day})$0'
+
+
+def test_jedi_completion_extra_paths(config, tmpdir):
+    # Create a tempfile with some content and pass to extra_paths
+    temp_doc_content = '''
+def spam():
+    pass
+'''
+    p = tmpdir.mkdir("extra_path")
+    extra_paths = [str(p)]
+    p = p.join("foo.py")
+    p.write(temp_doc_content)
+
+    # Content of doc to test completion
+    doc_content = """import foo
+foo.s"""
+    doc = Document(DOC_URI, doc_content)
+
+    # After 'foo.s' without extra paths
+    com_position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions is None
+
+    # Update config extra paths
+    config.update({'plugins': {'jedi': {'extra_paths': extra_paths}}})
+    doc.update_config(config)
+
+    # After 'foo.s' with extra paths
+    com_position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions[0]['label'] == 'spam()'
+
+
+@pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
+def test_jedi_completion_environment(config):
+    # Content of doc to test completion
+    doc_content = '''import logh
+'''
+    doc = Document(DOC_URI, doc_content, workspace=MockWorkspace())
+
+    # After 'import logh' with default environment
+    com_position = {'line': 0, 'character': 11}
+
+    assert os.path.isdir('/tmp/pyenv/')
+
+    config.update({'plugins': {'jedi': {'environment': None}}})
+    doc.update_config(config)
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions is None
+
+    # Update config extra environment
+    env_path = '/tmp/pyenv/bin/python'
+    config.update({'plugins': {'jedi': {'environment': env_path}}})
+    doc.update_config(config)
+
+    # After 'import logh' with new environment
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert completions[0]['label'] == 'loghub'
+    assert 'changelog generator' in completions[0]['documentation'].lower()

@@ -1,13 +1,12 @@
 # Copyright 2018 Google LLC.
 """Linter plugin for pylint."""
 import collections
-import json
 import logging
 import sys
 
+import ujson as json
 from pylint.epylint import py_run
 from pyls import hookimpl, lsp
-
 
 log = logging.getLogger(__name__)
 
@@ -145,6 +144,13 @@ def _build_pylint_flags(settings):
     if pylint_args is None:
         return ''
     return ' '.join(pylint_args)
+
+
+@hookimpl
+def pyls_settings():
+    # Default pylint to disabled because it requires a config
+    # file to be useful.
+    return {'plugins': {'pylint': {'enabled': False, 'args': []}}}
 
 
 @hookimpl

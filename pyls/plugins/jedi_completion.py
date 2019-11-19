@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import parso
 from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
@@ -38,6 +39,9 @@ _TYPE_MAP = {
     'statement': lsp.CompletionItemKind.Keyword,
 }
 
+# Types of parso nodes for which snippet is not included in the completion
+_IMPORTS = ('import_name', 'import_from')
+
 
 @hookimpl
 def pyls_completions(config, document, position):
@@ -50,8 +54,31 @@ def pyls_completions(config, document, position):
 
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
+    include_params = (snippet_support and should_include_params and
+                      use_snippets(document, position))
+    return [_format_completion(d, include_params) for d in definitions] or None
 
-    return [_format_completion(d, snippet_support and should_include_params) for d in definitions] or None
+
+def use_snippets(document, position):
+    """
+    Determine if it's necessary to return snippets in code completions.
+
+    This returns `False` if a completion is being requested on an import
+    statement, `True` otherwise.
+    """
+    line = position['line']
+    lines = document.source.split('\n', line)
+    act_lines = [lines[line][:position['character']]]
+    line -= 1
+    while line > -1:
+        act_line = lines[line]
+        if act_line.rstrip().endswith('\\'):
+            act_lines.insert(0, act_line)
+            line -= 1
+        else:
+            break
+    tokens = parso.parse('\n'.join(act_lines).split(';')[-1].strip())
+    return tokens.children[0].type not in _IMPORTS
 
 
 def _format_completion(d, include_params=True):
