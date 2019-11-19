@@ -103,7 +103,6 @@ def _format_completion(d, include_params=True):
             if i < len(positional_args) - 1:
                 snippet += ', '
         snippet += ')$0'
-        print(snippet)
         completion['insertText'] = snippet
 
     return completion
