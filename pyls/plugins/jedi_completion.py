@@ -92,18 +92,23 @@ def _format_completion(d, include_params=True):
     }
 
     if include_params and hasattr(d, 'params') and d.params:
-        positional_args = [param for param in d.params if '=' not in param.description]
-
         # For completions with params, we can generate a snippet instead
-        completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
-        snippet = d.name + '('
-        for i, param in enumerate(positional_args):
-            name = param.name if param.name != '/' else '\\/'
-            snippet += '${%s:%s}' % (i + 1, name)
-            if i < len(positional_args) - 1:
-                snippet += ', '
-        snippet += ')$0'
-        completion['insertText'] = snippet
+
+        def positional_args():
+            # return params until / or kwarg
+            for param in d.params:
+                if param.name in {'/', '*'} or '=' in param.description:
+                    break
+                yield param
+
+        snippet_params = ', '.join(
+            '${{{}:{}}}'.format(i + 1, param.name) for i, param in enumerate(positional_args())
+        )
+
+        completion.update(
+            insertTextFormat=lsp.InsertTextFormat.Snippet,
+            insertText='{}({})$0'.format(d.name, snippet_params)
+        )
 
     return completion
 
