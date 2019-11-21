@@ -38,7 +38,7 @@ setup(
         'jedi>=0.14.1,<0.16',
         'python-jsonrpc-server>=0.3.0',
         'pluggy',
-        'ujson<=1.35'
+        'ujson<=1.35; platform_system=="Linux"'
     ],
 
     # List additional groups of dependencies here (e.g. development

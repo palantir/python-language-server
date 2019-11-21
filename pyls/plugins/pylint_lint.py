@@ -4,9 +4,13 @@ import collections
 import logging
 import sys
 
-import ujson as json
 from pylint.epylint import py_run
 from pyls import hookimpl, lsp
+
+try:
+    import ujson as json
+except Exception:
+    import json
 
 log = logging.getLogger(__name__)
 
