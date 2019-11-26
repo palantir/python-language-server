@@ -101,7 +101,11 @@ def _format_completion(d, include_params):
 
     if include_params:
         # For completions with params, we can generate a snippet instead
-        names = [param.name for param in d.params if '=' not in param.description]
+
+        def fix_name(name):
+            return '\\/' if name == '/' else name
+
+        names = [fix_name(param.name) for param in d.params if '=' not in param.description]
         snippets = ('${{{}:{}}}'.format(i + 1, p) for i, p in enumerate(names))
         completion.update(
             insertTextFormat=lsp.InsertTextFormat.Snippet,

@@ -177,6 +177,18 @@ def test_snippets_completion(config):
     assert completions[1]['label'] == 'defaultdict(default_factory, iterable, kwargs)'
 
 
+def test_snippet_parsing(config):
+    doc = 'import numpy as np\nnp.logical_and'
+    completion_position = {'line': 1, 'character': 14}
+    doc = Document(DOC_URI, doc)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+    completions = pyls_jedi_completions(config, doc, completion_position)
+    out = 'logical_and(${1:x1}, ${2:x2}, ${3:\\/}, ${4:*})$0'
+    assert completions[0]['insertText'] == out
+
+
 def test_multiline_snippets(config):
     document = 'from datetime import\\\n date,\\\n datetime \na=date'
     doc = Document(DOC_URI, document)
