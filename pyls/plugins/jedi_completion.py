@@ -43,11 +43,6 @@ _TYPE_MAP = {
 # Types of parso nodes for which snippet is not included in the completion
 _IMPORTS = ('import_name', 'import_from')
 
-# Provide completions with snippets
-_USE_PARAMS_OFF = 0
-_USE_PARAMS_ON = 1
-_USE_PARAMS_BOTH = 2
-
 
 @hookimpl
 def pyls_completions(config, document, position):
@@ -62,13 +57,6 @@ def pyls_completions(config, document, position):
     should_include_params = settings.get('include_params')
     include_params = (snippet_support and should_include_params and
                       use_snippets(document, position))
-    if include_params:
-        if settings.get('include_params_both'):
-            include_params = _USE_PARAMS_BOTH
-        else:
-            include_params = _USE_PARAMS_ON
-    else:
-        include_params = _USE_PARAMS_OFF
 
     return list(chain.from_iterable(_format_completions(d, include_params) for d in definitions))
 
@@ -96,12 +84,9 @@ def use_snippets(document, position):
 
 
 def _format_completions(d, include_params):
-    if include_params == _USE_PARAMS_BOTH:
-        yield _format_completion(d, False)
-        if hasattr(d, 'params'):
-            yield _format_completion(d, True)
-    else:
-        yield _format_completion(d, include_params == _USE_PARAMS_ON and hasattr(d, 'params'))
+    yield _format_completion(d, False)
+    if hasattr(d, 'params'):
+        yield _format_completion(d, True)
 
 
 def _format_completion(d, include_params):

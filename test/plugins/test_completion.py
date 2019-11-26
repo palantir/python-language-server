@@ -170,24 +170,11 @@ def test_snippets_completion(config):
 
     com_position = {'line': 1, 'character': len(doc_snippets)}
     completions = pyls_jedi_completions(config, doc, com_position)
-    out = 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
-    assert completions[0]['insertText'] == out
-
-
-def test_snippets_both(config):
-    document = 'from datetime import date; a=date'
-    doc = Document(DOC_URI, document)
-    config.capabilities['textDocument'] = {
-        'completion': {'completionItem': {'snippetSupport': True}}}
-    config.update({'plugins': {'jedi_completion': {'include_params': True, 'include_params_both': True}}})
-
-    position = {'line': 0, 'character': len(document)}
-    completions = pyls_jedi_completions(config, doc, position)
     assert len(completions) == 2
-    assert completions[0]['insertText'] == 'date'
-    assert completions[0]['label'] == 'date'
-    assert completions[1]['insertText'] == 'date(${1:year}, ${2:month}, ${3:day})$0'
-    assert completions[1]['label'] == 'date(year, month, day)'
+    assert completions[0]['insertText'] == 'defaultdict'
+    assert completions[0]['label'] == 'defaultdict'
+    assert completions[1]['insertText'] == 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
+    assert completions[1]['label'] == 'defaultdict(default_factory, iterable, kwargs)'
 
 
 def test_multiline_snippets(config):
@@ -221,7 +208,7 @@ def test_multistatement_snippet(config):
     doc = Document(DOC_URI, document)
     position = {'line': 0, 'character': len(document)}
     completions = pyls_jedi_completions(config, doc, position)
-    assert completions[0]['insertText'] == 'date(${1:year}, ${2:month}, ${3:day})$0'
+    assert completions[1]['insertText'] == 'date(${1:year}, ${2:month}, ${3:day})$0'
 
 
 def test_jedi_completion_extra_paths(config, tmpdir):
