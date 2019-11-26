@@ -85,7 +85,7 @@ def use_snippets(document, position):
 
 def _format_completions(d, include_params):
     yield _format_completion(d, False)
-    if hasattr(d, 'params'):
+    if include_params and hasattr(d, 'params'):
         yield _format_completion(d, True)
 
 
