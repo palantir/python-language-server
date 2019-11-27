@@ -6,7 +6,7 @@ import sys
 
 try:
     import ujson as json
-except Exception:
+except ImportError:
     import json
 
 from .python_ls import (PythonLanguageServer, start_io_lang_server,

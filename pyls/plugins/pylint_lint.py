@@ -9,7 +9,7 @@ from pyls import hookimpl, lsp
 
 try:
     import ujson as json
-except Exception:
+except ImportError:
     import json
 
 log = logging.getLogger(__name__)
