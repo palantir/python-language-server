@@ -45,7 +45,15 @@ _IMPORTS = ('import_name', 'import_from')
 
 @hookimpl
 def pyls_completions(config, document, position):
-    definitions = document.jedi_script(position).completions()
+    try:
+        definitions = document.jedi_script(position).completions()
+    except AttributeError as e:
+        if 'CompiledObject' in str(e):
+            # Needed to handle missing CompiledObject attribute
+            # 'sub_modules_dict'
+            definitions = None
+        else:
+            raise e
     if not definitions:
         return None
 
