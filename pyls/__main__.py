@@ -6,7 +6,7 @@ import sys
 
 try:
     import ujson as json
-except ImportError:
+except Exception:  # pylint: disable=broad-except
     import json
 
 from .python_ls import (PythonLanguageServer, start_io_lang_server,
