@@ -67,7 +67,8 @@ setup(
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
         'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov',
-                 'coverage', 'numpy', 'pandas', 'matplotlib'],
+                 'coverage', 'numpy', 'pandas', 'matplotlib',
+                 'pyqt5;python_version>="3"'],
     },
 
     # To provide executable scripts, use entry points in preference to the
