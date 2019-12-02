@@ -36,9 +36,9 @@ setup(
         'future>=0.14.0; python_version<"3"',
         'backports.functools_lru_cache; python_version<"3.2"',
         'jedi>=0.14.1,<0.16',
-        'python-jsonrpc-server>=0.3.0',
+        'python-jsonrpc-server>=0.3.2',
         'pluggy',
-        'ujson<=1.35'
+        'ujson<=1.35; platform_system!="Windows"'
     ],
 
     # List additional groups of dependencies here (e.g. development
