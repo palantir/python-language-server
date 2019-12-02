@@ -45,7 +45,16 @@ _IMPORTS = ('import_name', 'import_from')
 
 @hookimpl
 def pyls_completions(config, document, position):
-    definitions = document.jedi_script(position).completions()
+    try:
+        definitions = document.jedi_script(position).completions()
+    except AttributeError as e:
+        if 'CompiledObject' in str(e):
+            # Needed to handle missing CompiledObject attribute
+            # 'sub_modules_dict'
+            definitions = None
+        else:
+            raise e
+
     if not definitions:
         return None
 
@@ -98,7 +107,8 @@ def _format_completion(d, include_params=True):
         completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
         snippet = d.name + '('
         for i, param in enumerate(positional_args):
-            snippet += '${%s:%s}' % (i + 1, param.name)
+            name = param.name if param.name != '/' else '\\/'
+            snippet += '${%s:%s}' % (i + 1, name)
             if i < len(positional_args) - 1:
                 snippet += ', '
         snippet += ')$0'

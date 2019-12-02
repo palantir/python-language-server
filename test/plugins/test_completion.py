@@ -124,6 +124,18 @@ def test_jedi_method_completion(config):
     assert everyone_method['insertText'] == 'everyone'
 
 
+@pytest.mark.skipif(PY2 or LooseVersion(jedi.__version__) >= LooseVersion('0.16.0'),
+                    reason='Test only with Jedi <0.16 in Python 3. Check for a fix in future Jedi versions')
+def test_pyqt_completion(config):
+    # Over 'QA' in 'from PyQt5.QtWidgets import QApplication'
+    doc_pyqt = "from PyQt5.QtWidgets import QA"
+    com_position = {'line': 0, 'character': len(doc_pyqt)}
+    doc = Document(DOC_URI, doc_pyqt)
+
+    # Test we don't throw importing elements from PyQt5
+    assert pyls_jedi_completions(config, doc, com_position) is None
+
+
 @pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
                     reason='This test fails with Jedi 0.15')
 def test_numpy_completions(config):
@@ -171,6 +183,18 @@ def test_snippets_completion(config):
     com_position = {'line': 1, 'character': len(doc_snippets)}
     completions = pyls_jedi_completions(config, doc, com_position)
     out = 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
+    assert completions[0]['insertText'] == out
+
+
+def test_snippet_parsing(config):
+    doc = 'import numpy as np\nnp.logical_and'
+    completion_position = {'line': 1, 'character': 14}
+    doc = Document(DOC_URI, doc)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+    completions = pyls_jedi_completions(config, doc, completion_position)
+    out = 'logical_and(${1:x1}, ${2:x2}, ${3:\\/}, ${4:*})$0'
     assert completions[0]['insertText'] == out
 
 
