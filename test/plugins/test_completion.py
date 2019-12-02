@@ -133,7 +133,7 @@ def test_pyqt_completion(config):
     doc = Document(DOC_URI, doc_pyqt)
 
     # Test we don't throw importing elements from PyQt5
-    pyls_jedi_completions(config, doc, com_position)
+    assert pyls_jedi_completions(config, doc, com_position) is None
 
 
 @pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),

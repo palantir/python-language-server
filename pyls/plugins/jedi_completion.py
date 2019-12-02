@@ -54,6 +54,7 @@ def pyls_completions(config, document, position):
             definitions = None
         else:
             raise e
+
     if not definitions:
         return None
 
