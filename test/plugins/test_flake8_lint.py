@@ -1,6 +1,8 @@
 # Copyright 2019 Palantir Technologies, Inc.
 import tempfile
 import os
+from mock import patch
+
 from pyls import lsp, uris
 from pyls.plugins import flake8_lint
 from pyls.workspace import Document
@@ -50,3 +52,14 @@ def test_flake8_lint(config):
 
     finally:
         os.remove(name)
+
+
+def test_flake8_config_param(config):
+    with patch('pyls.plugins.flake8_lint.Popen') as popen_mock:
+        flake8_conf = '/tmp/some.cfg'
+        config.update({'plugins': {'flake8': {'config': flake8_conf}}})
+        _name, doc = temp_document(DOC)
+        flake8_lint.pyls_lint(config, doc)
+        call_args = popen_mock.call_args.args[0]
+        assert 'flake8' in call_args
+        assert '--config={}'.format(flake8_conf) in call_args
