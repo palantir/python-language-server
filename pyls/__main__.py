@@ -4,7 +4,10 @@ import logging
 import logging.config
 import sys
 
-import ujson as json
+try:
+    import ujson as json
+except Exception:  # pylint: disable=broad-except
+    import json
 
 from .python_ls import (PythonLanguageServer, start_io_lang_server,
                         start_tcp_lang_server)
