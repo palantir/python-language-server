@@ -26,8 +26,8 @@ def test_mccabe(config):
         mod_import = [d for d in diags if d['message'] == msg][0]
 
         assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
-        assert mod_import['range']['start'] == {'line': 1, 'character': 0}
-        assert mod_import['range']['end'] == {'line': 1, 'character': 6}
+        assert mod_import['range']['start'] == {'line': 0, 'character': 0}
+        assert mod_import['range']['end'] == {'line': 0, 'character': 6}
     finally:
         config._settings = old_settings
 
