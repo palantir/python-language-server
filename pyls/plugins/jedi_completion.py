@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+from itertools import chain
 import parso
 from pyls import hookimpl, lsp, _utils
 
@@ -65,7 +66,8 @@ def pyls_completions(config, document, position):
     should_include_params = settings.get('include_params')
     include_params = (snippet_support and should_include_params and
                       use_snippets(document, position))
-    return [_format_completion(d, include_params) for d in definitions] or None
+
+    return list(chain.from_iterable(_format_completions(d, include_params) for d in definitions))
 
 
 def use_snippets(document, position):
@@ -90,9 +92,15 @@ def use_snippets(document, position):
     return tokens.children[0].type not in _IMPORTS
 
 
-def _format_completion(d, include_params=True):
+def _format_completions(d, include_params):
+    yield _format_completion(d, False)
+    if include_params and hasattr(d, 'params'):
+        yield _format_completion(d, True)
+
+
+def _format_completion(d, include_params):
     completion = {
-        'label': _label(d),
+        'label': d.name,
         'kind': _TYPE_MAP.get(d.type),
         'detail': _detail(d),
         'documentation': _utils.format_docstring(d.docstring()),
@@ -100,29 +108,21 @@ def _format_completion(d, include_params=True):
         'insertText': d.name
     }
 
-    if include_params and hasattr(d, 'params') and d.params:
-        positional_args = [param for param in d.params if '=' not in param.description]
-
+    if include_params:
         # For completions with params, we can generate a snippet instead
-        completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
-        snippet = d.name + '('
-        for i, param in enumerate(positional_args):
-            name = param.name if param.name != '/' else '\\/'
-            snippet += '${%s:%s}' % (i + 1, name)
-            if i < len(positional_args) - 1:
-                snippet += ', '
-        snippet += ')$0'
-        completion['insertText'] = snippet
+
+        def fix_name(name):
+            return '\\/' if name == '/' else name
+
+        names = [fix_name(param.name) for param in d.params if '=' not in param.description]
+        snippets = ('${{{}:{}}}'.format(i + 1, p) for i, p in enumerate(names))
+        completion.update(
+            insertTextFormat=lsp.InsertTextFormat.Snippet,
+            label='{}({})'.format(d.name, ', '.join(names)),
+            insertText='{}({})$0'.format(d.name, ', '.join(snippets))
+        )
 
     return completion
-
-
-def _label(definition):
-    if definition.type in ('function', 'method') and hasattr(definition, 'params'):
-        params = ', '.join([param.name for param in definition.params])
-        return '{}({})'.format(definition.name, params)
-
-    return definition.name
 
 
 def _detail(definition):
