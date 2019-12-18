@@ -123,20 +123,31 @@ Install `VSCode <https://code.visualstudio.com/download>`_
 
 .. code-block:: bash
 
-    # Setup a virtual env
+    # 1. Setup a virtual env
     virtualenv env
     . env/bin/activate
 
-    # Install pyls
+    # 2. Install pyls
     pip install .
 
-    # Install the vscode-client extension
+    # 3. Install the vscode-client extension
     cd vscode-client
     yarn install
 
-    # Run VSCode which is configured to use pyls
+    # 4. Run VSCode which is configured to use pyls
     # See the bottom of vscode-client/src/extension.ts for info
     yarn run vscode -- $PWD/../
+    
+    # How to view your change?
+    # Redo step 2 and 4 after making the change
+    
+    # How to add new plugins?
+    # Wrtie your code in pyls/plugins and corresponding test in test/plugins
+    # Resgiter your plugin in setup.py (under entry_points.plys)
+        
+    # Troubleshooting for palantirian
+    # Error: self signed certificate in certificate chain
+    # Try connect to RacerXGuestPortal (if not working, connect back to RacerX)
 
 Then to debug, click View -> Output and in the dropdown will be pyls.
 To refresh VSCode, press `Cmd + r`
