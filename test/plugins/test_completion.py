@@ -4,10 +4,10 @@ import os
 import sys
 
 from test.test_utils import MockWorkspace
-import jedi
 import pytest
 
 from pyls import uris, lsp
+from pyls._utils import JEDI_VERSION
 from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
@@ -124,19 +124,24 @@ def test_jedi_method_completion(config):
     assert everyone_method['insertText'] == 'everyone'
 
 
-@pytest.mark.skipif(PY2 or LooseVersion(jedi.__version__) >= LooseVersion('0.16.0'),
-                    reason='Test only with Jedi <0.16 in Python 3. Check for a fix in future Jedi versions')
+@pytest.mark.skipif(PY2 or (sys.platform.startswith('linux') and os.environ.get('CI') is not None),
+                    reason="Test in Python 3 and not on CIs on Linux because wheels don't work on them.")
 def test_pyqt_completion(config):
     # Over 'QA' in 'from PyQt5.QtWidgets import QApplication'
     doc_pyqt = "from PyQt5.QtWidgets import QA"
     com_position = {'line': 0, 'character': len(doc_pyqt)}
     doc = Document(DOC_URI, doc_pyqt)
+    completions = pyls_jedi_completions(config, doc, com_position)
 
-    # Test we don't throw importing elements from PyQt5
-    assert pyls_jedi_completions(config, doc, com_position) is None
+    # Test we don't throw an error for Jedi < 0.15.2 and get completions
+    # for Jedi 0.15.2+
+    if LooseVersion(JEDI_VERSION) < LooseVersion('0.15.2'):
+        assert completions is None
+    else:
+        assert completions is not None
 
 
-@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.15.2'),
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(JEDI_VERSION) < LooseVersion('0.15.2'),
                     reason='This test fails with Jedi 0.15.0 and 0.15.1')
 def test_numpy_completions(config):
     doc_numpy = "import numpy as np; np."
@@ -148,7 +153,7 @@ def test_numpy_completions(config):
     assert any(['array' in i['label'] for i in items])
 
 
-@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.15.2'),
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(JEDI_VERSION) < LooseVersion('0.15.2'),
                     reason='This test fails with Jedi 0.15.0 and 0.15.1')
 def test_pandas_completions(config):
     doc_pandas = "import pandas as pd; pd."
@@ -170,7 +175,7 @@ def test_matplotlib_completions(config):
     assert any(['plot' in i['label'] for i in items])
 
 
-@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.15.2'),
+@pytest.mark.skipif(LooseVersion(JEDI_VERSION) < LooseVersion('0.15.2'),
                     reason='This test fails with Jedi 0.15.1 or less')
 def test_snippets_completion(config):
     doc_snippets = 'from collections import defaultdict \na=defaultdict'
