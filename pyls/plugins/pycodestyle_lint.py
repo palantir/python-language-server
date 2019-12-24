@@ -5,7 +5,7 @@ from autopep8 import continued_indentation as autopep8_c_i
 from pyls import hookimpl, lsp
 
 # Check if autopep8's continued_indentation implementation
-# is overriding pycodestyle's and if so, re-register 
+# is overriding pycodestyle's and if so, re-register
 # the check using pycodestyle's implementation as expected
 if autopep8_c_i in pycodestyle._checks['logical_line']:
     del pycodestyle._checks['logical_line'][autopep8_c_i]
