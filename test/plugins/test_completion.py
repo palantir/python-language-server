@@ -136,8 +136,8 @@ def test_pyqt_completion(config):
     assert pyls_jedi_completions(config, doc, com_position) is None
 
 
-@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
-                    reason='This test fails with Jedi 0.15')
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.15.2'),
+                    reason='This test fails with Jedi 0.15.0 and 0.15.1')
 def test_numpy_completions(config):
     doc_numpy = "import numpy as np; np."
     com_position = {'line': 0, 'character': len(doc_numpy)}
@@ -148,8 +148,8 @@ def test_numpy_completions(config):
     assert any(['array' in i['label'] for i in items])
 
 
-@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.16.0'),
-                    reason='This test fails with Jedi 0.15')
+@pytest.mark.skipif(LooseVersion('0.15.0') <= LooseVersion(jedi.__version__) < LooseVersion('0.15.2'),
+                    reason='This test fails with Jedi 0.15.0 and 0.15.1')
 def test_pandas_completions(config):
     doc_pandas = "import pandas as pd; pd."
     com_position = {'line': 0, 'character': len(doc_pandas)}
@@ -170,6 +170,8 @@ def test_matplotlib_completions(config):
     assert any(['plot' in i['label'] for i in items])
 
 
+@pytest.mark.skipif(LooseVersion(jedi.__version__) < LooseVersion('0.15.2'),
+                    reason='This test fails with Jedi 0.15.1 or less')
 def test_snippets_completion(config):
     doc_snippets = 'from collections import defaultdict \na=defaultdict'
     com_position = {'line': 0, 'character': 35}
@@ -182,7 +184,7 @@ def test_snippets_completion(config):
 
     com_position = {'line': 1, 'character': len(doc_snippets)}
     completions = pyls_jedi_completions(config, doc, com_position)
-    out = 'defaultdict(${1:default_factory}, ${2:iterable}, ${3:kwargs})$0'
+    out = 'defaultdict(${1:kwargs})$0'
     assert completions[0]['insertText'] == out
 
 
