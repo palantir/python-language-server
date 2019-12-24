@@ -1,8 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import pycodestyle
-from pyls import hookimpl, lsp
 from autopep8 import continued_indentation as autopep8_c_i
+from pyls import hookimpl, lsp
 
 if autopep8_c_i in pycodestyle._checks['logical_line']:
     del pycodestyle._checks['logical_line'][autopep8_c_i]
