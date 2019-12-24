@@ -30,8 +30,8 @@ def pyls_lint(config, document):
             diags.append({
                 'source': 'mccabe',
                 'range': {
-                    'start': {'line': graph.lineno, 'character': graph.column},
-                    'end': {'line': graph.lineno, 'character': len(document.lines[graph.lineno])},
+                    'start': {'line': graph.lineno - 1, 'character': graph.column},
+                    'end': {'line': graph.lineno - 1, 'character': len(document.lines[graph.lineno])},
                 },
                 'message': 'Cyclomatic complexity too high: %s (threshold %s)' % (graph.complexity(), threshold),
                 'severity': lsp.DiagnosticSeverity.Warning
