@@ -68,10 +68,12 @@ def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
          'SHUTDOWN_CALL': shutdown_server}
     )
 
-    server = socketserver.TCPServer((bind_addr, port), wrapper_class)
+    server = socketserver.TCPServer((bind_addr, port), wrapper_class, bind_and_activate=False)
     server.allow_reuse_address = True
 
     try:
+        server.server_bind()
+        server.server_activate()
         log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
         server.serve_forever()
     finally:
