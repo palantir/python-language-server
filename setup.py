@@ -66,7 +66,7 @@ setup(
         'pylint': ['pylint'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
-        'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov',
+        'test': ['versioneer', 'pylint', 'pytest-xdist', 'mock', 'pytest-cov',
                  'coverage', 'numpy', 'pandas', 'matplotlib',
                  'pyqt5;python_version>="3"'],
     },
