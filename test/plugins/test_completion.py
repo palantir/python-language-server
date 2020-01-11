@@ -64,6 +64,21 @@ def test_jedi_completion(config):
     pyls_jedi_completions(config, doc, {'line': 1, 'character': 1000})
 
 
+def test_jedi_completion_with_fuzzy_enabled(config):
+    # Over 'i' in os.path.isabs(...)
+    config.update({'plugins': {'jedi_completion': {'fuzzy': True}}})
+    com_position = {'line': 1, 'character': 15}
+    doc = Document(DOC_URI, DOC)
+
+    items = pyls_jedi_completions(config, doc, com_position)
+
+    assert items
+    assert items[0]['label'] == 'commonprefix(list)'
+
+    # Test we don't throw with big character
+    pyls_jedi_completions(config, doc, {'line': 1, 'character': 1000})
+
+
 def test_rope_completion(config, workspace):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}

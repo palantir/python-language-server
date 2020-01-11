@@ -45,8 +45,9 @@ _IMPORTS = ('import_name', 'import_from')
 
 @hookimpl
 def pyls_completions(config, document, position):
+    settings = config.plugin_settings('jedi_completion', document_path=document.path)
     try:
-        definitions = document.jedi_script(position).completions()
+        definitions = document.jedi_script(position).completions(fuzzy=settings.get("fuzzy", False))
     except AttributeError as e:
         if 'CompiledObject' in str(e):
             # Needed to handle missing CompiledObject attribute
@@ -61,7 +62,6 @@ def pyls_completions(config, document, position):
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
-    settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
     include_params = (snippet_support and should_include_params and
                       use_snippets(document, position))
