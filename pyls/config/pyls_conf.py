@@ -70,6 +70,9 @@ class PylsConfig(ConfigSource):
 
         return settings
 
+    def lsp_config(self, config):
+        self.normalize(config, self._norm_root_path)
+
     def normalize(self, config, basedir):
         for config_path, inside_only in NORMALIZED_CONFIGS:
             paths = get_config_by_path(config, config_path)

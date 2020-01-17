@@ -144,6 +144,7 @@ def _make_paths_dir_relative(paths, dirname):
     'tox.ini',
     'service/foo/setup.cfg',
     'service/foo/tox.ini',
+    None,
 ])
 def test_source_roots_config(tmpdir, metafile):
     """Examine that source_roots config is intentionaly read in.
@@ -178,6 +179,12 @@ def test_source_roots_config(tmpdir, metafile):
         rootUri=uris.from_fs_path(root_path),
         initializationOptions={}
     )
+
+    if not metafile:
+        # configured by client via LSP after pyls startup
+        pyls.m_workspace__did_change_configuration({
+            'pyls': {'source_roots': source_roots},
+        })
 
     # put new document under ROOT/service/foo
     test_uri = uris.from_fs_path(os.path.join(root_path, doc_root, 'hello/test.py'))
