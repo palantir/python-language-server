@@ -56,6 +56,98 @@ issue if you require assistance writing a plugin.
 Configuration
 -------------
 
+Location of Configuration File
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are three configuration levels below.
+
+* user-level configuration (e.g. ~/.config/CONFIGFILE)
+* lsp-level configuration (via LSP didChangeConfiguration method)
+* project-level configuration
+
+The latter level has priority over the former.
+
+As project-level configuration, configurations are read in from files
+in the root of the workspace, by default. What files are read in is
+described after.
+
+At evaluation of python source file ``foo/bar/baz/example.py`` for
+example, if there is any configuration file in the ascendant directory
+(i.e. ``foo``, ``foo/bar`` or ``foo/bar/baz``), it is read in before
+evaluation. If multiple ascendant directories contain configuration
+files, files only in the nearest ascendant directory are read in.
+
+In some cases, automatically discovered files are exclusive with files
+in the root of the workspace.
+
+Syntax in Configuration File
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuration file should be written in "INI file" syntax.
+
+Value specified in configuration file should be one of types below.
+
+* bool
+* int
+* string
+* list
+
+"List" value is string entries joined with comma. Both leading and
+trailing white spaces of each entries in a "list" value are trimmed.
+
+Source Roots
+~~~~~~~~~~~~
+
+"Source roots" is determined in the order below.
+
+1. if ``pyls.source_roots`` (described after) is specified, its value
+   is used as "source roots"
+2. if any of setup.py or pyproject.toml is found in the ascendant
+   directory of python source file at evaluation, that directory is
+   treated as "source roots"
+3. otherwise, the root of the workspace is treated as "source roots"
+
+"Source roots" is used as a part of sys path at evaluation of python
+source files.
+
+Python Language Server Specific Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+lsp-level and project-level configuration are supported for Python
+Language Server specific configuration.
+
+For project-level configuration, setup.cfg and tox.ini are read in.
+Configuration files discovered automatically at evaluation of python
+source file are **not** exclusive with configuration files in the root
+of the workspace. Files in both locations are read in, and a
+configuration in the former files has priority over one in the latter.
+
+Python Language Server specific configurations are show below.
+
+* ``pyls.source_roots`` (list) to specify source roots
+* ``pyls.plugins.jedi.extra_paths`` (list) to specify extra sys paths
+
+Relative path in these configurations is treated as relative to the
+directory, in which configuration file exists. For configuration via
+LSP didChangeConfiguration method, the root of the workspace is used
+as base directory.
+
+Path in ``pyls.source_roots`` is ignored, if it refers outside of the
+workspace.
+
+To make these configurations persisted into setup.cfg or tox.ini,
+describe them under ``[pyls]`` section like below.
+
+.. code-block:: ini
+
+    [pyls]
+    source_roots = services/foo, services/bar
+    plugins.jedi.extra_paths = ../extra_libs
+
+
+Configuration at Source Code Evaluation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Configuration is loaded from zero or more configuration sources. Currently implemented are:
 
 * pycodestyle: discovered in ~/.config/pycodestyle, setup.cfg, tox.ini and pycodestyle.cfg.
@@ -66,6 +158,10 @@ order to respect flake8 configuration instead.
 
 Overall configuration is computed first from user configuration (in home directory), overridden by configuration
 passed in by the language client, and then overriden by configuration discovered in the workspace.
+
+Configuration files discovered in the workspace automatically at
+evaluation of python source file are exclusive with configuration
+files in the root of the workspace.
 
 To enable pydocstyle for linting docstrings add the following setting in your LSP configuration:
 ```
