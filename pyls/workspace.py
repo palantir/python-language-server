@@ -230,15 +230,13 @@ class Document(object):
         )
 
     def jedi_script(self, position=None):
-        extra_paths = []
         environment_path = None
 
         if self._config:
             jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
             environment_path = jedi_settings.get('environment')
-            extra_paths = jedi_settings.get('extra_paths') or []
 
-        sys_path = self.sys_path(environment_path) + extra_paths
+        sys_path = self.sys_path(environment_path)
         environment = self.get_enviroment(environment_path) if environment_path else None
 
         kwargs = {
@@ -272,4 +270,11 @@ class Document(object):
         path = list(self._extra_sys_path)
         environment = self.get_enviroment(environment_path=environment_path)
         path.extend(environment.get_sys_path())
+
+        if self._config:
+            jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
+            extra_paths = jedi_settings.get('extra_paths')
+            if extra_paths:
+                path.extend(extra_paths)
+
         return path
