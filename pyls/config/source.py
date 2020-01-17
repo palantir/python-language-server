@@ -25,6 +25,16 @@ class ConfigSource(object):
         """Return project-level (i.e. workspace directory) configuration."""
         raise NotImplementedError()
 
+    def lsp_config(self, config):
+        """Check configuration at updating.
+
+        Typical usecase is updating via LSP didChangeConfiguration
+        method.
+
+        Change config directly, if any changing like normalization is
+        needed. It is nested dictionay.
+        """
+
     @staticmethod
     def read_config_from_files(files):
         config = configparser.RawConfigParser()
