@@ -16,8 +16,18 @@ except Exception:  # pylint: disable=broad-except
 
 if sys.version_info.major == 2:
     from StringIO import StringIO
+
+    # subprocess.Popen() on Windows expects that env contains only
+    # "str" keys/values (= "bytes" for Python2.x, "unicode" for
+    # Python3.x), even though pyls treats all path values as "unicode"
+    # regardless of Python version
+    def stringify(u):
+        return u.encode('utf-8')
 else:
     from io import StringIO
+
+    def stringify(u):
+        return u
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +43,7 @@ def spawn_pylint(document, flags):
         path = path.replace('\\', '/')
 
     env = dict(os.environ)
-    env["PYTHONPATH"] = os.pathsep.join(sys.path)
+    env["PYTHONPATH"] = stringify(os.pathsep.join(document.sys_path()))
 
     # Detect if we use Python as executable or not, else default to `python`
     executable = sys.executable if "python" in sys.executable else "python"
