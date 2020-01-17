@@ -10,11 +10,15 @@ PROJECT_CONFIGS = ['setup.cfg', 'tox.ini']
 
 OPTIONS = [
     ('source_roots', 'source_roots', list),
+
+    # inter-plugins configurations
+    ('plugins.jedi.extra_paths', 'plugins.jedi.extra_paths', list),
 ]
 
 # list of (config_path, inside_only) tuples for path normalization
 NORMALIZED_CONFIGS = [
     ('source_roots', True),
+    ('plugins.jedi.extra_paths', False),
 ]
 
 

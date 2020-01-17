@@ -251,3 +251,62 @@ def test_pyls_config_readin(tmpdir, metafile):
     for raw_path in source_roots:
         full_path = os.path.normcase(os.path.join(root_path, raw_path))
         assert os.path.normpath(full_path) in sys_path
+
+
+@pytest.mark.parametrize('metafile', [
+    'setup.cfg',
+    'tox.ini',
+    'service/foo/setup.cfg',
+    'service/foo/tox.ini',
+    None,
+])
+def test_jedi_extra_paths_config(tmpdir, metafile):
+    """Examine that plugins.jedi.extra_paths config is intentionaly read in.
+
+    This test also examines below for entries in plugins.jedi.extra_paths:
+
+    * relative path is:
+      - treated as relative to config file location, and
+      - normalized into absolute one
+    """
+    root_path = str(tmpdir)
+
+    extra_paths = ['extra/foo', 'extra/bar', '/absolute/root', '../baz']
+    doc_root = 'service/foo'
+
+    if metafile:
+        dirname = os.path.dirname(metafile)
+        if dirname:
+            os.makedirs(os.path.join(root_path, dirname))
+
+        # configured by metafile at pyls startup
+        with open(os.path.join(root_path, metafile), 'w+') as f:
+            f.write('[pyls]\nplugins.jedi.extra_paths=\n    %s\n' %
+                    ',\n    '.join(_make_paths_dir_relative(extra_paths, dirname)))
+
+    pyls = PythonLanguageServer(StringIO, StringIO)
+    pyls.m_initialize(
+        processId=1,
+        rootUri=uris.from_fs_path(root_path),
+        initializationOptions={}
+    )
+
+    if not metafile:
+        # configured by client via LSP after pyls startup
+        pyls.m_workspace__did_change_configuration({
+            'pyls': {'plugins': {'jedi': {'extra_paths': extra_paths}}},
+        })
+
+    # put new document under ROOT/service/foo
+    test_uri = uris.from_fs_path(os.path.join(root_path, doc_root, 'hello/test.py'))
+    pyls.workspace.put_document(test_uri, 'assert true')
+    test_doc = pyls.workspace.get_document(test_uri)
+
+    # apply os.path.normcase() on paths below, because case-sensitive
+    # comparison on Windows causes unintentional failure for case
+    # instability around drive letter
+
+    sys_path = [os.path.normcase(p) for p in test_doc.sys_path()]
+    for raw_path in extra_paths:
+        full_path = os.path.normcase(os.path.join(root_path, raw_path))
+        assert os.path.normpath(full_path) in sys_path
