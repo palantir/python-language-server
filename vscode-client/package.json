@@ -35,6 +35,15 @@
                     },
                     "uniqueItems": true
                 },
+                "pyls.source_roots": {
+                    "type": "array",
+                    "default": [],
+                    "description": "List of source roots in the working space.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                },
                 "pyls.plugins.jedi.extra_paths": {
                     "type": "array",
                     "default": [],

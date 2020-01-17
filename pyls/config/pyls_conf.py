@@ -1,7 +1,7 @@
 import logging
 import os
-from pyls._utils import find_parents, merge_dicts
-from .source import ConfigSource
+from pyls._utils import find_parents, get_config_by_path, merge_dicts, normalize_paths
+from .source import ConfigSource, _set_opt
 
 log = logging.getLogger(__name__)
 
@@ -9,6 +9,12 @@ CONFIG_KEY = 'pyls'
 PROJECT_CONFIGS = ['setup.cfg', 'tox.ini']
 
 OPTIONS = [
+    ('source_roots', 'source_roots', list),
+]
+
+# list of (config_path, inside_only) tuples for path normalization
+NORMALIZED_CONFIGS = [
+    ('source_roots', True),
 ]
 
 
@@ -58,6 +64,23 @@ class PylsConfig(ConfigSource):
             if not parsed:
                 continue  # no pyls specific configuration
 
+            self.normalize(parsed, os.path.dirname(files[0]))
+
             settings = merge_dicts(settings, parsed)
 
         return settings
+
+    def normalize(self, config, basedir):
+        for config_path, inside_only in NORMALIZED_CONFIGS:
+            paths = get_config_by_path(config, config_path)
+            if not paths:
+                continue  # not specified (or empty)
+
+            normalized = []
+            for path, valid in normalize_paths(paths, basedir, inside_only and self._norm_root_path):
+                if valid:
+                    normalized.append(path)
+                else:
+                    log.warning("Ignoring path '%s' for pyls.%s", path, config_path)
+
+            _set_opt(config, config_path, normalized)

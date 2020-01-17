@@ -97,6 +97,11 @@ class Workspace(object):
 
     def source_roots(self, document_path):
         """Return the source roots for the given document."""
+        source_roots = self._config and self._config.settings(document_path=document_path).get('source_roots')
+        if source_roots:
+            # Use specified source_roots without traversing upper directories
+            return source_roots
+
         files = _utils.find_parents(self._root_path, document_path, ['setup.py', 'pyproject.toml']) or []
         return list(set((os.path.dirname(project_file) for project_file in files))) or [self._root_path]
 
