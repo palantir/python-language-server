@@ -40,6 +40,9 @@ class Config(object):
         except ImportError:
             pass
 
+        from .pyls_conf import PylsConfig
+        self._config_sources['pyls'] = PylsConfig(self._root_path)
+
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
         self._pm.enable_tracing()
@@ -104,7 +107,7 @@ class Config(object):
         settings.cache_clear() when the config is updated
         """
         settings = {}
-        sources = self._settings.get('configurationSources', DEFAULT_CONFIG_SOURCES)
+        sources = self._settings.get('configurationSources', DEFAULT_CONFIG_SOURCES) + ['pyls']
 
         for source_name in reversed(sources):
             source = self._config_sources.get(source_name)
