@@ -132,6 +132,25 @@ def merge_dicts(dict_a, dict_b):
     return dict(_merge_dicts_(dict_a, dict_b))
 
 
+def get_config_by_path(settings, path, default_value=None):
+    """Get the value in settings dict at the given path.
+
+    If path is not resolvable in specified settings, this returns
+    default_value.
+    """
+    paths = path.split('.')
+    while len(paths) > 1:
+        settings = settings.get(paths.pop(0))
+        if not isinstance(settings, dict):
+            # Here, at least one more looking up should be available,
+            # but the last retrieved was non-dict. Therefore, path is
+            # not resolvable in specified settings.
+            return default_value
+
+    # Here, paths should have only one value
+    return settings.get(paths[0], default_value)
+
+
 def format_docstring(contents):
     """Python doc strings come in a number of formats, but LSP wants markdown.
 
