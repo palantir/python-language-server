@@ -91,9 +91,11 @@ def pyls_hover(config, workspace, document, position):
 def pyls_initialize(config, workspace):
     pass
 
+
 @hookspec
 def pyls_initialized():
     pass
+
 
 @hookspec
 def pyls_lint(config, workspace, document, is_saved):
