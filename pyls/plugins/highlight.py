@@ -1,6 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-from pyls import hookimpl, lsp, uris
+from pyls import hookimpl, lsp
 
 log = logging.getLogger(__name__)
 
