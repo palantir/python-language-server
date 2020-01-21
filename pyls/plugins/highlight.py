@@ -13,7 +13,7 @@ def pyls_document_highlight(document, position):
         return definition.line is not None and definition.column is not None
 
     def local_to_document(definition):
-        return not definition.module_path or uris.uri_with(document.uri, path=definition.module_path) == document.uri
+        return not definition.module_path or definition.module_path == document.path
 
     return [{
         'range': {
