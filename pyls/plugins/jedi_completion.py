@@ -79,14 +79,23 @@ def use_snippets(document, position):
     lines = document.source.split('\n', line)
     act_lines = [lines[line][:position['character']]]
     line -= 1
+    last_character = ''
     while line > -1:
         act_line = lines[line]
-        if act_line.rstrip().endswith('\\'):
+        if (act_line.rstrip().endswith('\\')
+                or act_line.rstrip().endswith('(')
+                or act_line.rstrip().endswith(',')):
             act_lines.insert(0, act_line)
             line -= 1
+            if act_line.rstrip().endswith('('):
+                # Needs to be added to the end of the code before parsing
+                # to make it valid, otherwise the node type could end
+                # being an 'error_node'
+                last_character = ')'
         else:
             break
-    tokens = parso.parse('\n'.join(act_lines).split(';')[-1].strip())
+    tokens = parso.parse(
+        '\n'.join(act_lines).split(';')[-1].strip() + last_character)
     return tokens.children[0].type not in _IMPORTS
 
 
