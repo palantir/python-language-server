@@ -84,6 +84,7 @@ def is_exception_class(name):
         # class definition in Python 2
         return False
 
+
 def use_snippets(document, position):
     """
     Determine if it's necessary to return snippets in code completions.
@@ -115,8 +116,8 @@ def use_snippets(document, position):
     code = '\n'.join(act_lines).split(';')[-1].strip() + last_character
     tokens = parso.parse(code)
     expr_type = tokens.children[0].type
-    return  (expr_type not in _IMPORTS and
-             not (expr_type in _ERRORS and 'import' in code))
+    return (expr_type not in _IMPORTS and
+            not (expr_type in _ERRORS and 'import' in code))
 
 
 def _format_completion(d, include_params=True):
