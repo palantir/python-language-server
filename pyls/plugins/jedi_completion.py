@@ -82,9 +82,9 @@ def use_snippets(document, position):
     last_character = ''
     while line > -1:
         act_line = lines[line]
-        if (act_line.rstrip().endswith('\\')
-                or act_line.rstrip().endswith('(')
-                or act_line.rstrip().endswith(',')):
+        if (act_line.rstrip().endswith('\\') or
+                act_line.rstrip().endswith('(') or
+                act_line.rstrip().endswith(',')):
             act_lines.insert(0, act_line)
             line -= 1
             if act_line.rstrip().endswith('('):
