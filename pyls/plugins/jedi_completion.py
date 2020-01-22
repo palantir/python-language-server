@@ -42,6 +42,9 @@ _TYPE_MAP = {
 # Types of parso nodes for which snippet is not included in the completion
 _IMPORTS = ('import_name', 'import_from')
 
+# Types of parso node for errors
+_ERRORS = ('error_node', )
+
 
 @hookimpl
 def pyls_completions(config, document, position):
@@ -75,12 +78,11 @@ def is_exception_class(name):
     the 'Exception' class, `True` otherwise
     """
     try:
-        class_def = eval(name)
-        is_exception_class = issubclass(class_def, Exception)
-    except Exception:
-        is_exception_class = False
-    return is_exception_class
-
+        return name in [cls.__name__ for cls in Exception.__subclasses__()]
+    except AttributeError:
+        # Needed in case a class don't uses new-style
+        # class definition in Python 2
+        return False
 
 def use_snippets(document, position):
     """
@@ -110,9 +112,11 @@ def use_snippets(document, position):
             break
     if '(' in act_lines[-1].strip():
         last_character = ')'
-    tokens = parso.parse(
-        '\n'.join(act_lines).split(';')[-1].strip() + last_character)
-    return tokens.children[0].type not in _IMPORTS
+    code = '\n'.join(act_lines).split(';')[-1].strip() + last_character
+    tokens = parso.parse(code)
+    expr_type = tokens.children[0].type
+    return  (expr_type not in _IMPORTS and
+             not (expr_type in _ERRORS and 'import' in code))
 
 
 def _format_completion(d, include_params=True):
