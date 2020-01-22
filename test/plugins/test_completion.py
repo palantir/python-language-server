@@ -189,8 +189,7 @@ def test_snippets_completion(config):
 
     com_position = {'line': 1, 'character': len(doc_snippets)}
     completions = pyls_jedi_completions(config, doc, com_position)
-    out = 'defaultdict'
-    assert completions[0]['insertText'] == out
+    assert completions[0]['insertText'] == 'defaultdict($0)'
 
 
 def test_snippet_parsing(config):
