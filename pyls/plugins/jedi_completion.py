@@ -63,9 +63,23 @@ def pyls_completions(config, document, position):
 
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
-    include_params = (snippet_support and should_include_params and
-                      use_snippets(document, position))
+    include_params = snippet_support and should_include_params and use_snippets(document, position)
     return [_format_completion(d, include_params) for d in definitions] or None
+
+
+def is_exception_class(name):
+    """
+    Determine if a class name is an instance of an Exception.
+
+    This returns `False` if the name given corresponds with a instance of
+    the 'Exception' class, `True` otherwise
+    """
+    try:
+        class_def = eval(name)
+        is_exception_class = issubclass(class_def, Exception)
+    except Exception:
+        is_exception_class = False
+    return is_exception_class
 
 
 def use_snippets(document, position):
@@ -94,6 +108,8 @@ def use_snippets(document, position):
                 last_character = ')'
         else:
             break
+    if '(' in act_lines[-1].strip():
+        last_character = ')'
     tokens = parso.parse(
         '\n'.join(act_lines).split(';')[-1].strip() + last_character)
     return tokens.children[0].type not in _IMPORTS
@@ -109,7 +125,8 @@ def _format_completion(d, include_params=True):
         'insertText': d.name
     }
 
-    if include_params and hasattr(d, 'params') and d.params:
+    if (include_params and hasattr(d, 'params') and d.params and
+            not is_exception_class(d.name)):
         positional_args = [param for param in d.params if '=' not in param.description]
 
         if len(positional_args) > 1:
@@ -123,6 +140,10 @@ def _format_completion(d, include_params=True):
                     snippet += ', '
             snippet += ')$0'
             completion['insertText'] = snippet
+        elif len(positional_args) == 1:
+            completion['insertText'] = d.name + '($0)'
+        else:
+            completion['insertText'] = d.name + '()'
 
     return completion
 
