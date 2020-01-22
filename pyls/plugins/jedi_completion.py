@@ -90,7 +90,7 @@ def use_snippets(document, position):
             if act_line.rstrip().endswith('('):
                 # Needs to be added to the end of the code before parsing
                 # to make it valid, otherwise the node type could end
-                # being an 'error_node'
+                # being an 'error_node' for multi-line imports that use '('
                 last_character = ')'
         else:
             break
