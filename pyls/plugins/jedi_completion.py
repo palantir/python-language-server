@@ -1,11 +1,12 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import parso
-from pyls import hookimpl, lsp, _utils
 
 from distutils.version import LooseVersion
+import parso
 
 import jedi
+from pyls import hookimpl, lsp, _utils
+
 
 log = logging.getLogger(__name__)
 
