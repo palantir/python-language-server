@@ -3,7 +3,13 @@ import logging
 import parso
 from pyls import hookimpl, lsp, _utils
 
+from distutils.version import LooseVersion
+
+import jedi
+
 log = logging.getLogger(__name__)
+
+JEDI_VERSION = jedi.__version__
 
 # Map to the VSCode type
 _TYPE_MAP = {
@@ -46,8 +52,13 @@ _IMPORTS = ('import_name', 'import_from')
 @hookimpl
 def pyls_completions(config, document, position):
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
+
     try:
-        definitions = document.jedi_script(position).completions(fuzzy=settings.get("fuzzy", False))
+        if LooseVersion(JEDI_VERSION) >= LooseVersion('0.15.2'):
+            definitions = document.jedi_script(position).completions(
+                fuzzy=settings.get("fuzzy", False))
+        else:
+            definitions = document.jedi_script(position).completions()
     except AttributeError as e:
         if 'CompiledObject' in str(e):
             # Needed to handle missing CompiledObject attribute
