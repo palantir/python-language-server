@@ -3,14 +3,9 @@ import logging
 
 from distutils.version import LooseVersion
 import parso
-
-import jedi
 from pyls import hookimpl, lsp, _utils
 
-
 log = logging.getLogger(__name__)
-
-JEDI_VERSION = jedi.__version__
 
 # Map to the VSCode type
 _TYPE_MAP = {
@@ -55,7 +50,7 @@ def pyls_completions(config, document, position):
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
 
     try:
-        if LooseVersion(JEDI_VERSION) >= LooseVersion('0.15.2'):
+        if LooseVersion(_utils.JEDI_VERSION) >= LooseVersion('0.15.2'):
             definitions = document.jedi_script(position).completions(
                 fuzzy=settings.get("fuzzy", False))
         else:
