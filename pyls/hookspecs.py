@@ -93,6 +93,11 @@ def pyls_initialize(config, workspace):
 
 
 @hookspec
+def pyls_initialized():
+    pass
+
+
+@hookspec
 def pyls_lint(config, workspace, document, is_saved):
     pass
 
