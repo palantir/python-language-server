@@ -110,34 +110,33 @@ def __check_if_node_is_valid(node):
     return valid
 
 
+def __handle_skip(stack, skip):
+    body = stack[skip]
+    children = [body]
+    if hasattr(body, 'children'):
+        children = body.children
+    stack = stack[:skip] + children + stack[skip + 1:]
+    node = body
+    end_line, _ = body.end_pos
+    return node, end_line
+
+
 def __handle_flow_nodes(node, end_line, stack):
     from_keyword = False
     if isinstance(node, tree_nodes.Keyword):
         from_keyword = True
-        if node.value in {'if', 'elif', 'with', 'while', 'except'}:
-            body = stack[2]
-            children = [body]
-            if hasattr(body, 'children'):
-                children = body.children
-            stack = stack[:2] + children + stack[3:]
-            node = body
-            end_line, _ = body.end_pos
+        if node.value in {'if', 'elif', 'with', 'while'}:
+            node, end_line = __handle_skip(stack, 2)
+        elif node.value in {'except'}:
+            first_node = stack[0]
+            if isinstance(first_node, tree_nodes.Operator):
+                node, end_line = __handle_skip(stack, 1)
+            else:
+                node, end_line = __handle_skip(stack, 2)
         elif node.value in {'for'}:
-            body = stack[4]
-            children = [body]
-            if hasattr(body, 'children'):
-                children = body.children
-            stack = stack[:4] + children + stack[5:]
-            node = body
-            end_line, _ = body.end_pos
+            node, end_line = __handle_skip(stack, 4)
         elif node.value in {'else'}:
-            body = stack[1]
-            children = [body]
-            if hasattr(body, 'children'):
-                children = body.children
-            stack = stack[:1] + children + stack[2:]
-            node = body
-            end_line, _ = body.end_pos
+            node, end_line = __handle_skip(stack, 1)
     return end_line, from_keyword, node, stack
 
 
