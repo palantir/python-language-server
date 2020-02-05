@@ -42,6 +42,9 @@ _TYPE_MAP = {
 # Types of parso nodes for which snippet is not included in the completion
 _IMPORTS = ('import_name', 'import_from')
 
+# Types of parso node for errors
+_ERRORS = ('error_node', )
+
 
 @hookimpl
 def pyls_completions(config, document, position):
@@ -63,9 +66,23 @@ def pyls_completions(config, document, position):
 
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
-    include_params = (snippet_support and should_include_params and
-                      use_snippets(document, position))
+    include_params = snippet_support and should_include_params and use_snippets(document, position)
     return [_format_completion(d, include_params) for d in definitions] or None
+
+
+def is_exception_class(name):
+    """
+    Determine if a class name is an instance of an Exception.
+
+    This returns `False` if the name given corresponds with a instance of
+    the 'Exception' class, `True` otherwise
+    """
+    try:
+        return name in [cls.__name__ for cls in Exception.__subclasses__()]
+    except AttributeError:
+        # Needed in case a class don't uses new-style
+        # class definition in Python 2
+        return False
 
 
 def use_snippets(document, position):
@@ -79,15 +96,28 @@ def use_snippets(document, position):
     lines = document.source.split('\n', line)
     act_lines = [lines[line][:position['character']]]
     line -= 1
+    last_character = ''
     while line > -1:
         act_line = lines[line]
-        if act_line.rstrip().endswith('\\'):
+        if (act_line.rstrip().endswith('\\') or
+                act_line.rstrip().endswith('(') or
+                act_line.rstrip().endswith(',')):
             act_lines.insert(0, act_line)
             line -= 1
+            if act_line.rstrip().endswith('('):
+                # Needs to be added to the end of the code before parsing
+                # to make it valid, otherwise the node type could end
+                # being an 'error_node' for multi-line imports that use '('
+                last_character = ')'
         else:
             break
-    tokens = parso.parse('\n'.join(act_lines).split(';')[-1].strip())
-    return tokens.children[0].type not in _IMPORTS
+    if '(' in act_lines[-1].strip():
+        last_character = ')'
+    code = '\n'.join(act_lines).split(';')[-1].strip() + last_character
+    tokens = parso.parse(code)
+    expr_type = tokens.children[0].type
+    return (expr_type not in _IMPORTS and
+            not (expr_type in _ERRORS and 'import' in code))
 
 
 def _format_completion(d, include_params=True):
@@ -100,19 +130,25 @@ def _format_completion(d, include_params=True):
         'insertText': d.name
     }
 
-    if include_params and hasattr(d, 'params') and d.params:
+    if (include_params and hasattr(d, 'params') and d.params and
+            not is_exception_class(d.name)):
         positional_args = [param for param in d.params if '=' not in param.description]
 
-        # For completions with params, we can generate a snippet instead
-        completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
-        snippet = d.name + '('
-        for i, param in enumerate(positional_args):
-            name = param.name if param.name != '/' else '\\/'
-            snippet += '${%s:%s}' % (i + 1, name)
-            if i < len(positional_args) - 1:
-                snippet += ', '
-        snippet += ')$0'
-        completion['insertText'] = snippet
+        if len(positional_args) > 1:
+            # For completions with params, we can generate a snippet instead
+            completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
+            snippet = d.name + '('
+            for i, param in enumerate(positional_args):
+                name = param.name if param.name != '/' else '\\/'
+                snippet += '${%s:%s}' % (i + 1, name)
+                if i < len(positional_args) - 1:
+                    snippet += ', '
+            snippet += ')$0'
+            completion['insertText'] = snippet
+        elif len(positional_args) == 1:
+            completion['insertText'] = d.name + '($0)'
+        else:
+            completion['insertText'] = d.name + '()'
 
     return completion
 

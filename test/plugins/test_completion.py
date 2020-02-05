@@ -189,8 +189,7 @@ def test_snippets_completion(config):
 
     com_position = {'line': 1, 'character': len(doc_snippets)}
     completions = pyls_jedi_completions(config, doc, com_position)
-    out = 'defaultdict(${1:kwargs})$0'
-    assert completions[0]['insertText'] == out
+    assert completions[0]['insertText'] == 'defaultdict($0)'
 
 
 def test_snippet_parsing(config):
@@ -203,6 +202,22 @@ def test_snippet_parsing(config):
     completions = pyls_jedi_completions(config, doc, completion_position)
     out = 'logical_and(${1:x1}, ${2:x2}, ${3:\\/}, ${4:*})$0'
     assert completions[0]['insertText'] == out
+
+
+def test_multiline_import_snippets(config):
+    document = 'from datetime import(\n date,\n datetime)\na=date'
+    doc = Document(DOC_URI, document)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {'include_params': True}}})
+
+    position = {'line': 1, 'character': 5}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'date'
+
+    position = {'line': 2, 'character': 9}
+    completions = pyls_jedi_completions(config, doc, position)
+    assert completions[0]['insertText'] == 'datetime'
 
 
 def test_multiline_snippets(config):
