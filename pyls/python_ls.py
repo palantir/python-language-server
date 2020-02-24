@@ -369,7 +369,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         for removed_info in removed:
             removed_uri = removed_info['uri']
-            self.workspaces.pop(removed_uri)
+            self.workspaces.pop(removed_uri, None)
 
         for added_info in added:
             added_uri = added_info['uri']
