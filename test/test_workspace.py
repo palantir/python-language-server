@@ -96,7 +96,7 @@ def test_multiple_workspaces(tmpdir, pyls):
 
     added_workspaces = [{'uri': path_as_uri(str(x))}
                         for x in (workspace1_dir, workspace2_dir)]
-    event = { 'added': added_workspaces, 'removed': []}
+    event = {'added': added_workspaces, 'removed': []}
     pyls.m_workspace__did_change_workspace_folders(event)
 
     for workspace in added_workspaces:
@@ -116,6 +116,6 @@ def test_multiple_workspaces(tmpdir, pyls):
     workspace2_uri = added_workspaces[1]['uri']
     assert msg['uri'] in pyls.workspaces[workspace2_uri]._docs
 
-    event = { 'added': [], 'removed': [added_workspaces[0]]}
+    event = {'added': [], 'removed': [added_workspaces[0]]}
     pyls.m_workspace__did_change_workspace_folders(event)
     assert workspace1_uri not in pyls.workspaces
