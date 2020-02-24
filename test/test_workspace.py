@@ -120,9 +120,9 @@ def test_multiple_workspaces(tmpdir, pyls):
     pyls.m_workspace__did_change_workspace_folders(event)
     assert workspace1_uri not in pyls.workspaces
 
+
 def test_multiple_workspaces_wrong_removed_uri(pyls):
     workspace = {'uri': 'Test123'}
     event = {'added': [], 'removed': [workspace]}
     pyls.m_workspace__did_change_workspace_folders(event)
     assert workspace['uri'] not in pyls.workspaces
-
