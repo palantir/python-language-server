@@ -361,7 +361,12 @@ class PythonLanguageServer(MethodDispatcher):
             for doc_uri in workspace.documents:
                 self.lint(doc_uri, is_saved=False)
 
-    def m_workspace__did_change_workspace_folders(self, added=None, removed=None, **_kwargs):
+    def m_workspace__did_change_workspace_folders(self, event=None, **_kwargs):
+        if event is None:
+            return
+        added = event.get('added', [])
+        removed = event.get('removed', [])
+
         for removed_info in removed:
             removed_uri = removed_info['uri']
             self.workspaces.pop(removed_uri)
