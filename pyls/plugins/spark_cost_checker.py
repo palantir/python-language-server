@@ -17,10 +17,10 @@ class SparkCostAnalyzer(ast.NodeVisitor):
 
     def visit_Call(self, node):
         func = node.func
-        if type(func) == ast.Attribute:
+        if isinstance(func, ast.Attribute):
             func_name = func.attr
             args = node.args
-            if len(args) == 0 and func_name in self.antipattern_func_names:
+            if not args and func_name in self.antipattern_func_names:
                 self.stats.append({
                     "message": "Costly spark method call found",
                     "symbol": func_name,
@@ -87,7 +87,7 @@ class SparkCostChecker(object):
         found_issues = analyzer.stats
 
         # The CostChecker's found_issues will be empty if nothing problematic is found
-        if len(found_issues) == 0:
+        if not found_issues:
             cls.last_diags[document.path] = []
             return []
 
