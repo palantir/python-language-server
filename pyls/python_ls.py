@@ -368,12 +368,14 @@ class PythonLanguageServer(MethodDispatcher):
         removed = event.get('removed', [])
 
         for removed_info in removed:
-            removed_uri = removed_info['uri']
-            self.workspaces.pop(removed_uri, None)
+            if 'uri' in removed_info:
+                removed_uri = removed_info['uri']
+                self.workspaces.pop(removed_uri, None)
 
         for added_info in added:
-            added_uri = added_info['uri']
-            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint, self.config)
+            if 'uri' in added_info:
+                added_uri = added_info['uri']
+                self.workspaces[added_uri] = Workspace(added_uri, self._endpoint, self.config)
 
         # Migrate documents that are on the root workspace and have a better
         # match now
@@ -382,6 +384,13 @@ class PythonLanguageServer(MethodDispatcher):
             doc = self.workspace._docs.pop(uri)
             new_workspace = self._match_uri_to_workspace(uri)
             new_workspace._docs[uri] = doc
+
+        root_workspace_removed = any(removed_info['uri'] == self.root_uri for removed_info in removed)
+        workspace_added = len(added) > 0 and 'uri' in added[0]
+        if root_workspace_removed and workspace_added:
+            added_uri = added[0]['uri']
+            self.root_uri = added_uri
+            self.workspace = Workspace(added_uri, self._endpoint, self.config)
 
     def m_workspace__did_change_watched_files(self, changes=None, **_kwargs):
         changed_py_files = set()

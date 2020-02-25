@@ -126,3 +126,48 @@ def test_multiple_workspaces_wrong_removed_uri(pyls):
     event = {'added': [], 'removed': [workspace]}
     pyls.m_workspace__did_change_workspace_folders(event)
     assert workspace['uri'] not in pyls.workspaces
+
+
+def test_root_workspace_changed(pyls):
+    pyls.root_uri = 'Test123'
+    pyls.workspace._root_uri = 'Test123'
+
+    workspace1 = {'uri': 'Test123'}
+    workspace2 = {'uri': 'NewTest456'}
+
+    event = {'added': [workspace2], 'removed': [workspace1]}
+    pyls.m_workspace__did_change_workspace_folders(event)
+
+    assert workspace2['uri'] == pyls.workspace._root_uri
+    assert workspace2['uri'] == pyls.root_uri
+
+
+def test_root_workspace_not_changed(pyls):
+    # removed uri != root_uri
+    pyls.root_uri = 'Test12'
+    pyls.workspace._root_uri = 'Test12'
+    workspace1 = {'uri': 'Test1234'}
+    workspace2 = {'uri': 'NewTest456'}
+    event = {'added': [workspace2], 'removed': [workspace1]}
+    pyls.m_workspace__did_change_workspace_folders(event)
+    assert 'Test12' == pyls.workspace._root_uri
+    assert 'Test12' == pyls.root_uri
+    # empty 'added' list
+    pyls.root_uri = 'Test123'
+    pyls.workspace._root_uri = 'Test123'
+    workspace1 = {'uri': 'Test123'}
+    event = {'added': [], 'removed': [workspace1]}
+    pyls.m_workspace__did_change_workspace_folders(event)
+    assert 'Test123' == pyls.workspace._root_uri
+    assert 'Test123' == pyls.root_uri
+    # empty 'removed' list
+    event = {'added': [workspace1], 'removed': []}
+    pyls.m_workspace__did_change_workspace_folders(event)
+    assert 'Test123' == pyls.workspace._root_uri
+    assert 'Test123' == pyls.root_uri
+    # 'added' list has no 'uri'
+    workspace2 = {'TESTuri': 'Test1234'}
+    event = {'added': [workspace2], 'removed': [workspace1]}
+    pyls.m_workspace__did_change_workspace_folders(event)
+    assert 'Test123' == pyls.workspace._root_uri
+    assert 'Test123' == pyls.root_uri
