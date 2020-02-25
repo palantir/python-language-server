@@ -30,6 +30,7 @@ class SparkCostAnalyzer(ast.NodeVisitor):
                     "message-id": "costly-spark-method"
                 })
 
+
 log = logging.getLogger(__name__)
 
 
