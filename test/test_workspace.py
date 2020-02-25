@@ -129,10 +129,11 @@ def test_multiple_workspaces_wrong_removed_uri(pyls):
 
 
 def test_root_workspace_changed(pyls):
-    pyls.root_uri = 'Test123'
-    pyls.workspace._root_uri = 'Test123'
+    test_uri = 'Test123'
+    pyls.root_uri = test_uri
+    pyls.workspace._root_uri = test_uri
 
-    workspace1 = {'uri': 'Test123'}
+    workspace1 = {'uri': test_uri}
     workspace2 = {'uri': 'NewTest456'}
 
     event = {'added': [workspace2], 'removed': [workspace1]}
@@ -144,30 +145,32 @@ def test_root_workspace_changed(pyls):
 
 def test_root_workspace_not_changed(pyls):
     # removed uri != root_uri
-    pyls.root_uri = 'Test12'
-    pyls.workspace._root_uri = 'Test12'
+    test_uri_1 = 'Test12'
+    pyls.root_uri = test_uri_1
+    pyls.workspace._root_uri = test_uri_1
     workspace1 = {'uri': 'Test1234'}
     workspace2 = {'uri': 'NewTest456'}
     event = {'added': [workspace2], 'removed': [workspace1]}
     pyls.m_workspace__did_change_workspace_folders(event)
-    assert 'Test12' == pyls.workspace._root_uri
-    assert 'Test12' == pyls.root_uri
+    assert test_uri_1 == pyls.workspace._root_uri
+    assert test_uri_1 == pyls.root_uri
     # empty 'added' list
-    pyls.root_uri = 'Test123'
-    pyls.workspace._root_uri = 'Test123'
-    workspace1 = {'uri': 'Test123'}
+    test_uri_2 = 'Test123'
+    pyls.root_uri = test_uri_2
+    pyls.workspace._root_uri = test_uri_2
+    workspace1 = {'uri': test_uri_2}
     event = {'added': [], 'removed': [workspace1]}
     pyls.m_workspace__did_change_workspace_folders(event)
-    assert 'Test123' == pyls.workspace._root_uri
-    assert 'Test123' == pyls.root_uri
+    assert test_uri_2 == pyls.workspace._root_uri
+    assert test_uri_2 == pyls.root_uri
     # empty 'removed' list
     event = {'added': [workspace1], 'removed': []}
     pyls.m_workspace__did_change_workspace_folders(event)
-    assert 'Test123' == pyls.workspace._root_uri
-    assert 'Test123' == pyls.root_uri
+    assert test_uri_2 == pyls.workspace._root_uri
+    assert test_uri_2 == pyls.root_uri
     # 'added' list has no 'uri'
     workspace2 = {'TESTuri': 'Test1234'}
     event = {'added': [workspace2], 'removed': [workspace1]}
     pyls.m_workspace__did_change_workspace_folders(event)
-    assert 'Test123' == pyls.workspace._root_uri
-    assert 'Test123' == pyls.root_uri
+    assert test_uri_2 == pyls.workspace._root_uri
+    assert test_uri_2 == pyls.root_uri
