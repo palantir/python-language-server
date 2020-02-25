@@ -4,16 +4,15 @@ import sys
 import ast
 import collections
 
-from pylint.epylint import py_run
 from pyls import hookimpl, lsp
 
 
 class SparkCostAnalyzer(ast.NodeVisitor):
-    
+
     antipattern_func_names = [
         "collect"
     ]
-    
+
     stats = []
 
     def visit_Call(self, node):
@@ -30,11 +29,6 @@ class SparkCostAnalyzer(ast.NodeVisitor):
                     "column": node.col_offset,
                     "message-id": "costly-spark-method"
                 })
-
-try:
-    import ujson as json
-except Exception:  # pylint: disable=broad-except
-    import json
 
 log = logging.getLogger(__name__)
 
@@ -84,9 +78,9 @@ class SparkCostChecker(object):
         path = document.path
         if sys.platform.startswith('win'):
             path = path.replace('\\', '/')
-            
+
         with open(path, "r") as source:
-          tree = ast.parse(source.read())
+            tree = ast.parse(source.read())
 
         analyzer = SparkCostAnalyzer()
         analyzer.visit(tree)
