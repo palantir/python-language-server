@@ -2,6 +2,7 @@
 import logging
 import sys
 import ast
+import collections
 
 from pylint.epylint import py_run
 from pyls import hookimpl, lsp
@@ -97,7 +98,7 @@ class SparkCostChecker(object):
             return []
 
         diagnostics = []
-        for diag in found_issue:
+        for diag in found_issues:
             # pylint lines index from 1, pyls lines index from 0
             line = diag['line'] - 1
 
@@ -119,7 +120,7 @@ class SparkCostChecker(object):
                 'source': 'spark_cost_checker',
                 'range': err_range,
                 'message': '[{}] {}'.format(diag['symbol'], diag['message']),
-                'severity': severity,
+                'severity': diag['severity'],
                 'code': diag['message-id']
             })
         cls.last_diags[document.path] = diagnostics
