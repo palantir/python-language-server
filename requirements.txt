@@ -1,4 +1,4 @@
-future
+future;python_version < '3'
 flake8
 configparser
 python-language-server
