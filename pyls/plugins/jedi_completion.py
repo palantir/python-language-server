@@ -1,6 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import parso
+import os.path as osp
 from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ _TYPE_MAP = {
     'builtinfunction': lsp.CompletionItemKind.Function,
     'module': lsp.CompletionItemKind.Module,
     'file': lsp.CompletionItemKind.File,
+    'path': lsp.CompletionItemKind.Text,
     'xrange': lsp.CompletionItemKind.Class,
     'slice': lsp.CompletionItemKind.Class,
     'traceback': lsp.CompletionItemKind.Class,
@@ -129,6 +131,13 @@ def _format_completion(d, include_params=True):
         'sortText': _sort_text(d),
         'insertText': d.name
     }
+
+    if d.type == 'path':
+        path = osp.normpath(d.name)
+        path = path.replace('\\', '\\\\')
+        path = path.replace('/', '\\/')
+        completion['insertText'] = path
+
 
     if (include_params and hasattr(d, 'params') and d.params and
             not is_exception_class(d.name)):
