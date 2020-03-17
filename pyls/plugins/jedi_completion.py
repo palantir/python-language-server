@@ -1,7 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import parso
 import os.path as osp
+import parso
 from pyls import hookimpl, lsp, _utils
 
 log = logging.getLogger(__name__)
@@ -137,7 +137,6 @@ def _format_completion(d, include_params=True):
         path = path.replace('\\', '\\\\')
         path = path.replace('/', '\\/')
         completion['insertText'] = path
-
 
     if (include_params and hasattr(d, 'params') and d.params and
             not is_exception_class(d.name)):
