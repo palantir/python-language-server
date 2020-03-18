@@ -200,7 +200,7 @@ def test_snippet_parsing(config):
         'completion': {'completionItem': {'snippetSupport': True}}}
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
     completions = pyls_jedi_completions(config, doc, completion_position)
-    out = 'logical_and(${1:x1}, ${2:x2}, ${3:\\/}, ${4:*})$0'
+    out = 'logical_and(${1:x1}, ${2:x2})$0'
     assert completions[0]['insertText'] == out
 
 
