@@ -141,8 +141,8 @@ def _format_completion(d, include_params=True):
     if (include_params and hasattr(d, 'params') and d.params and
             not is_exception_class(d.name)):
         positional_args = [param for param in d.params
-                           if '=' not in param.description or
-                           param.name in {'/', '*'}]
+                           if '=' not in param.description and
+                           param.name not in {'/', '*'}]
 
         if len(positional_args) > 1:
             # For completions with params, we can generate a snippet instead
