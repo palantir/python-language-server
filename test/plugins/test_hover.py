@@ -20,6 +20,7 @@ np.sin
 
 """
 
+
 def test_numpy_hover():
     # Over the blank line
     no_hov_position = {'line': 1, 'character': 0}
@@ -35,28 +36,21 @@ def test_numpy_hover():
     doc = Document(DOC_URI, NUMPY_DOC)
 
     if LooseVersion(_utils.JEDI_VERSION) >= LooseVersion('0.15.0'):
-        contents = [
-            {'language': 'python', 'value': 'numpy'},
-            'NumPy\n=====\n\nProvides\n\xa0\xa01. '
-            'An array object of arbitrary homogeneous items\n\xa0\xa02.']
-        assert contents in pyls_hover(doc, numpy_hov_position_1)['contents']
+        contents = ''
+        assert contents in pyls_hover(doc, no_hov_position)['contents']
 
-        contents = [
-            {'language': 'python', 'value': 'numpy'},
-            'NumPy\n=====\n\nProvides\n\xa0\xa01. '
-            'An array object of arbitrary homogeneous items\n\xa0\xa02.']
-        assert contents in pyls_hover(doc, numpy_hov_position_2)['contents']
+        contents = 'NumPy\n=====\n\nProvides\n'
+        assert contents in pyls_hover(doc, numpy_hov_position_1)['contents'][0]
 
-        contents = [
-            {'language': 'python', 'value': 'numpy'},
-            'NumPy\n=====\n\nProvides\n\xa0\xa01. '
-            'An array object of arbitrary homogeneous items\n\xa0\xa02.']
-        assert contents in pyls_hover(doc, numpy_hov_position_3)['contents']
+        contents = 'NumPy\n=====\n\nProvides\n'
+        assert contents in pyls_hover(doc, numpy_hov_position_2)['contents'][0]
 
-        contents = [
-            {'language': 'python', 'value': 'numpy'},
-            'Trigonometric sine, element-wise.\n\n']
-        assert contents in pyls_hover(doc, numpy_sin_hov_position)['contents']
+        contents = 'NumPy\n=====\n\nProvides\n'
+        assert contents in pyls_hover(doc, numpy_hov_position_3)['contents'][0]
+
+        contents = 'Trigonometric sine, element-wise.\n\n'
+        assert contents in pyls_hover(
+            doc, numpy_sin_hov_position)['contents'][0]
 
 
 def test_hover():
