@@ -237,15 +237,10 @@ class Document(object):
         environment = self.get_enviroment(environment_path) if environment_path else None
 
         kwargs = {
-            'source': self.source,
-            'path': self.path,
-            'sys_path': sys_path,
+            'code': self.source,
             'environment': environment,
+            'project': jedi.api.Project(self.path, sys_path=sys_path),
         }
-
-        if position:
-            kwargs['line'] = position['line'] + 1
-            kwargs['column'] = _utils.clip_column(position['character'], self.lines, position['line'])
 
         return jedi.Script(**kwargs)
 
