@@ -51,7 +51,11 @@ _ERRORS = ('error_node', )
 @hookimpl
 def pyls_completions(config, document, position):
     try:
-        definitions = document.jedi_script(position).completions()
+        code_position = {}
+        if position:
+            code_position = {'line': position['line'] + 1,
+                             'column': _utils.clip_column(position['character'], document.lines, position['line'])}
+        definitions = document.jedi_script().complete(**code_position)
     except AttributeError as e:
         if 'CompiledObject' in str(e):
             # Needed to handle missing CompiledObject attribute
@@ -69,7 +73,7 @@ def pyls_completions(config, document, position):
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
     include_params = snippet_support and should_include_params and use_snippets(document, position)
-    return [_format_completion(d, include_params) for d in definitions] or None
+    return [_format_completion(signature, include_params) for d in definitions for signature in d.get_signatures()] or None
 
 
 def is_exception_class(name):
@@ -173,7 +177,7 @@ def _label(definition):
 def _detail(definition):
     try:
         return definition.parent().full_name or ''
-    except AttributeError:
+    except (AttributeError, TypeError):
         return definition.full_name or ''
 
 
