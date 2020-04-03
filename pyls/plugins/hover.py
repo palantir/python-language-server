@@ -16,6 +16,12 @@ def pyls_hover(document, position):
         # Find first exact matching definition
         definition = next((x for x in definitions if x.name == word), None)
 
+        # Ensure a definition is used if only one is available
+        # even if the word doesn't match. An example of this case is 'np'
+        # where 'numpy' doesn't match with 'np'. Same for NumPy ufuncs
+        if len(definitions) == 1:
+            definition = definitions[0]
+
         if not definition:
             return {'contents': ''}
 
