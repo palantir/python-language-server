@@ -19,6 +19,7 @@ init:
 install:
   - "%PYTHON%/python.exe -m pip install --upgrade pip setuptools"
   - "%PYTHON%/python.exe -m pip install .[all] .[test]"
+  - "%PYTHON%/python.exe -m pip install -q --no-deps git+https://github.com/davidhalter/jedi"
 
 test_script:
   - "%PYTHON%/Scripts/pytest.exe -v test/"
