@@ -7,6 +7,7 @@ jobs:
     steps:
       - checkout
       - run: pip install -e .[all] .[test]
+      - run: pip install -q --no-deps git+https://github.com/davidhalter/jedi
       - run: py.test -v test/
       - run: pylint pyls test
       - run: pycodestyle pyls test
@@ -21,6 +22,7 @@ jobs:
       - run: python3 -m venv /tmp/pyenv
       - run: /tmp/pyenv/bin/python -m pip install loghub
       - run: pip install -e .[all] .[test]
+      - run: pip install -q --no-deps git+https://github.com/davidhalter/jedi
       - run: py.test -v test/
 
   lint:
