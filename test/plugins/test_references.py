@@ -73,7 +73,7 @@ def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-n
     doc2 = Document(doc2_uri)
 
     refs = pyls_references(doc2, position)
-    assert len(refs) == 1
+    assert len(refs) >= 1
 
     assert refs[0]['range']['start'] == {'line': 4, 'character': 7}
     assert refs[0]['range']['end'] == {'line': 4, 'character': 19}
