@@ -74,6 +74,9 @@ with open('doc', 'r') as f:
         pass
     finally:
         raise SomeException()
+
+def testC():
+    pass
 """)
 
 SYNTAX_ERR = dedent("""
@@ -141,7 +144,8 @@ def test_folding():
                 {'startLine': 59, 'endLine': 65},
                 {'startLine': 60, 'endLine': 61},
                 {'startLine': 62, 'endLine': 63},
-                {'startLine': 64, 'endLine': 65}]
+                {'startLine': 64, 'endLine': 65},
+                {'startLine': 67, 'endLine': 68}]
     assert ranges == expected
 
 

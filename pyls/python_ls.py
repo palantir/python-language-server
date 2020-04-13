@@ -227,7 +227,7 @@ class PythonLanguageServer(MethodDispatcher):
         return {'capabilities': self.capabilities()}
 
     def m_initialized(self, **_kwargs):
-        pass
+        self._hook('pyls_initialized')
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook('pyls_code_actions', doc_uri, range=range, context=context))
