@@ -152,6 +152,17 @@ def clip_column(column, lines, line_number):
     return min(column, max_column)
 
 
+def position_to_jedi_linecolumn(document, position):
+    """Convert the format 'line', 'character' to 'line', 'column'"""
+    code_position = {}
+    if position:
+        code_position = {'line': position['line'] + 1,
+                         'column': clip_column(position['character'],
+                                               document.lines,
+                                               position['line'])}
+    return code_position
+
+
 if os.name == 'nt':
     import ctypes
 

@@ -51,13 +51,7 @@ _ERRORS = ('error_node', )
 @hookimpl
 def pyls_completions(config, document, position):
     try:
-        code_position = {}
-        if position:
-            code_position = {
-                'line': position['line'] + 1,
-                'column': _utils.clip_column(position['character'],
-                                             document.lines,
-                                             position['line'])}
+        code_position = _utils.position_to_jedi_linecolumn(document, position)
         completions = document.jedi_script().complete(**code_position)
     except AttributeError as e:
         if 'CompiledObject' in str(e):

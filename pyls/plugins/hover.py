@@ -9,7 +9,8 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_hover(document, position):
-    definitions = document.jedi_script(position).goto_definitions()
+    code_position = _utils.position_to_jedi_linecolumn(document, position)
+    definitions = document.jedi_script().infer(**code_position)
     word = document.word_at_position(position)
 
     if LooseVersion(_utils.JEDI_VERSION) >= LooseVersion('0.15.0'):

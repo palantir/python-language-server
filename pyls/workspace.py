@@ -231,9 +231,15 @@ class Document(object):
 
         kwargs = {
             'code': self.source,
+            'path': self.path,
             'environment': environment,
-            'project': jedi.api.Project(self.path, sys_path=sys_path),
+            'project': jedi.api.Project(os.path.dirname(self.path),
+                                        sys_path=sys_path),
         }
+
+        if position:
+            # deprecated by Jedi to use in Script() constructor
+            kwargs += _utils.position_to_jedi_linecolumn(self, position)
 
         return jedi.Script(**kwargs)
 
