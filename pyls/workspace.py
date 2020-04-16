@@ -230,7 +230,8 @@ class Document(object):
         environment = self.get_enviroment(environment_path) if environment_path else None
 
         kwargs = {
-            'code': self.source,
+            # 'source' is deprecated but 'code' was only introduced in 0.17.0
+            'source' if jedi.__version__ < "0.17.0" else 'code': self.source,
             'path': self.path,
             'environment': environment,
             'project': jedi.api.Project(os.path.dirname(self.path),
