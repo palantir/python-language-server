@@ -75,5 +75,7 @@ def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-n
     refs = pyls_references(doc2, position)
     assert len(refs) >= 1
 
-    assert refs[0]['range']['start'] == {'line': 4, 'character': 7}
-    assert refs[0]['range']['end'] == {'line': 4, 'character': 19}
+    expected = {'start': {'line': 4, 'character': 7},
+                'end': {'line': 4, 'character': 19}}
+    ranges = [r['range'] for r in refs]
+    assert expected in ranges
