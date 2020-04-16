@@ -58,7 +58,8 @@ def test_jedi_completion(config):
     items = pyls_jedi_completions(config, doc, com_position)
 
     assert items
-    assert items[0]['label'] == 'isabs(path)'
+    labels = [i['label'] for i in items]
+    assert 'isabs(path)' in labels
 
     # Test we don't throw with big character
     pyls_jedi_completions(config, doc, {'line': 1, 'character': 1000})
