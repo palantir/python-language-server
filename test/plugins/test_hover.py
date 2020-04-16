@@ -35,22 +35,21 @@ def test_numpy_hover():
 
     doc = Document(DOC_URI, NUMPY_DOC)
 
-    if LooseVersion(_utils.JEDI_VERSION) >= LooseVersion('0.15.0'):
-        contents = ''
-        assert contents in pyls_hover(doc, no_hov_position)['contents']
+    contents = ''
+    assert contents in pyls_hover(doc, no_hov_position)['contents']
 
-        contents = 'NumPy\n=====\n\nProvides\n'
-        assert contents in pyls_hover(doc, numpy_hov_position_1)['contents'][0]
+    contents = 'NumPy\n=====\n\nProvides\n'
+    assert contents in pyls_hover(doc, numpy_hov_position_1)['contents'][0]
 
-        contents = 'NumPy\n=====\n\nProvides\n'
-        assert contents in pyls_hover(doc, numpy_hov_position_2)['contents'][0]
+    contents = 'NumPy\n=====\n\nProvides\n'
+    assert contents in pyls_hover(doc, numpy_hov_position_2)['contents'][0]
 
-        contents = 'NumPy\n=====\n\nProvides\n'
-        assert contents in pyls_hover(doc, numpy_hov_position_3)['contents'][0]
+    contents = 'NumPy\n=====\n\nProvides\n'
+    assert contents in pyls_hover(doc, numpy_hov_position_3)['contents'][0]
 
-        contents = 'Trigonometric sine, element-wise.\n\n'
-        assert contents in pyls_hover(
-            doc, numpy_sin_hov_position)['contents'][0]
+    contents = 'Trigonometric sine, element-wise.\n\n'
+    assert contents in pyls_hover(
+        doc, numpy_sin_hov_position)['contents'][0]
 
 
 def test_hover():
@@ -61,10 +60,7 @@ def test_hover():
 
     doc = Document(DOC_URI, DOC)
 
-    if LooseVersion(_utils.JEDI_VERSION) >= LooseVersion('0.15.0'):
-        contents = [{'language': 'python', 'value': 'main()'}, 'hello world']
-    else:
-        contents = 'main()\n\nhello world'
+    contents = [{'language': 'python', 'value': 'main()'}, 'hello world']
 
     assert {
         'contents': contents

@@ -140,8 +140,6 @@ def format_docstring(contents):
     """
     contents = contents.replace('\t', u'\u00A0' * 4)
     contents = contents.replace('  ', u'\u00A0' * 2)
-    if LooseVersion(JEDI_VERSION) < LooseVersion('0.15.0'):
-        contents = contents.replace('*', '\\*')
     return contents
 
 
