@@ -1,5 +1,4 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from distutils.version import LooseVersion
 import os
 import sys
 
@@ -7,7 +6,6 @@ from test.test_utils import MockWorkspace
 import pytest
 
 from pyls import uris, lsp
-from pyls._utils import JEDI_VERSION
 from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions

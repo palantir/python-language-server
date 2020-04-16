@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from distutils.version import LooseVersion
 
-from pyls import uris, _utils
+from pyls import uris
 from pyls.plugins.hover import pyls_hover
 from pyls.workspace import Document
 

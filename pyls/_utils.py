@@ -1,5 +1,4 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from distutils.version import LooseVersion
 import functools
 import inspect
 import logging
