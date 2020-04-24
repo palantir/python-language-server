@@ -2,9 +2,11 @@
 """Linter plugin for pylint."""
 import collections
 import logging
+import os
+import shlex
+import subprocess
 import sys
 
-from pylint.epylint import py_run
 from pyls import hookimpl, lsp
 
 try:
@@ -12,7 +14,63 @@ try:
 except Exception:  # pylint: disable=broad-except
     import json
 
+if sys.version_info.major == 2:
+    from StringIO import StringIO
+
+    # subprocess.Popen() on Windows expects that env contains only
+    # "str" keys/values (= "bytes" for Python2.x, "unicode" for
+    # Python3.x), even though pyls treats all path values as "unicode"
+    # regardless of Python version
+    def stringify(u):
+        return u.encode('utf-8')
+else:
+    from io import StringIO
+
+    def stringify(u):
+        return u
+
 log = logging.getLogger(__name__)
+
+
+def spawn_pylint(document, flags):
+    """Spawn pylint process as same as pylint.epylint.py_run
+    """
+    path = document.path
+    if sys.platform.startswith('win'):
+        # Now, shlex.split is not applied on path, and Windows path
+        # (including '\\') is safe enough. But turn backslashes into
+        # forward slashes in order to keep previous behavior.
+        path = path.replace('\\', '/')
+
+    env = dict(os.environ)
+    env["PYTHONPATH"] = stringify(os.pathsep.join(document.sys_path()))
+
+    # Detect if we use Python as executable or not, else default to `python`
+    executable = sys.executable if "python" in sys.executable else "python"
+
+    # Create command line to call pylint
+    epylint_part = [executable, "-c", "from pylint import epylint;epylint.Run()"]
+    options = shlex.split(flags, posix=not sys.platform.startswith("win"))
+
+    pylint_call = [path, '-f', 'json'] + options
+    log.debug("Calling pylint with %r", pylint_call)
+
+    cli = epylint_part + pylint_call
+
+    stdout = stderr = subprocess.PIPE
+
+    # Call pylint in a subprocess
+    process = subprocess.Popen(
+        cli,
+        shell=False,
+        stdout=stdout,
+        stderr=stderr,
+        env=env,
+        universal_newlines=True,
+    )
+    proc_stdout, proc_stderr = process.communicate()
+    # Return standard output and error
+    return StringIO(proc_stdout), StringIO(proc_stderr)
 
 
 class PylintLinter(object):
@@ -56,16 +114,7 @@ class PylintLinter(object):
             # save.
             return cls.last_diags[document.path]
 
-        # py_run will call shlex.split on its arguments, and shlex.split does
-        # not handle Windows paths (it will try to perform escaping). Turn
-        # backslashes into forward slashes first to avoid this issue.
-        path = document.path
-        if sys.platform.startswith('win'):
-            path = path.replace('\\', '/')
-
-        pylint_call = '{} -f json {}'.format(path, flags)
-        log.debug("Calling pylint with '%s'", pylint_call)
-        json_out, err = py_run(pylint_call, return_std=True)
+        json_out, err = spawn_pylint(document, flags)
 
         # Get strings
         json_out = json_out.getvalue()

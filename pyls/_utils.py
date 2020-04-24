@@ -83,6 +83,48 @@ def find_parents(root, path, names):
     return []
 
 
+def is_inside_of(path, root, strictly=True):
+    """Return whether path is inside of root or not
+
+    It is assumed that both path and root are absolute.
+
+    If strictly=False, os.path.normcase and os.path.normpath are not
+    applied on path and root for efficiency. This is useful if
+    ablsolute "path" is made from relative one and "root" (and already
+    normpath-ed), for example.
+    """
+    if strictly:
+        path = os.path.normcase(os.path.normpath(path))
+        root = os.path.normcase(os.path.normpath(root))
+
+    return path == root or path.startswith(root + os.path.sep)
+
+
+def normalize_paths(paths, basedir, inside_only):
+    """Normalize each elements in paths
+
+    Relative elements in paths are treated as relative to basedir.
+
+    This function yields "(path, validity)" tuple as normalization
+    result for each elements in paths. If inside_only is specified and path is
+    not so, validity is False. Otherwise, path is already normalized
+    as absolute path, and validity is True.
+    """
+    for path in paths:
+        full_path = os.path.normpath(os.path.join(basedir, path))
+        if (not inside_only or
+                # If "inside_only" is specified, path must (1) not be
+                # absolute (= be relative to basedir), (2) not have
+                # drive letter (on Windows), and (3) be descendant of
+                # the root (= "inside_only").
+                (not os.path.isabs(path) and
+                 not os.path.splitdrive(path)[0] and
+                 is_inside_of(full_path, inside_only, strictly=False))):
+            yield full_path, True
+        else:
+            yield path, False
+
+
 def match_uri_to_workspace(uri, workspaces):
     if uri is None:
         return None
@@ -130,6 +172,25 @@ def merge_dicts(dict_a, dict_b):
             elif b[key] is not None:
                 yield (key, b[key])
     return dict(_merge_dicts_(dict_a, dict_b))
+
+
+def get_config_by_path(settings, path, default_value=None):
+    """Get the value in settings dict at the given path.
+
+    If path is not resolvable in specified settings, this returns
+    default_value.
+    """
+    paths = path.split('.')
+    while len(paths) > 1:
+        settings = settings.get(paths.pop(0))
+        if not isinstance(settings, dict):
+            # Here, at least one more looking up should be available,
+            # but the last retrieved was non-dict. Therefore, path is
+            # not resolvable in specified settings.
+            return default_value
+
+    # Here, paths should have only one value
+    return settings.get(paths[0], default_value)
 
 
 def format_docstring(contents):
