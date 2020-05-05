@@ -64,6 +64,7 @@ def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name
     doc2_usage_ref = [u for u in refs if u['uri'] != DOC1_URI][1]
     assert doc2_usage_ref['range']['start'] == {'line': 3, 'character': 4}
     assert doc2_usage_ref['range']['end'] == {'line': 3, 'character': 9}
+    doc1.stop()
 
 
 def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-name
@@ -73,6 +74,7 @@ def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-n
     doc2 = Document(doc2_uri)
 
     refs = pyls_references(doc2, position)
+    doc2.stop()
     assert len(refs) >= 1
 
     assert refs[0]['range']['start'] == {'line': 4, 'character': 7}

@@ -114,6 +114,7 @@ for i in range(0, 3)
 def test_folding():
     doc = Document(DOC_URI, DOC)
     ranges = pyls_folding_range(doc)
+    doc.stop()
     expected = [{'startLine': 1, 'endLine': 6},
                 {'startLine': 2, 'endLine': 3},
                 {'startLine': 5, 'endLine': 6},
@@ -152,6 +153,7 @@ def test_folding():
 def test_folding_syntax_error():
     doc = Document(DOC_URI, SYNTAX_ERR)
     ranges = pyls_folding_range(doc)
+    doc.stop()
     expected = [{'startLine': 1, 'endLine': 6},
                 {'startLine': 2, 'endLine': 3},
                 {'startLine': 5, 'endLine': 6},

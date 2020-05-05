@@ -18,6 +18,7 @@ def test_mccabe(config):
         config.update({'plugins': {'mccabe': {'threshold': 1}}})
         doc = Document(DOC_URI, DOC)
         diags = mccabe_lint.pyls_lint(config, doc)
+        doc.stop()
 
         assert all([d['source'] == 'mccabe' for d in diags])
 
@@ -34,4 +35,6 @@ def test_mccabe(config):
 
 def test_mccabe_syntax_error(config):
     doc = Document(DOC_URI, DOC_SYNTAX_ERR)
-    assert mccabe_lint.pyls_lint(config, doc) is None
+    result = mccabe_lint.pyls_lint(config, doc)
+    doc.stop()
+    assert result is None

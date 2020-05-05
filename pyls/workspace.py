@@ -194,6 +194,7 @@ class Document(object):
                     raise response
                 return response
 
+            print(attr)
             if attr in self.properties:
                 return queue_call()
             elif attr in self.methods:
@@ -226,22 +227,28 @@ class DocumentAgent(threading.Thread):
 
     def run(self):
         while True:
+            print('Waiting for queue')
             (_, item) = self.queue.get()
+            print(item)
+            self.queue.task_done()
             if item.name == 'shutdown':
                 break
             if item.cancelled:
+                print('Cancelled')
                 continue
             try:
                 attr = getattr(self.document, item.name)
                 result = attr
                 if inspect.ismethod(attr):
                     result = attr(*item.args, **item.kwargs)
+                print(result)
                 item.response = result
                 item.resolved = True
-                self.queue.task_done()
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 item.response = e
-
+        print('Exit!')
         self.document = None
         while not self.queue.empty():
             item = self.queue.get()
@@ -307,7 +314,7 @@ class _Document(object):
 
     def apply_change(self, change, version):
         """Apply a change to the document."""
-        self.version = version
+        self._version = version
         text = change['text']
         change_range = change.get('range')
 

@@ -52,6 +52,7 @@ def test_document_empty_edit():
         },
         'text': u'f'
     }, 0)
+    print(doc.source)
     assert doc.source == u'f'
     doc.stop()
 

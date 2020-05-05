@@ -45,6 +45,7 @@ def test_no_signature():
     doc = Document(DOC_URI, DOC)
 
     sigs = signature.pyls_signature_help(doc, sig_position)['signatures']
+    doc.stop()
     assert not sigs
 
 
@@ -54,6 +55,7 @@ def test_signature():
     doc = Document(DOC_URI, DOC)
 
     sig_info = signature.pyls_signature_help(doc, sig_position)
+    doc.stop()
 
     sigs = sig_info['signatures']
     assert len(sigs) == 1
@@ -70,6 +72,7 @@ def test_multi_line_signature():
     doc = Document(DOC_URI, MULTI_LINE_DOC)
 
     sig_info = signature.pyls_signature_help(doc, sig_position)
+    doc.stop()
 
     sigs = sig_info['signatures']
     assert len(sigs) == 1

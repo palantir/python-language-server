@@ -39,9 +39,14 @@ def pyls(tmpdir, request):
 
 
 @pytest.fixture
-def workspace(tmpdir):
+def workspace(tmpdir, request):
     """Return a workspace."""
-    return Workspace(uris.from_fs_path(str(tmpdir)), Mock())
+    workspace = Workspace(uris.from_fs_path(str(tmpdir)), Mock())
+
+    def stop_workspace():
+        workspace.close_all_documents()
+    request.addfinalizer(stop_workspace)
+    return workspace
 
 
 @pytest.fixture

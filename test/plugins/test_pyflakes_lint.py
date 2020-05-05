@@ -27,6 +27,7 @@ import sys
 def test_pyflakes():
     doc = Document(DOC_URI, DOC)
     diags = pyflakes_lint.pyls_lint(doc)
+    doc.stop()
 
     # One we're expecting is:
     msg = '\'sys\' imported but unused'
@@ -39,6 +40,7 @@ def test_pyflakes():
 def test_syntax_error_pyflakes():
     doc = Document(DOC_URI, DOC_SYNTAX_ERR)
     diag = pyflakes_lint.pyls_lint(doc)[0]
+    doc.stop()
 
     assert diag['message'] == 'invalid syntax'
     assert diag['range']['start'] == {'line': 0, 'character': 12}
@@ -48,6 +50,7 @@ def test_syntax_error_pyflakes():
 def test_undefined_name_pyflakes():
     doc = Document(DOC_URI, DOC_UNDEFINED_NAME_ERR)
     diag = pyflakes_lint.pyls_lint(doc)[0]
+    doc.stop()
 
     assert diag['message'] == 'undefined name \'b\''
     assert diag['range']['start'] == {'line': 0, 'character': 4}
@@ -57,6 +60,7 @@ def test_undefined_name_pyflakes():
 def test_unicode_encoding():
     doc = Document(DOC_URI, DOC_ENCODING)
     diags = pyflakes_lint.pyls_lint(doc)
+    doc.stop()
 
     assert len(diags) == 1
     assert diags[0]['message'] == '\'sys\' imported but unused'

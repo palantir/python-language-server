@@ -29,9 +29,11 @@ def temp_document(doc_text):
         name = temp_file.name
         temp_file.write(doc_text)
         temp_file.close()
-        yield Document(uris.from_fs_path(name))
+        doc = Document(uris.from_fs_path(name))
+        yield doc
     finally:
         os.remove(name)
+        doc.stop()
 
 
 def write_temp_doc(document, contents):

@@ -22,6 +22,7 @@ GOOD_DOC = """A = ['hello', 'world']\n"""
 def test_format():
     doc = Document(DOC_URI, DOC)
     res = pyls_format_document(doc)
+    doc.stop()
 
     assert len(res) == 1
     assert res[0]['newText'] == "A = ['h', 'w', 'a']\n\nB = ['h', 'w']\n"
@@ -35,6 +36,7 @@ def test_range_format():
         'end': {'line': 4, 'character': 10}
     }
     res = pyls_format_range(doc, def_range)
+    doc.stop()
 
     assert len(res) == 1
 
@@ -44,7 +46,9 @@ def test_range_format():
 
 def test_no_change():
     doc = Document(DOC_URI, GOOD_DOC)
-    assert not pyls_format_document(doc)
+    result = pyls_format_document(doc)
+    doc.stop()
+    assert not result
 
 
 def test_config_file(tmpdir):
@@ -53,6 +57,8 @@ def test_config_file(tmpdir):
     conf.write('[style]\ncolumn_limit = 14')
     src = tmpdir.join('test.py')
     doc = Document(uris.from_fs_path(src.strpath), DOC)
+    result = pyls_format_document(doc)
+    doc.stop()
 
     # A was split on multiple lines because of column_limit from config file
-    assert pyls_format_document(doc)[0]['newText'] == "A = [\n    'h', 'w',\n    'a'\n]\n\nB = ['h', 'w']\n"
+    assert result[0]['newText'] == "A = [\n    'h', 'w',\n    'a'\n]\n\nB = ['h', 'w']\n"

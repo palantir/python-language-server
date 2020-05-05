@@ -52,6 +52,7 @@ def test_symbols(config):
     doc = Document(DOC_URI, DOC)
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
     symbols = pyls_document_symbols(config, doc)
+    doc.stop()
 
     # All four symbols (import sys, a, B, main)
     # y is not in the root scope, it shouldn't be returned
@@ -76,6 +77,7 @@ def test_symbols(config):
 def test_symbols_all_scopes(config):
     doc = Document(DOC_URI, DOC)
     symbols = pyls_document_symbols(config, doc)
+    doc.stop()
     helper_check_symbols_all_scope(symbols)
 
 
@@ -88,4 +90,5 @@ def test_symbols_all_scopes_with_jedi_environment(config):
     config.update({'plugins': {'jedi': {'environment': env_path}}})
     doc.update_config(config)
     symbols = pyls_document_symbols(config, doc)
+    doc.stop()
     helper_check_symbols_all_scope(symbols)

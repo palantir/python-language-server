@@ -32,6 +32,7 @@ def test_definitions(config):
 
     doc = Document(DOC_URI, DOC)
     assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(config, doc, cursor_pos)
+    doc.stop()
 
 
 def test_builtin_definition(config):
@@ -41,6 +42,7 @@ def test_builtin_definition(config):
     # No go-to def for builtins
     doc = Document(DOC_URI, DOC)
     assert not pyls_definitions(config, doc, cursor_pos)
+    doc.stop()
 
 
 def test_assignment(config):
@@ -55,3 +57,4 @@ def test_assignment(config):
 
     doc = Document(DOC_URI, DOC)
     assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(config, doc, cursor_pos)
+    doc.stop()

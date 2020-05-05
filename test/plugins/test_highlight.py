@@ -15,7 +15,9 @@ def test_highlight():
     cursor_pos = {'line': 1, 'character': 0}
 
     doc = Document(DOC_URI, DOC)
-    assert pyls_document_highlight(doc, cursor_pos) == [{
+    result = pyls_document_highlight(doc, cursor_pos)
+    doc.stop()
+    assert result == [{
         'range': {
             'start': {'line': 0, 'character': 0},
             'end': {'line': 0, 'character': 1},
@@ -41,7 +43,9 @@ def test_sys_highlight():
     cursor_pos = {'line': 0, 'character': 8}
 
     doc = Document(DOC_URI, SYS_DOC)
-    assert pyls_document_highlight(doc, cursor_pos) == [{
+    result = pyls_document_highlight(doc, cursor_pos)
+    doc.stop()
+    assert result == [{
         'range': {
             'start': {'line': 0, 'character': 7},
             'end': {'line': 0, 'character': 10}

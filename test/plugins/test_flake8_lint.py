@@ -34,6 +34,7 @@ def test_flake8_no_checked_file(config):
 
     doc = Document('', DOC)
     diags = flake8_lint.pyls_lint(config, doc)
+    doc.stop()
     assert diags == []
 
 
@@ -52,6 +53,7 @@ def test_flake8_lint(config):
 
     finally:
         os.remove(name)
+        doc.stop()
 
 
 def test_flake8_config_param(config):
@@ -60,6 +62,7 @@ def test_flake8_config_param(config):
         config.update({'plugins': {'flake8': {'config': flake8_conf}}})
         _name, doc = temp_document(DOC)
         flake8_lint.pyls_lint(config, doc)
+        doc.stop()
         call_args = popen_mock.call_args.args[0]
         assert 'flake8' in call_args
         assert '--config={}'.format(flake8_conf) in call_args

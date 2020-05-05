@@ -72,7 +72,7 @@ def test_rope_completion(config, workspace):
     workspace.put_document(DOC_URI, source=DOC)
     doc = workspace.get_document(DOC_URI)
     items = pyls_rope_completions(config, workspace, doc, com_position)
-    doc.stop()
+    # doc.stop()
 
     assert items
     assert items[0]['label'] == 'isabs'
