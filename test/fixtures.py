@@ -22,7 +22,7 @@ def main():
 
 
 @pytest.fixture
-def pyls(tmpdir):
+def pyls(tmpdir, request):
     """ Return an initialized python LS """
     ls = PythonLanguageServer(StringIO, StringIO)
 
@@ -32,6 +32,9 @@ def pyls(tmpdir):
         initializationOptions={}
     )
 
+    def stop_pyls():
+        ls.m_shutdown()
+    request.addfinalizer(stop_pyls)
     return ls
 
 

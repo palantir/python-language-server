@@ -132,7 +132,7 @@ def find_methods_properties(cls):
             else:
                 properties.append(member_name)
     cls.method_registry = frozenset(methods)
-    cls.property_registry = frozenset(properties)
+    cls.property_registry = frozenset(properties + ['_source'])
     return cls
 
 
@@ -256,10 +256,10 @@ class _Document(object):
 
     def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None,
                  config=None, workspace=None):
-        self.uri = uri
-        self.version = version
-        self.path = uris.to_fs_path(uri)
-        self.filename = os.path.basename(self.path)
+        self._uri = uri
+        self._version = version
+        self._path = uris.to_fs_path(uri)
+        self._filename = os.path.basename(self.path)
 
         self._config = config
         self._workspace = workspace
@@ -274,6 +274,22 @@ class _Document(object):
     def rope_resource(self, rope_config):
         from rope.base import libutils
         return libutils.path_to_resource(self._rope_project_builder(rope_config), self.path)
+
+    @property
+    def uri(self):
+        return self._uri
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def filename(self):
+        return self._filename
 
     @property
     def lines(self):

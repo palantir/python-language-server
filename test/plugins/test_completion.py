@@ -48,6 +48,7 @@ def test_rope_import_completion(config, workspace):
     com_position = {'line': 0, 'character': 7}
     doc = Document(DOC_URI, DOC)
     items = pyls_rope_completions(config, workspace, doc, com_position)
+    doc.stop()
     assert items is None
 
 
@@ -62,6 +63,7 @@ def test_jedi_completion(config):
 
     # Test we don't throw with big character
     pyls_jedi_completions(config, doc, {'line': 1, 'character': 1000})
+    doc.stop()
 
 
 def test_rope_completion(config, workspace):
@@ -70,6 +72,7 @@ def test_rope_completion(config, workspace):
     workspace.put_document(DOC_URI, source=DOC)
     doc = workspace.get_document(DOC_URI)
     items = pyls_rope_completions(config, workspace, doc, com_position)
+    doc.stop()
 
     assert items
     assert items[0]['label'] == 'isabs'
@@ -80,6 +83,7 @@ def test_jedi_completion_ordering(config):
     com_position = {'line': 8, 'character': 0}
     doc = Document(DOC_URI, DOC)
     completions = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
 
     items = {c['label']: c['sortText'] for c in completions}
 
@@ -92,6 +96,7 @@ def test_jedi_property_completion(config):
     com_position = {'line': 18, 'character': 15}
     doc = Document(DOC_URI, DOC)
     completions = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
 
     items = {c['label']: c['sortText'] for c in completions}
 
@@ -122,6 +127,7 @@ def test_jedi_method_completion(config):
 
     assert 'insertTextFormat' not in everyone_method
     assert everyone_method['insertText'] == 'everyone'
+    doc.stop()
 
 
 @pytest.mark.skipif(PY2 or (sys.platform.startswith('linux') and os.environ.get('CI') is not None),
@@ -132,6 +138,7 @@ def test_pyqt_completion(config):
     com_position = {'line': 0, 'character': len(doc_pyqt)}
     doc = Document(DOC_URI, doc_pyqt)
     completions = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
 
     # Test we don't throw an error for Jedi < 0.15.2 and get completions
     # for Jedi 0.15.2+
@@ -148,6 +155,7 @@ def test_numpy_completions(config):
     com_position = {'line': 0, 'character': len(doc_numpy)}
     doc = Document(DOC_URI, doc_numpy)
     items = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
 
     assert items
     assert any(['array' in i['label'] for i in items])
@@ -160,6 +168,7 @@ def test_pandas_completions(config):
     com_position = {'line': 0, 'character': len(doc_pandas)}
     doc = Document(DOC_URI, doc_pandas)
     items = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
 
     assert items
     assert any(['DataFrame' in i['label'] for i in items])
@@ -170,6 +179,7 @@ def test_matplotlib_completions(config):
     com_position = {'line': 0, 'character': len(doc_mpl)}
     doc = Document(DOC_URI, doc_mpl)
     items = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
 
     assert items
     assert any(['plot' in i['label'] for i in items])
@@ -189,6 +199,7 @@ def test_snippets_completion(config):
 
     com_position = {'line': 1, 'character': len(doc_snippets)}
     completions = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
     assert completions[0]['insertText'] == 'defaultdict($0)'
 
 
@@ -201,6 +212,7 @@ def test_snippet_parsing(config):
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
     completions = pyls_jedi_completions(config, doc, completion_position)
     out = 'logical_and(${1:x1}, ${2:x2})$0'
+    doc.stop()
     assert completions[0]['insertText'] == out
 
 
@@ -217,6 +229,7 @@ def test_multiline_import_snippets(config):
 
     position = {'line': 2, 'character': 9}
     completions = pyls_jedi_completions(config, doc, position)
+    doc.stop()
     assert completions[0]['insertText'] == 'datetime'
 
 
@@ -233,6 +246,7 @@ def test_multiline_snippets(config):
 
     position = {'line': 2, 'character': 9}
     completions = pyls_jedi_completions(config, doc, position)
+    doc.stop()
     assert completions[0]['insertText'] == 'datetime'
 
 
@@ -245,12 +259,14 @@ def test_multistatement_snippet(config):
     doc = Document(DOC_URI, document)
     position = {'line': 0, 'character': len(document)}
     completions = pyls_jedi_completions(config, doc, position)
+    doc.stop()
     assert completions[0]['insertText'] == 'date'
 
     document = 'from datetime import date; a = date'
     doc = Document(DOC_URI, document)
     position = {'line': 0, 'character': len(document)}
     completions = pyls_jedi_completions(config, doc, position)
+    doc.stop()
     assert completions[0]['insertText'] == 'date(${1:year}, ${2:month}, ${3:day})$0'
 
 
@@ -282,6 +298,7 @@ foo.s"""
     # After 'foo.s' with extra paths
     com_position = {'line': 1, 'character': 5}
     completions = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
     assert completions[0]['label'] == 'spam()'
 
 
@@ -309,5 +326,6 @@ def test_jedi_completion_environment(config):
 
     # After 'import logh' with new environment
     completions = pyls_jedi_completions(config, doc, com_position)
+    doc.stop()
     assert completions[0]['label'] == 'loghub'
     assert 'changelog generator' in completions[0]['documentation'].lower()
