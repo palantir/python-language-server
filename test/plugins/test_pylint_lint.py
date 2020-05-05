@@ -78,8 +78,10 @@ def test_lint_free_pylint(config):
     # Can't use temp_document because it might give us a file that doesn't
     # match pylint's naming requirements. We should be keeping this file clean
     # though, so it works for a test of an empty lint.
-    assert not pylint_lint.pyls_lint(
-        config, Document(uris.from_fs_path(__file__)), True)
+    doc = Document(uris.from_fs_path(__file__))
+    result = pylint_lint.pyls_lint(config, doc, True)
+    doc.stop()
+    assert not result
 
 
 def test_lint_caching():
@@ -115,5 +117,7 @@ def test_per_file_caching(config):
     with temp_document(DOC) as doc:
         assert pylint_lint.pyls_lint(config, doc, True)
 
-    assert not pylint_lint.pyls_lint(
-        config, Document(uris.from_fs_path(__file__)), False)
+    doc = Document(uris.from_fs_path(__file__))
+    result = pylint_lint.pyls_lint(config, doc, False)
+    doc.stop()
+    assert not result
