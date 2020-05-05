@@ -73,7 +73,11 @@ class Workspace(object):
 
         See https://github.com/Microsoft/language-server-protocol/issues/177
         """
-        return self._docs.get(doc_uri) or self._create_document(doc_uri)
+        doc = self._docs.get(doc_uri)
+        if doc is None:
+            doc = self._create_document(doc_uri)
+            self._docs[doc_uri] = doc
+        return doc
 
     def put_document(self, doc_uri, source, version=None):
         self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
@@ -194,7 +198,6 @@ class Document(object):
                     raise response
                 return response
 
-            print(attr)
             if attr in self.properties:
                 return queue_call()
             elif attr in self.methods:
@@ -227,28 +230,23 @@ class DocumentAgent(threading.Thread):
 
     def run(self):
         while True:
-            print('Waiting for queue')
             (_, item) = self.queue.get()
-            print(item)
             self.queue.task_done()
             if item.name == 'shutdown':
                 break
             if item.cancelled:
-                print('Cancelled')
                 continue
             try:
                 attr = getattr(self.document, item.name)
                 result = attr
                 if inspect.ismethod(attr):
                     result = attr(*item.args, **item.kwargs)
-                print(result)
                 item.response = result
                 item.resolved = True
             except Exception as e:
                 import traceback
                 traceback.print_exc()
                 item.response = e
-        print('Exit!')
         self.document = None
         while not self.queue.empty():
             item = self.queue.get()

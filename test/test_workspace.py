@@ -41,7 +41,9 @@ def test_get_missing_document(tmpdir, pyls):
     doc_path = tmpdir.join("test_document.py")
     doc_path.write(source)
     doc_uri = uris.from_fs_path(str(doc_path))
-    assert pyls.workspace.get_document(doc_uri).source == 'TEXT'
+    document = pyls.workspace.get_document(doc_uri)
+    source = document.source
+    assert source == 'TEXT'
 
 
 def test_rm_document(pyls):

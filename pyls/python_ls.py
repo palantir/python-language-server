@@ -373,7 +373,8 @@ class PythonLanguageServer(MethodDispatcher):
     def m_workspace__did_change_workspace_folders(self, added=None, removed=None, **_kwargs):
         for removed_info in removed:
             removed_uri = removed_info['uri']
-            self.workspaces.pop(removed_uri)
+            workspace = self.workspaces.pop(removed_uri)
+            workspace.close_all_documents()
 
         for added_info in added:
             added_uri = added_info['uri']
