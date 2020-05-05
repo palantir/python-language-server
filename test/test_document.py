@@ -17,6 +17,8 @@ def test_document_source_unicode():
     document_mem = Document(DOC_URI, u'my source')
     document_disk = Document(DOC_URI)
     assert isinstance(document_mem.source, type(document_disk.source))
+    document_mem.stop()
+    document_disk.stop()
 
 
 def test_offset_at_position(doc):
@@ -51,6 +53,7 @@ def test_document_empty_edit():
         'text': u'f'
     }, 0)
     assert doc.source == u'f'
+    doc.stop()
 
 
 def test_document_line_edit():
@@ -63,6 +66,7 @@ def test_document_line_edit():
         }
     }, 0)
     assert doc.source == u'itsgoodbyeworld'
+    doc.stop()
 
 
 def test_document_multiline_edit():
@@ -80,6 +84,7 @@ def test_document_multiline_edit():
         "def hello(a, b):\n",
         "    print a, b\n"
     ]
+    doc.stop()
 
 
 def test_document_end_of_file_edit():
@@ -97,3 +102,4 @@ def test_document_end_of_file_edit():
         "print 'b'\n",
         "o",
     ]
+    doc.stop()

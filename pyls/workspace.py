@@ -82,6 +82,12 @@ class Workspace(object):
         doc = self._docs.pop(doc_uri)
         doc.stop()
 
+    def close_all_documents(self):
+        documents = list(self._docs.keys())
+        for uri in documents:
+            doc = self._docs.pop(uri)
+            doc.stop()
+
     def update_document(self, doc_uri, change, version=None):
         self._docs[doc_uri].apply_change(change, version)
 
@@ -116,15 +122,17 @@ class Workspace(object):
 
 def find_methods_properties(cls):
     """Class decorator that extracts class methods and properties."""
-    cls.method_registry = set({})
-    cls.property_registry = set({})
+    methods = []
+    properties = []
     for member_name in dir(cls):
         if not member_name.startswith('_'):
             member = getattr(cls, member_name)
-            if inspect.ismethod(member):
-                cls.method_registry.add(member)
+            if inspect.isfunction(member):
+                methods.append(member_name)
             else:
-                cls.property_registry.add(member)
+                properties.append(member_name)
+    cls.method_registry = frozenset(methods)
+    cls.property_registry = frozenset(properties)
     return cls
 
 
@@ -132,6 +140,7 @@ class DocumentCallWrapper:
     def __init__(self, name, *args, **kwargs):
         self.resolved = False
         self.response = None
+        self.cancelled = False
         self.args = args
         self.kwargs = kwargs
         self.name = name
@@ -141,12 +150,14 @@ class Document(object):
     """Send concurrent requests to a Document."""
 
     TIMEOUT = 5000
+    LOCAL = {'properties', 'methods', 'stop', 'uri', 'agent', 'sequence'}
 
     def __init__(self, uri, source=None, version=None, local=True,
                  extra_sys_path=None, rope_project_builder=None,
                  config=None, workspace=None):
         self.uri = uri
-        self.request_queue = queue.Queue()
+        self.sequence = 1
+        self.request_queue = queue.PriorityQueue()
         self.agent = DocumentAgent(self.request_queue, uri, source,
                                    version, local, extra_sys_path,
                                    rope_project_builder, config, workspace)
@@ -155,29 +166,42 @@ class Document(object):
         self.agent.start()
 
     def stop(self):
-        self.agent.stop()
+        # self.agent.stop()
+        shutdown = DocumentCallWrapper('shutdown')
+        self.request_queue.put((0, shutdown))
+        # self.request_queue.join()
         self.agent.join()
         self.agent = None
+        self.request_queue = None
 
     def __str__(self):
         return str(self.uri)
 
     def __getattr__(self, attr):
-        def queue_call(*args, **kwargs):
-            call_item = DocumentCallWrapper(attr, *args, **kwargs)
-            self.request_queue.put(call_item)
-            start_time = time.time()
-            while (not call_item.resolved and
-                    (start_time - time.time()) < self.TIMEOUT):
-                continue
-            return call_item.response
+        if attr not in self.LOCAL:
+            def queue_call(*args, **kwargs):
+                call_item = DocumentCallWrapper(attr, *args, **kwargs)
+                self.request_queue.put((self.sequence, call_item))
+                self.sequence += 1
+                start_time = time.time()
+                while (not call_item.resolved and
+                        (start_time - time.time()) < self.TIMEOUT):
+                    continue
+                if not call_item.resolved:
+                    call_item.cancelled = True
+                response = call_item.response
+                if isinstance(response, Exception):
+                    raise response
+                return response
 
-        if attr in self.properties:
-            return queue_call()
-        elif attr in self.methods:
-            return queue_call
+            if attr in self.properties:
+                return queue_call()
+            elif attr in self.methods:
+                return queue_call
+            else:
+                super(Document, self).__getattribute__(attr)
         else:
-            super(Document, self).__getattr__(attr)
+            super(Document, self).__getattribute__(attr)
 
 
 class DocumentAgent(threading.Thread):
@@ -200,20 +224,31 @@ class DocumentAgent(threading.Thread):
     def properties(self):
         return self.document.property_registry
 
-    def stop(self):
-        self.stopped = True
-
     def run(self):
-        while not self.stopped:
+        while True:
+            (_, item) = self.queue.get()
+            if item.name == 'shutdown':
+                break
+            if item.cancelled:
+                continue
+            try:
+                attr = getattr(self.document, item.name)
+                result = attr
+                if inspect.ismethod(attr):
+                    result = attr(*item.args, **item.kwargs)
+                item.response = result
+                item.resolved = True
+                self.queue.task_done()
+            except Exception as e:
+                item.response = e
+
+        self.document = None
+        while not self.queue.empty():
             item = self.queue.get()
-            attr = getattr(self.document, item.name)
-            result = attr
-            if inspect.ismethod(attr):
-                result = attr(*item.args, **item.kwargs)
-            item.response = result
+            item.response = None
             item.resolved = True
             self.queue.task_done()
-        self.document = None
+        self.queue = None
 
 
 @find_methods_properties

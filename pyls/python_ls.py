@@ -134,11 +134,19 @@ class PythonLanguageServer(MethodDispatcher):
 
         raise KeyError()
 
+    def _close_all_documents(self):
+        self.workspace.close_all_documents()
+        for workspace_uri in self.workspaces:
+            workspace = self.workspaces[workspace_uri]
+            workspace.close_all_documents()
+
     def m_shutdown(self, **_kwargs):
         self._shutdown = True
+        self._close_all_documents()
         return None
 
     def m_exit(self, **_kwargs):
+        self._close_all_documents()
         self._endpoint.shutdown()
         self._jsonrpc_stream_reader.close()
         self._jsonrpc_stream_writer.close()
