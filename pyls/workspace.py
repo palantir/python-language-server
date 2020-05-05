@@ -3,6 +3,10 @@ import io
 import logging
 import os
 import re
+import time
+import queue
+import inspect
+import threading
 
 import jedi
 
@@ -36,7 +40,7 @@ class Workspace(object):
         self.__rope = None
         self.__rope_config = None
 
-    def _rope_project_builder(self, rope_config):
+    def rope_project_builder(self, rope_config):
         from rope.base.project import Project
 
         # TODO: we could keep track of dirty files and validate only those
@@ -75,11 +79,11 @@ class Workspace(object):
         self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
 
     def rm_document(self, doc_uri):
-        self._docs.pop(doc_uri)
+        doc = self._docs.pop(doc_uri)
+        doc.stop()
 
     def update_document(self, doc_uri, change, version=None):
-        self._docs[doc_uri].apply_change(change)
-        self._docs[doc_uri].version = version
+        self._docs[doc_uri].apply_change(change, version)
 
     def update_config(self, config):
         self._config = config
@@ -105,12 +109,115 @@ class Workspace(object):
         return Document(
             doc_uri, source=source, version=version,
             extra_sys_path=self.source_roots(path),
-            rope_project_builder=self._rope_project_builder,
+            rope_project_builder=self.rope_project_builder,
             config=self._config, workspace=self,
         )
 
 
+def find_methods_properties(cls):
+    """Class decorator that extracts class methods and properties."""
+    cls.method_registry = set({})
+    cls.property_registry = set({})
+    for member_name in dir(cls):
+        if not member_name.startswith('_'):
+            member = getattr(cls, member_name)
+            if inspect.ismethod(member):
+                cls.method_registry.add(member)
+            else:
+                cls.property_registry.add(member)
+    return cls
+
+
+class DocumentCallWrapper:
+    def __init__(self, name, *args, **kwargs):
+        self.resolved = False
+        self.response = None
+        self.args = args
+        self.kwargs = kwargs
+        self.name = name
+
+
 class Document(object):
+    """Send concurrent requests to a Document."""
+
+    TIMEOUT = 5000
+
+    def __init__(self, uri, source=None, version=None, local=True,
+                 extra_sys_path=None, rope_project_builder=None,
+                 config=None, workspace=None):
+        self.uri = uri
+        self.request_queue = queue.Queue()
+        self.agent = DocumentAgent(self.request_queue, uri, source,
+                                   version, local, extra_sys_path,
+                                   rope_project_builder, config, workspace)
+        self.properties = self.agent.properties
+        self.methods = self.agent.methods
+        self.agent.start()
+
+    def stop(self):
+        self.agent.stop()
+        self.agent.join()
+        self.agent = None
+
+    def __str__(self):
+        return str(self.uri)
+
+    def __getattr__(self, attr):
+        def queue_call(*args, **kwargs):
+            call_item = DocumentCallWrapper(attr, *args, **kwargs)
+            self.request_queue.put(call_item)
+            start_time = time.time()
+            while (not call_item.resolved and
+                    (start_time - time.time()) < self.TIMEOUT):
+                continue
+            return call_item.response
+
+        if attr in self.properties:
+            return queue_call()
+        elif attr in self.methods:
+            return queue_call
+        else:
+            super(Document, self).__getattr__(attr)
+
+
+class DocumentAgent(threading.Thread):
+    """Handle concurrent requests to a Document."""
+
+    def __init__(self, queue, uri, source=None, version=None, local=True,
+                 extra_sys_path=None, rope_project_builder=None,
+                 config=None, workspace=None):
+        self.document = _Document(uri, source, version, local, extra_sys_path,
+                                  rope_project_builder, config, workspace)
+        self.queue = queue
+        self.stopped = False
+        super(DocumentAgent, self).__init__()
+
+    @property
+    def methods(self):
+        return self.document.method_registry
+
+    @property
+    def properties(self):
+        return self.document.property_registry
+
+    def stop(self):
+        self.stopped = True
+
+    def run(self):
+        while not self.stopped:
+            item = self.queue.get()
+            attr = getattr(self.document, item.name)
+            result = attr
+            if inspect.ismethod(attr):
+                result = attr(*item.args, **item.kwargs)
+            item.response = result
+            item.resolved = True
+            self.queue.task_done()
+        self.document = None
+
+
+@find_methods_properties
+class _Document(object):
 
     def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None,
                  config=None, workspace=None):
@@ -129,7 +236,7 @@ class Document(object):
     def __str__(self):
         return str(self.uri)
 
-    def _rope_resource(self, rope_config):
+    def rope_resource(self, rope_config):
         from rope.base import libutils
         return libutils.path_to_resource(self._rope_project_builder(rope_config), self.path)
 
@@ -147,8 +254,9 @@ class Document(object):
     def update_config(self, config):
         self._config = config
 
-    def apply_change(self, change):
+    def apply_change(self, change, version):
         """Apply a change to the document."""
+        self.version = version
         text = change['text']
         change_range = change.get('range')
 

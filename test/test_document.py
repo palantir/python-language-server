@@ -49,7 +49,7 @@ def test_document_empty_edit():
             'end': {'line': 0, 'character': 0}
         },
         'text': u'f'
-    })
+    }, 0)
     assert doc.source == u'f'
 
 
@@ -61,7 +61,7 @@ def test_document_line_edit():
             'start': {'line': 0, 'character': 3},
             'end': {'line': 0, 'character': 8}
         }
-    })
+    }, 0)
     assert doc.source == u'itsgoodbyeworld'
 
 
@@ -75,7 +75,7 @@ def test_document_multiline_edit():
     doc.apply_change({'text': u'print a, b', 'range': {
         'start': {'line': 1, 'character': 4},
         'end': {'line': 2, 'character': 11}
-    }})
+    }}, 0)
     assert doc.lines == [
         "def hello(a, b):\n",
         "    print a, b\n"
@@ -91,7 +91,7 @@ def test_document_end_of_file_edit():
     doc.apply_change({'text': u'o', 'range': {
         'start': {'line': 2, 'character': 0},
         'end': {'line': 2, 'character': 0}
-    }})
+    }}, 0)
     assert doc.lines == [
         "print 'a'\n",
         "print 'b'\n",
