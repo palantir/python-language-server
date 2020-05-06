@@ -87,10 +87,12 @@ def start_tcp_lang_server(bind_addr, port, check_parent_process, handler_class):
          'SHUTDOWN_CALL': shutdown_server}
     )
 
-    socketserver.TCPServer.allow_reuse_address = True
-    server = socketserver.TCPServer((bind_addr, port), wrapper_class)
+    server = socketserver.TCPServer((bind_addr, port), wrapper_class, bind_and_activate=False)
+    server.allow_reuse_address = True
 
     try:
+        server.server_bind()
+        server.server_activate()
         log.info('Serving %s on (%s, %s)', handler_class.__name__, bind_addr, port)
         server.serve_forever()
     finally:
@@ -221,10 +223,10 @@ class PythonLanguageServer(MethodDispatcher):
 
         self.workspaces.pop(self.root_uri, None)
         self.root_uri = rootUri
-        self.workspace = Workspace(rootUri, self._endpoint)
-        self.workspaces[rootUri] = self.workspace
         self.config = config.Config(rootUri, initializationOptions or {},
                                     processId, _kwargs.get('capabilities', {}))
+        self.workspace = Workspace(rootUri, self._endpoint, self.config)
+        self.workspaces[rootUri] = self.workspace
         self._dispatchers = self._hook('pyls_dispatchers')
         self._hook('pyls_initialize')
 
@@ -244,7 +246,7 @@ class PythonLanguageServer(MethodDispatcher):
         return {'capabilities': self.capabilities()}
 
     def m_initialized(self, **_kwargs):
-        pass
+        self._hook('pyls_initialized')
 
     def code_actions(self, doc_uri, range, context):
         return flatten(self._hook('pyls_code_actions', doc_uri, range=range, context=context))
@@ -381,6 +383,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.config.update((settings or {}).get('pyls', {}))
         for workspace_uri in self.workspaces:
             workspace = self.workspaces[workspace_uri]
+            workspace.update_config(self.config)
             for doc_uri in workspace.documents:
                 self.lint(doc_uri, is_saved=False)
 
@@ -391,7 +394,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         for added_info in added:
             added_uri = added_info['uri']
-            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint)
+            self.workspaces[added_uri] = Workspace(added_uri, self._endpoint, self.config)
 
         # Migrate documents that are on the root workspace and have a better
         # match now

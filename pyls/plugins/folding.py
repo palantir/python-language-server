@@ -102,16 +102,50 @@ def __check_if_node_is_valid(node):
     valid = True
     if isinstance(node, tree_nodes.PythonNode):
         kind = node.type
-        valid = kind not in {'decorated', 'parameters'}
+        valid = kind not in {'decorated', 'parameters', 'dictorsetmaker',
+                             'testlist_comp'}
         if kind == 'suite':
             if isinstance(node.parent, tree_nodes.Function):
                 valid = False
     return valid
 
 
+def __handle_skip(stack, skip):
+    body = stack[skip]
+    children = [body]
+    if hasattr(body, 'children'):
+        children = body.children
+    stack = stack[:skip] + children + stack[skip + 1:]
+    node = body
+    end_line, _ = body.end_pos
+    return node, end_line
+
+
+def __handle_flow_nodes(node, end_line, stack):
+    from_keyword = False
+    if isinstance(node, tree_nodes.Keyword):
+        from_keyword = True
+        if node.value in {'if', 'elif', 'with', 'while'}:
+            node, end_line = __handle_skip(stack, 2)
+        elif node.value in {'except'}:
+            first_node = stack[0]
+            if isinstance(first_node, tree_nodes.Operator):
+                node, end_line = __handle_skip(stack, 1)
+            else:
+                node, end_line = __handle_skip(stack, 2)
+        elif node.value in {'for'}:
+            node, end_line = __handle_skip(stack, 4)
+        elif node.value in {'else'}:
+            node, end_line = __handle_skip(stack, 1)
+    return end_line, from_keyword, node, stack
+
+
 def __compute_start_end_lines(node, stack):
     start_line, _ = node.start_pos
     end_line, _ = node.end_pos
+    modified = False
+    end_line, from_keyword, node, stack = __handle_flow_nodes(
+        node, end_line, stack)
 
     last_leaf = node.get_last_leaf()
     last_newline = isinstance(last_leaf, tree_nodes.Newline)
@@ -121,8 +155,7 @@ def __compute_start_end_lines(node, stack):
 
     end_line -= 1
 
-    modified = False
-    if isinstance(node.parent, tree_nodes.PythonNode):
+    if isinstance(node.parent, tree_nodes.PythonNode) and not from_keyword:
         kind = node.type
         if kind in {'suite', 'atom', 'atom_expr', 'arglist'}:
             if len(stack) > 0:
@@ -133,7 +166,7 @@ def __compute_start_end_lines(node, stack):
                     modified = True
     if not last_newline and not modified and not last_operator:
         end_line += 1
-    return start_line, end_line
+    return start_line, end_line, stack
 
 
 def __compute_folding_ranges(tree, lines):
@@ -158,7 +191,8 @@ def __compute_folding_ranges(tree, lines):
         elif not isinstance(node, SKIP_NODES):
             valid = __check_if_node_is_valid(node)
             if valid:
-                start_line, end_line = __compute_start_end_lines(node, stack)
+                start_line, end_line, stack = __compute_start_end_lines(
+                    node, stack)
                 if end_line > start_line:
                     current_end = folding_ranges.get(start_line, -1)
                     folding_ranges[start_line] = max(current_end, end_line)

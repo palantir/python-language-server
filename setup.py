@@ -36,8 +36,9 @@ setup(
         'future>=0.14.0; python_version<"3"',
         'backports.functools_lru_cache; python_version<"3.2"',
         'jedi>=0.14.1,<0.16',
-        'python-jsonrpc-server>=0.1.0',
-        'pluggy'
+        'python-jsonrpc-server>=0.3.2',
+        'pluggy',
+        'ujson<=1.35; platform_system!="Windows"'
     ],
 
     # List additional groups of dependencies here (e.g. development
@@ -51,7 +52,7 @@ setup(
             'mccabe',
             'pycodestyle',
             'pydocstyle>=2.0.0',
-            'pyflakes>=1.6.0',
+            'pyflakes>=1.6.0,<2.2.0',
             'pylint',
             'rope>=0.10.5',
             'yapf',
@@ -61,12 +62,13 @@ setup(
         'mccabe': ['mccabe'],
         'pycodestyle': ['pycodestyle'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
-        'pyflakes': ['pyflakes>=1.6.0'],
+        'pyflakes': ['pyflakes>=1.6.0,<2.2.0'],
         'pylint': ['pylint'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
         'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov',
-                 'coverage', 'numpy', 'pandas', 'matplotlib'],
+                 'coverage', 'numpy', 'pandas', 'matplotlib',
+                 'pyqt5;python_version>="3"'],
     },
 
     # To provide executable scripts, use entry points in preference to the

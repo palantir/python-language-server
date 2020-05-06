@@ -10,6 +10,9 @@ DOC = """import sys
 
 def hello( ):
 \tpass
+print("hello"
+ ,"world"
+)
 
 import json
 
@@ -37,8 +40,8 @@ def test_pycodestyle(config):
 
     assert mod_import['code'] == 'W391'
     assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
-    assert mod_import['range']['start'] == {'line': 7, 'character': 0}
-    assert mod_import['range']['end'] == {'line': 7, 'character': 1}
+    assert mod_import['range']['start'] == {'line': 10, 'character': 0}
+    assert mod_import['range']['end'] == {'line': 10, 'character': 1}
 
     msg = "E201 whitespace after '('"
     mod_import = [d for d in diags if d['message'] == msg][0]
@@ -47,6 +50,14 @@ def test_pycodestyle(config):
     assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
     assert mod_import['range']['start'] == {'line': 2, 'character': 10}
     assert mod_import['range']['end'] == {'line': 2, 'character': 14}
+
+    msg = "E128 continuation line under-indented for visual indent"
+    mod_import = [d for d in diags if d['message'] == msg][0]
+
+    assert mod_import['code'] == 'E128'
+    assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
+    assert mod_import['range']['start'] == {'line': 5, 'character': 1}
+    assert mod_import['range']['end'] == {'line': 5, 'character': 10}
 
 
 def test_pycodestyle_config(workspace):
@@ -74,7 +85,7 @@ def test_pycodestyle_config(workspace):
     assert [d for d in diags if d['code'] == 'W191']
 
     content = {
-        'setup.cfg': ('[pycodestyle]\nignore = W191, E201', True),
+        'setup.cfg': ('[pycodestyle]\nignore = W191, E201, E128', True),
         'tox.ini': ('', False)
     }
 

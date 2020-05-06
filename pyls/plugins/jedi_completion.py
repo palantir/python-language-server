@@ -1,9 +1,8 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import time
+import os.path as osp
+import parso
 from pyls import hookimpl, lsp, _utils
-from contextlib import contextmanager
-import signal
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +23,7 @@ _TYPE_MAP = {
     'builtinfunction': lsp.CompletionItemKind.Function,
     'module': lsp.CompletionItemKind.Module,
     'file': lsp.CompletionItemKind.File,
+    'path': lsp.CompletionItemKind.Text,
     'xrange': lsp.CompletionItemKind.Class,
     'slice': lsp.CompletionItemKind.Class,
     'traceback': lsp.CompletionItemKind.Class,
@@ -43,29 +43,24 @@ _TYPE_MAP = {
 
 COMPLETION_CACHE = {}
 
-@contextmanager
-def timeout(time):
-    # Register a function to raise a TimeoutError on the signal.
-    signal.signal(signal.SIGALRM, raise_timeout)
-    # Schedule the signal to be sent after ``time``.
-    signal.setitimer(signal.SIGALRM, time)
+# Types of parso nodes for which snippet is not included in the completion
+_IMPORTS = ('import_name', 'import_from')
 
-    try:
-        yield
-    except TimeoutError:
-        pass
-    finally:
-        # Unregister the signal so it won't be triggered
-        # if the timeout is not reached.
-        signal.signal(signal.SIGALRM, signal.SIG_IGN)
-
-
-def raise_timeout(signum, frame):
-    raise TimeoutError
+# Types of parso node for errors
+_ERRORS = ('error_node', )
 
 @hookimpl
 def pyls_completions(config, document, position):
-    definitions = document.jedi_script(position).completions()
+    try:
+        definitions = document.jedi_script(position).completions()
+    except AttributeError as e:
+        if 'CompiledObject' in str(e):
+            # Needed to handle missing CompiledObject attribute
+            # 'sub_modules_dict'
+            definitions = None
+        else:
+            raise e
+
     if not definitions:
         return None
 
@@ -77,9 +72,57 @@ def pyls_completions(config, document, position):
 
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
+    include_params = snippet_support and should_include_params and use_snippets(document, position)
+    return [_format_completion(d, include_params) for d in definitions] or None
 
-    result = [_format_completion(d, i, snippet_support and should_include_params) for i, d in enumerate(definitions)] or None
-    return result
+def is_exception_class(name):
+    """
+    Determine if a class name is an instance of an Exception.
+
+    This returns `False` if the name given corresponds with a instance of
+    the 'Exception' class, `True` otherwise
+    """
+    try:
+        return name in [cls.__name__ for cls in Exception.__subclasses__()]
+    except AttributeError:
+        # Needed in case a class don't uses new-style
+        # class definition in Python 2
+        return False
+
+
+def use_snippets(document, position):
+    """
+    Determine if it's necessary to return snippets in code completions.
+
+    This returns `False` if a completion is being requested on an import
+    statement, `True` otherwise.
+    """
+    line = position['line']
+    lines = document.source.split('\n', line)
+    act_lines = [lines[line][:position['character']]]
+    line -= 1
+    last_character = ''
+    while line > -1:
+        act_line = lines[line]
+        if (act_line.rstrip().endswith('\\') or
+                act_line.rstrip().endswith('(') or
+                act_line.rstrip().endswith(',')):
+            act_lines.insert(0, act_line)
+            line -= 1
+            if act_line.rstrip().endswith('('):
+                # Needs to be added to the end of the code before parsing
+                # to make it valid, otherwise the node type could end
+                # being an 'error_node' for multi-line imports that use '('
+                last_character = ')'
+        else:
+            break
+    if '(' in act_lines[-1].strip():
+        last_character = ')'
+    code = '\n'.join(act_lines).split(';')[-1].strip() + last_character
+    tokens = parso.parse(code)
+    expr_type = tokens.children[0].type
+    return (expr_type not in _IMPORTS and
+            not (expr_type in _ERRORS and 'import' in code))
 
 @hookimpl
 def pyls_completion_detail(config, item):
@@ -108,18 +151,33 @@ def _format_completion(d, i, include_params=True):
         'sortText': '', #_sort_text(d),
         'insertText': d.name
     }
-#     if include_params and hasattr(d, 'params') and d.params:
-        # positional_args = [param for param in d.params if '=' not in param.description]
 
-        # # For completions with params, we can generate a snippet instead
-        # completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
-        # snippet = d.name + '('
-        # for i, param in enumerate(positional_args):
-            # snippet += '${%s:%s}' % (i + 1, param.name)
-            # if i < len(positional_args) - 1:
-                # snippet += ', '
-        # snippet += ')$0'
-        # completion['insertText'] = snippet
+    if d.type == 'path':
+        path = osp.normpath(d.name)
+        path = path.replace('\\', '\\\\')
+        path = path.replace('/', '\\/')
+        completion['insertText'] = path
+
+    if (include_params and hasattr(d, 'params') and d.params and
+            not is_exception_class(d.name)):
+        positional_args = [param for param in d.params
+                           if '=' not in param.description and
+                           param.name not in {'/', '*'}]
+
+        if len(positional_args) > 1:
+            # For completions with params, we can generate a snippet instead
+            completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
+            snippet = d.name + '('
+            for i, param in enumerate(positional_args):
+                snippet += '${%s:%s}' % (i + 1, param.name)
+                if i < len(positional_args) - 1:
+                    snippet += ', '
+            snippet += ')$0'
+            completion['insertText'] = snippet
+        elif len(positional_args) == 1:
+            completion['insertText'] = d.name + '($0)'
+        else:
+            completion['insertText'] = d.name + '()'
 
     return completion
 

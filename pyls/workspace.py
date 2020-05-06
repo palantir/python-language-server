@@ -21,12 +21,16 @@ class Workspace(object):
     M_APPLY_EDIT = 'workspace/applyEdit'
     M_SHOW_MESSAGE = 'window/showMessage'
 
-    def __init__(self, root_uri, endpoint):
+    def __init__(self, root_uri, endpoint, config=None):
+        self._config = config
         self._root_uri = root_uri
         self._endpoint = endpoint
         self._root_uri_scheme = uris.urlparse(self._root_uri)[0]
         self._root_path = uris.to_fs_path(self._root_uri)
         self._docs = {}
+
+        # Cache jedi environments
+        self._environments = {}
 
         # Whilst incubating, keep rope private
         self.__rope = None
@@ -77,6 +81,11 @@ class Workspace(object):
         self._docs[doc_uri].apply_change(change)
         self._docs[doc_uri].version = version
 
+    def update_config(self, config):
+        self._config = config
+        for doc_uri in self.documents:
+            self.get_document(doc_uri).update_config(config)
+
     def apply_edit(self, edit):
         return self._endpoint.request(self.M_APPLY_EDIT, {'edit': edit})
 
@@ -97,17 +106,21 @@ class Workspace(object):
             doc_uri, source=source, version=version,
             extra_sys_path=self.source_roots(path),
             rope_project_builder=self._rope_project_builder,
+            config=self._config, workspace=self,
         )
 
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None):
+    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None,
+                 config=None, workspace=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
         self.filename = os.path.basename(self.path)
 
+        self._config = config
+        self._workspace = workspace
         self._local = local
         self._source = source
         self._extra_sys_path = extra_sys_path or []
@@ -133,6 +146,9 @@ class Document(object):
             with io.open(self.path, 'r', encoding='utf-8') as f:
                 return f.read()
         return self._source
+
+    def update_config(self, config):
+        self._config = config
 
     def apply_change(self, change):
         """Apply a change to the document."""
@@ -200,28 +216,58 @@ class Document(object):
         return m_start[0] + m_end[-1]
 
     def jedi_names(self, all_scopes=False, definitions=True, references=False):
+        environment_path = None
+        if self._config:
+            jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
+            environment_path = jedi_settings.get('environment')
+        environment = self.get_enviroment(environment_path) if environment_path else None
+
         return jedi.api.names(
             source=self.source, path=self.path, all_scopes=all_scopes,
-            definitions=definitions, references=references
+            definitions=definitions, references=references, environment=environment,
         )
 
     def jedi_script(self, position=None):
+        extra_paths = []
+        environment_path = None
+
+        if self._config:
+            jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
+            environment_path = jedi_settings.get('environment')
+            extra_paths = jedi_settings.get('extra_paths') or []
+
+        sys_path = self.sys_path(environment_path) + extra_paths
+        environment = self.get_enviroment(environment_path) if environment_path else None
+
         kwargs = {
             'source': self.source,
             'path': self.path,
-            'sys_path': self.sys_path()
+            'sys_path': sys_path,
+            'environment': environment,
         }
+
         if position:
             kwargs['line'] = position['line'] + 1
             kwargs['column'] = _utils.clip_column(position['character'], self.lines, position['line'])
+
         return jedi.Script(**kwargs)
 
-    def sys_path(self):
+    def get_enviroment(self, environment_path=None):
+        # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
+        if environment_path is None:
+            environment = jedi.api.environment.get_cached_default_environment()
+        else:
+            if environment_path in self._workspace._environments:
+                environment = self._workspace._environments[environment_path]
+            else:
+                environment = jedi.api.environment.create_environment(path=environment_path, safe=False)
+                self._workspace._environments[environment_path] = environment
+
+        return environment
+
+    def sys_path(self, environment_path=None):
         # Copy our extra sys path
         path = list(self._extra_sys_path)
-
-        # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
-        environment = jedi.api.environment.get_cached_default_environment()
+        environment = self.get_enviroment(environment_path=environment_path)
         path.extend(environment.get_sys_path())
-
         return path

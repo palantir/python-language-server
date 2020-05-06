@@ -1,10 +1,16 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import argparse
-import json
 import logging
 import logging.config
 import sys
-from .python_ls import start_io_lang_server, start_tcp_lang_server, PythonLanguageServer
+
+try:
+    import ujson as json
+except Exception:  # pylint: disable=broad-except
+    import json
+
+from .python_ls import (PythonLanguageServer, start_io_lang_server,
+                        start_tcp_lang_server)
 
 LOG_FORMAT = "%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s"
 
