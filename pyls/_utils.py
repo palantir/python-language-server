@@ -143,14 +143,19 @@ def format_docstring(contents):
 
 
 def clip_column(column, lines, line_number):
-    # Normalise the position as per the LSP that accepts character positions > line length
-    # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
+    """Normalise the position as per the LSP that accepts character positions > line length
+
+    https://microsoft.github.io/language-server-protocol/specification#position
+    """
     max_column = len(lines[line_number].rstrip('\r\n')) if len(lines) > line_number else 0
     return min(column, max_column)
 
 
 def position_to_jedi_linecolumn(document, position):
-    """Convert the format 'line', 'character' to 'line', 'column'"""
+    """Convert the LSP format 'line', 'character' to Jedi's 'line', 'column'
+
+    https://microsoft.github.io/language-server-protocol/specification#position
+    """
     code_position = {}
     if position:
         code_position = {'line': position['line'] + 1,

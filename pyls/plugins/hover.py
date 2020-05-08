@@ -38,8 +38,11 @@ def pyls_hover(document, position):
             'language': 'python',
             'value': signature,
         })
+
     if doc:
         contents.append(doc)
+
     if not contents:
         return {'contents': ''}
+
     return {'contents': contents}
