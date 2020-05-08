@@ -50,17 +50,9 @@ _ERRORS = ('error_node', )
 
 @hookimpl
 def pyls_completions(config, document, position):
-    try:
-        code_position = _utils.position_to_jedi_linecolumn(document, position)
-        completions = document.jedi_script().complete(**code_position)
-    except AttributeError as e:
-        if 'CompiledObject' in str(e):
-            # Needed to handle missing CompiledObject attribute
-            # 'sub_modules_dict'
-            # TODO: probably not needed for new Complete objects
-            completions = None
-        else:
-            raise e
+    """Get formatted completions for current code position"""
+    code_position = _utils.position_to_jedi_linecolumn(document, position)
+    completions = document.jedi_script().complete(**code_position)
 
     if not completions:
         return None
