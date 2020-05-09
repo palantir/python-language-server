@@ -238,7 +238,7 @@ class Document(object):
         }
 
         if position:
-            # deprecated by Jedi to use in Script() constructor
+            # Deprecated by Jedi to use in Script() constructor
             kwargs += _utils.position_to_jedi_linecolumn(self, position)
 
         return jedi.Script(**kwargs)
