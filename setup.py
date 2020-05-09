@@ -87,6 +87,7 @@ setup(
             'jedi_hover = pyls.plugins.hover',
             'jedi_highlight = pyls.plugins.highlight',
             'jedi_references = pyls.plugins.references',
+            'jedi_rename = pyls.plugins.jedi_rename',
             'jedi_signature_help = pyls.plugins.signature',
             'jedi_symbols = pyls.plugins.symbols',
             'mccabe = pyls.plugins.mccabe_lint',
