@@ -226,10 +226,15 @@ class Document(object):
             environment_path = jedi_settings.get('environment')
             extra_paths = jedi_settings.get('extra_paths') or []
 
-        sys_path = self.sys_path(environment_path) + extra_paths
         environment = self.get_enviroment(environment_path) if environment_path else None
 
-        project_path = self._workspace.root_path if self._workspace else os.path.dirname(self.path)
+        if hasattr(self._workspace, 'root_path'):
+            project_path = self._workspace.root_path
+        else:
+            project_path = os.path.dirname(self.path)
+
+        sys_path = self.sys_path(environment_path) + extra_paths
+
         kwargs = {
             'code': self.source,
             'path': self.path,
