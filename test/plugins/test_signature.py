@@ -42,7 +42,7 @@ main(
 def test_no_signature(workspace):
     # Over blank line
     sig_position = {'line': 9, 'character': 0}
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
 
     sigs = signature.pyls_signature_help(doc, sig_position)['signatures']
     assert not sigs
@@ -51,7 +51,7 @@ def test_no_signature(workspace):
 def test_signature(workspace):
     # Over '( ' in main(
     sig_position = {'line': 10, 'character': 5}
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
 
     sig_info = signature.pyls_signature_help(doc, sig_position)
 
@@ -67,7 +67,7 @@ def test_signature(workspace):
 def test_multi_line_signature(workspace):
     # Over '( ' in main(
     sig_position = {'line': 17, 'character': 5}
-    doc = Document(DOC_URI, MULTI_LINE_DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, MULTI_LINE_DOC)
 
     sig_info = signature.pyls_signature_help(doc, sig_position)
 

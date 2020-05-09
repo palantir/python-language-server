@@ -43,7 +43,7 @@ def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name
     # Over 'Test1' in class Test1():
     position = {'line': 0, 'character': 8}
     DOC1_URI = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC1_NAME))
-    doc1 = Document(DOC1_URI, workspace=tmp_workspace)
+    doc1 = Document(DOC1_URI, tmp_workspace)
 
     refs = pyls_references(doc1, position)
 
@@ -75,7 +75,7 @@ def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-n
     # Over 'UnicodeError':
     position = {'line': 4, 'character': 7}
     doc2_uri = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC2_NAME))
-    doc2 = Document(doc2_uri, workspace=tmp_workspace)
+    doc2 = Document(doc2_uri, tmp_workspace)
 
     refs = pyls_references(doc2, position)
     assert len(refs) >= 1

@@ -48,5 +48,5 @@ def config(workspace):  # pylint: disable=redefined-outer-name
 
 
 @pytest.fixture
-def doc():
-    return Document(DOC_URI, DOC)
+def doc(workspace):
+    return Document(DOC_URI, workspace, DOC)

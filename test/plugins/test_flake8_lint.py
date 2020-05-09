@@ -3,9 +3,12 @@ import tempfile
 import os
 from mock import patch
 
+from test.test_utils import MockWorkspace
+
 from pyls import lsp, uris
 from pyls.plugins import flake8_lint
 from pyls.workspace import Document
+
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import pyls
@@ -23,16 +26,16 @@ def temp_document(doc_text):
     name = temp_file.name
     temp_file.write(doc_text)
     temp_file.close()
-    doc = Document(uris.from_fs_path(name))
+    doc = Document(uris.from_fs_path(name), MockWorkspace())
 
     return name, doc
 
 
-def test_flake8_no_checked_file(config):
+def test_flake8_no_checked_file(config, workspace):
     # A bad uri or a non-saved file may cause the flake8 linter to do nothing.
     # In this situtation, the linter will return an empty list.
 
-    doc = Document('', DOC)
+    doc = Document('', DOC, workspace)
     diags = flake8_lint.pyls_lint(config, doc)
     assert diags == []
 

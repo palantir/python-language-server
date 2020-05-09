@@ -49,7 +49,7 @@ def helper_check_symbols_all_scope(symbols):
 
 
 def test_symbols(config, workspace):
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
     config.update({'plugins': {'jedi_symbols': {'all_scopes': False}}})
     symbols = pyls_document_symbols(config, doc)
 
@@ -74,14 +74,14 @@ def test_symbols(config, workspace):
 
 
 def test_symbols_all_scopes(config, workspace):
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
     symbols = pyls_document_symbols(config, doc)
     helper_check_symbols_all_scope(symbols)
 
 
 @pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
 def test_symbols_all_scopes_with_jedi_environment(config):
-    doc = Document(DOC_URI, DOC, workspace=MockWorkspace())
+    doc = Document(DOC_URI, MockWorkspace(), DOC)
 
     # Update config extra environment
     env_path = '/tmp/pyenv/bin/python'

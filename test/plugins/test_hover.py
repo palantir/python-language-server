@@ -32,7 +32,7 @@ def test_numpy_hover(workspace):
     # Over 'sin' in np.sin
     numpy_sin_hov_position = {'line': 3, 'character': 4}
 
-    doc = Document(DOC_URI, NUMPY_DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, NUMPY_DOC)
 
     contents = ''
     assert contents in pyls_hover(doc, no_hov_position)['contents']
@@ -57,7 +57,7 @@ def test_hover(workspace):
     # Over the blank second line
     no_hov_position = {'line': 1, 'character': 0}
 
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
 
     contents = [{'language': 'python', 'value': 'main()'}, 'hello world']
 

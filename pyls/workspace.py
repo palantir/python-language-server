@@ -112,8 +112,8 @@ class Workspace(object):
 
 class Document(object):
 
-    def __init__(self, uri, source=None, version=None, local=True, extra_sys_path=None, rope_project_builder=None,
-                 config=None, workspace=None):
+    def __init__(self, uri, workspace, source=None, version=None, local=True, extra_sys_path=None,
+                 rope_project_builder=None, config=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)

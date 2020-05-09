@@ -30,7 +30,7 @@ def test_definitions(config, workspace):
         'end': {'line': 0, 'character': 5}
     }
 
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
     assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(config, doc, cursor_pos)
 
 
@@ -39,7 +39,7 @@ def test_builtin_definition(config, workspace):
     cursor_pos = {'line': 8, 'character': 24}
 
     # No go-to def for builtins
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
     assert not pyls_definitions(config, doc, cursor_pos)
 
 
@@ -53,5 +53,5 @@ def test_assignment(config, workspace):
         'end': {'line': 8, 'character': 20}
     }
 
-    doc = Document(DOC_URI, DOC, workspace=workspace)
+    doc = Document(DOC_URI, workspace, DOC)
     assert [{'uri': DOC_URI, 'range': def_range}] == pyls_definitions(config, doc, cursor_pos)
