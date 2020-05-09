@@ -1,10 +1,8 @@
 # Copyright 2019 Palantir Technologies, Inc.
 import tempfile
 import os
-from mock import patch
-
 from test.test_utils import MockWorkspace
-
+from mock import patch
 from pyls import lsp, uris
 from pyls.plugins import flake8_lint
 from pyls.workspace import Document
@@ -35,7 +33,7 @@ def test_flake8_no_checked_file(config, workspace):
     # A bad uri or a non-saved file may cause the flake8 linter to do nothing.
     # In this situtation, the linter will return an empty list.
 
-    doc = Document('', DOC, workspace)
+    doc = Document('', workspace, DOC)
     diags = flake8_lint.pyls_lint(config, doc)
     assert diags == []
 
