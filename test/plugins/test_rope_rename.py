@@ -29,7 +29,7 @@ def tmp_workspace(workspace):
 def test_rope_rename(tmp_workspace, config):  # pylint: disable=redefined-outer-name
     position = {"line": 0, "character": 6}
     DOC_URI = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC_NAME))
-    doc = Document(DOC_URI)
+    doc = Document(DOC_URI, tmp_workspace)
 
     result = pyls_rename(config, tmp_workspace, doc, position, "ShouldBeRenamed")
     assert len(result.keys()) == 1

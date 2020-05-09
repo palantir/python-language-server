@@ -1,9 +1,12 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
+
 import pytest
+
 from pyls import uris
 from pyls.workspace import Document
 from pyls.plugins.references import pyls_references
+from pyls._utils import PY2
 
 
 DOC1_NAME = 'test1.py'
@@ -40,7 +43,7 @@ def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name
     # Over 'Test1' in class Test1():
     position = {'line': 0, 'character': 8}
     DOC1_URI = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC1_NAME))
-    doc1 = Document(DOC1_URI)
+    doc1 = Document(DOC1_URI, tmp_workspace)
 
     refs = pyls_references(doc1, position)
 
@@ -66,14 +69,18 @@ def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name
     assert doc2_usage_ref['range']['end'] == {'line': 3, 'character': 9}
 
 
+@pytest.mark.skipif(PY2, reason="Jedi sometimes fails while checking pylint "
+                                "example files in the modules path")
 def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-name
     # Over 'UnicodeError':
     position = {'line': 4, 'character': 7}
     doc2_uri = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC2_NAME))
-    doc2 = Document(doc2_uri)
+    doc2 = Document(doc2_uri, tmp_workspace)
 
     refs = pyls_references(doc2, position)
     assert len(refs) >= 1
 
-    assert refs[0]['range']['start'] == {'line': 4, 'character': 7}
-    assert refs[0]['range']['end'] == {'line': 4, 'character': 19}
+    expected = {'start': {'line': 4, 'character': 7},
+                'end': {'line': 4, 'character': 19}}
+    ranges = [r['range'] for r in refs]
+    assert expected in ranges
