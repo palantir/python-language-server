@@ -143,7 +143,8 @@ def format_docstring(contents):
 
 
 def clip_column(column, lines, line_number):
-    """Normalise the position as per the LSP that accepts character positions > line length
+    """
+    Normalise the position as per the LSP that accepts character positions > line length
 
     https://microsoft.github.io/language-server-protocol/specification#position
     """
@@ -152,7 +153,8 @@ def clip_column(column, lines, line_number):
 
 
 def position_to_jedi_linecolumn(document, position):
-    """Convert the LSP format 'line', 'character' to Jedi's 'line', 'column'
+    """
+    Convert the LSP format 'line', 'character' to Jedi's 'line', 'column'
 
     https://microsoft.github.io/language-server-protocol/specification#position
     """
