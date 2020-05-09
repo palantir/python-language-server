@@ -52,7 +52,7 @@ def test_rope_import_completion(config, workspace):
 def test_jedi_completion(config):
     # Over 'i' in os.path.isabs(...)
     com_position = {'line': 1, 'character': 15}
-    doc = Document(DOC_URI, DOC)
+    doc = Document(DOC_URI, DOC, workspace=MockWorkspace())
     items = pyls_jedi_completions(config, doc, com_position)
 
     assert items
@@ -77,7 +77,7 @@ def test_rope_completion(config, workspace):
 def test_jedi_completion_ordering(config):
     # Over the blank line
     com_position = {'line': 8, 'character': 0}
-    doc = Document(DOC_URI, DOC)
+    doc = Document(DOC_URI, DOC, workspace=MockWorkspace())
     completions = pyls_jedi_completions(config, doc, com_position)
 
     items = {c['label']: c['sortText'] for c in completions}
@@ -89,7 +89,7 @@ def test_jedi_completion_ordering(config):
 def test_jedi_property_completion(config):
     # Over the 'w' in 'print Hello().world'
     com_position = {'line': 18, 'character': 15}
-    doc = Document(DOC_URI, DOC)
+    doc = Document(DOC_URI, DOC, workspace=MockWorkspace())
     completions = pyls_jedi_completions(config, doc, com_position)
 
     items = {c['label']: c['sortText'] for c in completions}
@@ -101,7 +101,7 @@ def test_jedi_property_completion(config):
 def test_jedi_method_completion(config):
     # Over the 'y' in 'print Hello().every'
     com_position = {'line': 20, 'character': 19}
-    doc = Document(DOC_URI, DOC)
+    doc = Document(DOC_URI, DOC, workspace=MockWorkspace())
 
     config.capabilities['textDocument'] = {'completion': {'completionItem': {'snippetSupport': True}}}
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
@@ -129,7 +129,7 @@ def test_pyqt_completion(config):
     # Over 'QA' in 'from PyQt5.QtWidgets import QApplication'
     doc_pyqt = "from PyQt5.QtWidgets import QA"
     com_position = {'line': 0, 'character': len(doc_pyqt)}
-    doc = Document(DOC_URI, doc_pyqt)
+    doc = Document(DOC_URI, doc_pyqt, workspace=MockWorkspace())
     completions = pyls_jedi_completions(config, doc, com_position)
 
     assert completions is not None
@@ -138,7 +138,7 @@ def test_pyqt_completion(config):
 def test_numpy_completions(config):
     doc_numpy = "import numpy as np; np."
     com_position = {'line': 0, 'character': len(doc_numpy)}
-    doc = Document(DOC_URI, doc_numpy)
+    doc = Document(DOC_URI, doc_numpy, workspace=MockWorkspace())
     items = pyls_jedi_completions(config, doc, com_position)
 
     assert items
@@ -148,7 +148,7 @@ def test_numpy_completions(config):
 def test_pandas_completions(config):
     doc_pandas = "import pandas as pd; pd."
     com_position = {'line': 0, 'character': len(doc_pandas)}
-    doc = Document(DOC_URI, doc_pandas)
+    doc = Document(DOC_URI, doc_pandas, workspace=MockWorkspace())
     items = pyls_jedi_completions(config, doc, com_position)
 
     assert items
@@ -158,7 +158,7 @@ def test_pandas_completions(config):
 def test_matplotlib_completions(config):
     doc_mpl = "import matplotlib.pyplot as plt; plt."
     com_position = {'line': 0, 'character': len(doc_mpl)}
-    doc = Document(DOC_URI, doc_mpl)
+    doc = Document(DOC_URI, doc_mpl, workspace=MockWorkspace())
     items = pyls_jedi_completions(config, doc, com_position)
 
     assert items
@@ -168,7 +168,7 @@ def test_matplotlib_completions(config):
 def test_snippets_completion(config):
     doc_snippets = 'from collections import defaultdict \na=defaultdict'
     com_position = {'line': 0, 'character': 35}
-    doc = Document(DOC_URI, doc_snippets)
+    doc = Document(DOC_URI, doc_snippets, workspace=MockWorkspace())
     config.capabilities['textDocument'] = {
         'completion': {'completionItem': {'snippetSupport': True}}}
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
@@ -183,7 +183,7 @@ def test_snippets_completion(config):
 def test_snippet_parsing(config):
     doc = 'import numpy as np\nnp.logical_and'
     completion_position = {'line': 1, 'character': 14}
-    doc = Document(DOC_URI, doc)
+    doc = Document(DOC_URI, doc, workspace=MockWorkspace())
     config.capabilities['textDocument'] = {
         'completion': {'completionItem': {'snippetSupport': True}}}
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
@@ -194,7 +194,7 @@ def test_snippet_parsing(config):
 
 def test_multiline_import_snippets(config):
     document = 'from datetime import(\n date,\n datetime)\na=date'
-    doc = Document(DOC_URI, document)
+    doc = Document(DOC_URI, document, workspace=MockWorkspace())
     config.capabilities['textDocument'] = {
         'completion': {'completionItem': {'snippetSupport': True}}}
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
@@ -210,7 +210,7 @@ def test_multiline_import_snippets(config):
 
 def test_multiline_snippets(config):
     document = 'from datetime import\\\n date,\\\n datetime \na=date'
-    doc = Document(DOC_URI, document)
+    doc = Document(DOC_URI, document, workspace=MockWorkspace())
     config.capabilities['textDocument'] = {
         'completion': {'completionItem': {'snippetSupport': True}}}
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
@@ -230,13 +230,13 @@ def test_multistatement_snippet(config):
     config.update({'plugins': {'jedi_completion': {'include_params': True}}})
 
     document = 'a = 1; from datetime import date'
-    doc = Document(DOC_URI, document)
+    doc = Document(DOC_URI, document, workspace=MockWorkspace())
     position = {'line': 0, 'character': len(document)}
     completions = pyls_jedi_completions(config, doc, position)
     assert completions[0]['insertText'] == 'date'
 
     document = 'from datetime import date; a = date'
-    doc = Document(DOC_URI, document)
+    doc = Document(DOC_URI, document, workspace=MockWorkspace())
     position = {'line': 0, 'character': len(document)}
     completions = pyls_jedi_completions(config, doc, position)
     assert completions[0]['insertText'] == 'date(${1:year}, ${2:month}, ${3:day})$0'
@@ -256,7 +256,7 @@ def spam():
     # Content of doc to test completion
     doc_content = """import foo
 foo.s"""
-    doc = Document(DOC_URI, doc_content)
+    doc = Document(DOC_URI, doc_content, workspace=MockWorkspace())
 
     # After 'foo.s' without extra paths
     com_position = {'line': 1, 'character': 5}
