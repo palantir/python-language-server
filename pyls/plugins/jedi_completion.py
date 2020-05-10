@@ -1,8 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import os.path as osp
+
 import parso
-from pyls import hookimpl, lsp, _utils
+
+from pyls import _utils, hookimpl, lsp
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +53,10 @@ _ERRORS = ('error_node', )
 @hookimpl
 def pyls_completions(config, document, position):
     """Get formatted completions for current code position"""
+    settings = config.plugin_settings('jedi_completion', document_path=document.path)
     code_position = _utils.position_to_jedi_linecolumn(document, position)
+
+    code_position["fuzzy"] = settings.get("fuzzy", False)
     completions = document.jedi_script().complete(**code_position)
 
     if not completions:
@@ -60,7 +65,6 @@ def pyls_completions(config, document, position):
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
-    settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
     include_params = snippet_support and should_include_params and use_snippets(document, position)
     return [_format_completion(c, include_params) for c in completions] or None
