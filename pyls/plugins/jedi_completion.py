@@ -56,7 +56,9 @@ def pyls_completions(config, document, position):
     """Get formatted completions for current code position"""
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     code_position = _utils.position_to_jedi_linecolumn(document, position)
-    completions = document.jedi_script().complete(**code_position, fuzzy=settings.get("fuzzy", False))
+
+    code_position["fuzzy"] = settings.get("fuzzy", False)
+    completions = document.jedi_script().complete(**code_position)
 
     if not completions:
         return None
