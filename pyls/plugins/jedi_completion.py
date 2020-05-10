@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import os.path as osp
-from distutils.version import LooseVersion
 
 import parso
 
