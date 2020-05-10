@@ -1,9 +1,11 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-
+import os.path as osp
 from distutils.version import LooseVersion
+
 import parso
-from pyls import hookimpl, lsp, _utils
+
+from pyls import _utils, hookimpl, lsp
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ _TYPE_MAP = {
     'builtinfunction': lsp.CompletionItemKind.Function,
     'module': lsp.CompletionItemKind.Module,
     'file': lsp.CompletionItemKind.File,
+    'path': lsp.CompletionItemKind.Text,
     'xrange': lsp.CompletionItemKind.Class,
     'slice': lsp.CompletionItemKind.Class,
     'traceback': lsp.CompletionItemKind.Class,
@@ -50,23 +53,12 @@ _ERRORS = ('error_node', )
 
 @hookimpl
 def pyls_completions(config, document, position):
+    """Get formatted completions for current code position"""
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
+    code_position = _utils.position_to_jedi_linecolumn(document, position)
+    completions = document.jedi_script().complete(**code_position, fuzzy=settings.get("fuzzy", False))
 
-    try:
-        if LooseVersion(_utils.JEDI_VERSION) >= LooseVersion('0.15.2'):
-            definitions = document.jedi_script(position).completions(
-                fuzzy=settings.get("fuzzy", False))
-        else:
-            definitions = document.jedi_script(position).completions()
-    except AttributeError as e:
-        if 'CompiledObject' in str(e):
-            # Needed to handle missing CompiledObject attribute
-            # 'sub_modules_dict'
-            definitions = None
-        else:
-            raise e
-
-    if not definitions:
+    if not completions:
         return None
 
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
@@ -74,7 +66,7 @@ def pyls_completions(config, document, position):
 
     should_include_params = settings.get('include_params')
     include_params = snippet_support and should_include_params and use_snippets(document, position)
-    return [_format_completion(d, include_params) for d in definitions] or None
+    return [_format_completion(c, include_params) for c in completions] or None
 
 
 def is_exception_class(name):
@@ -137,17 +129,24 @@ def _format_completion(d, include_params=True):
         'insertText': d.name
     }
 
-    if (include_params and hasattr(d, 'params') and d.params and
-            not is_exception_class(d.name)):
-        positional_args = [param for param in d.params if '=' not in param.description]
+    if d.type == 'path':
+        path = osp.normpath(d.name)
+        path = path.replace('\\', '\\\\')
+        path = path.replace('/', '\\/')
+        completion['insertText'] = path
+
+    sig = d.get_signatures()
+    if (include_params and sig and not is_exception_class(d.name)):
+        positional_args = [param for param in sig[0].params
+                           if '=' not in param.description and
+                           param.name not in {'/', '*'}]
 
         if len(positional_args) > 1:
             # For completions with params, we can generate a snippet instead
             completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
             snippet = d.name + '('
             for i, param in enumerate(positional_args):
-                name = param.name if param.name != '/' else '\\/'
-                snippet += '${%s:%s}' % (i + 1, name)
+                snippet += '${%s:%s}' % (i + 1, param.name)
                 if i < len(positional_args) - 1:
                     snippet += ', '
             snippet += ')$0'
@@ -161,8 +160,9 @@ def _format_completion(d, include_params=True):
 
 
 def _label(definition):
-    if definition.type in ('function', 'method') and hasattr(definition, 'params'):
-        params = ', '.join([param.name for param in definition.params])
+    sig = definition.get_signatures()
+    if definition.type in ('function', 'method') and sig:
+        params = ', '.join([param.name for param in sig[0].params])
         return '{}({})'.format(definition.name, params)
 
     return definition.name
