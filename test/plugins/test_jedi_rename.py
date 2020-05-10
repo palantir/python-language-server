@@ -2,12 +2,12 @@
 import os
 import sys
 
+from test.test_utils import MockWorkspace
+
 import pytest
 from pyls import uris
 from pyls.plugins.jedi_rename import pyls_rename
 from pyls.workspace import Document
-
-from test.test_utils import MockWorkspace
 
 LT_PY36 = sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 6)
 
