@@ -58,11 +58,10 @@ def run_flake8(args):
         cmd = ['python', '-m', 'flake8']
         cmd.extend(args)
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    stderr = p.stderr.read().decode()
+    (stdout, stderr) = p.communicate()
     if stderr:
-        log.error("Error while running flake8 '%s'", stderr)
-    stdout = p.stdout
-    return stdout.read().decode()
+        log.error("Error while running flake8 '%s'", stderr.decode())
+    return stdout.decode()
 
 
 def build_args(options, doc_path):
