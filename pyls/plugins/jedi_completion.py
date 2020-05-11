@@ -1,8 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
 import os.path as osp
+
 import parso
-from pyls import hookimpl, lsp, _utils
+
+from pyls import _utils, hookimpl, lsp
 
 log = logging.getLogger(__name__)
 
@@ -51,17 +53,14 @@ _ERRORS = ('error_node', )
 
 @hookimpl
 def pyls_completions(config, document, position):
-    try:
-        definitions = document.jedi_script(position).completions()
-    except AttributeError as e:
-        if 'CompiledObject' in str(e):
-            # Needed to handle missing CompiledObject attribute
-            # 'sub_modules_dict'
-            definitions = None
-        else:
-            raise e
+    """Get formatted completions for current code position"""
+    settings = config.plugin_settings('jedi_completion', document_path=document.path)
+    code_position = _utils.position_to_jedi_linecolumn(document, position)
 
-    if not definitions:
+    code_position["fuzzy"] = settings.get("fuzzy", False)
+    completions = document.jedi_script().complete(**code_position)
+
+    if not completions:
         return None
 
     if len(definitions) > 40:
@@ -70,10 +69,9 @@ def pyls_completions(config, document, position):
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
-    settings = config.plugin_settings('jedi_completion', document_path=document.path)
     should_include_params = settings.get('include_params')
     include_params = snippet_support and should_include_params and use_snippets(document, position)
-    return [_format_completion(d, include_params) for d in definitions] or None
+    return [_format_completion(c, include_params) for c in completions] or None
 
 def is_exception_class(name):
     """
@@ -158,9 +156,9 @@ def _format_completion(d, i, include_params=True):
         path = path.replace('/', '\\/')
         completion['insertText'] = path
 
-    if (include_params and hasattr(d, 'params') and d.params and
-            not is_exception_class(d.name)):
-        positional_args = [param for param in d.params
+    sig = d.get_signatures()
+    if (include_params and sig and not is_exception_class(d.name)):
+        positional_args = [param for param in sig[0].params
                            if '=' not in param.description and
                            param.name not in {'/', '*'}]
 
@@ -183,8 +181,9 @@ def _format_completion(d, i, include_params=True):
 
 
 def _label(definition):
-    if definition.type in ('function', 'method') and hasattr(definition, 'params'):
-        params = ', '.join([param.name for param in definition.params])
+    sig = definition.get_signatures()
+    if definition.type in ('function', 'method') and sig:
+        params = ', '.join([param.name for param in sig[0].params])
         return '{}({})'.format(definition.name, params)
 
     return definition.name
