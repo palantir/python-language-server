@@ -57,6 +57,8 @@ def test_flake8_lint(config):
 
 def test_flake8_config_param(config):
     with patch('pyls.plugins.flake8_lint.Popen') as popen_mock:
+        mock_instance = popen_mock.return_value
+        mock_instance.communicate.return_value = [bytes(), bytes()]
         flake8_conf = '/tmp/some.cfg'
         config.update({'plugins': {'flake8': {'config': flake8_conf}}})
         _name, doc = temp_document(DOC)
