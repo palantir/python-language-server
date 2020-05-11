@@ -2,8 +2,6 @@
 import os
 import sys
 
-from test.test_utils import MockWorkspace
-
 import pytest
 from pyls import uris
 from pyls.plugins.jedi_rename import pyls_rename
@@ -34,9 +32,10 @@ def tmp_workspace(workspace):
 
 @pytest.mark.skipif(LT_PY36, reason='Jedi refactoring isnt supported on Python 2.x/3.5')
 def test_jedi_rename(tmp_workspace, config):  # pylint: disable=redefined-outer-name
+    # rename the `Test1` class
     position = {'line': 0, 'character': 6}
     DOC_URI = uris.from_fs_path(os.path.join(tmp_workspace.root_path, DOC_NAME))
-    doc = Document(DOC_URI, MockWorkspace())
+    doc = Document(DOC_URI, tmp_workspace)
 
     result = pyls_rename(config, tmp_workspace, doc, position, 'ShouldBeRenamed')
     assert len(result.keys()) == 1
