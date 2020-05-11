@@ -103,10 +103,10 @@ class Workspace(object):
     def _create_document(self, doc_uri, source=None, version=None):
         path = uris.to_fs_path(doc_uri)
         return Document(
-            doc_uri, source=source, version=version,
+            doc_uri, self, source=source, version=version,
             extra_sys_path=self.source_roots(path),
             rope_project_builder=self._rope_project_builder,
-            config=self._config, workspace=self,
+            config=self._config,
         )
 
 
