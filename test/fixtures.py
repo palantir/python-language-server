@@ -54,7 +54,7 @@ def doc(workspace):  # pylint: disable=redefined-outer-name
 
 
 @pytest.fixture
-def temp_workspace_factory(workspace):
+def temp_workspace_factory(workspace):  # pylint: disable=redefined-outer-name
     '''
     Returns a function that creates a temporary workspace from the files dict.
     The dict is in the format {"file_name": "file_contents"}
