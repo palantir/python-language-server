@@ -1,5 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+from typing import Dict, List
 import pkg_resources
 try:
     from functools import lru_cache
@@ -16,9 +17,9 @@ log = logging.getLogger(__name__)
 DEFAULT_CONFIG_SOURCES = ['pycodestyle']
 
 
-class Config(object):
+class Config:
 
-    def __init__(self, root_uri, init_opts, process_id, capabilities):
+    def __init__(self, root_uri: str, init_opts: dict, process_id: int, capabilities: dict):
         self._root_path = uris.to_fs_path(root_uri)
         self._root_uri = root_uri
         self._init_opts = init_opts
@@ -68,31 +69,31 @@ class Config(object):
         self._update_disabled_plugins()
 
     @property
-    def disabled_plugins(self):
+    def disabled_plugins(self) -> List:
         return self._disabled_plugins
 
     @property
-    def plugin_manager(self):
+    def plugin_manager(self) -> pluggy.PluginManager:
         return self._pm
 
     @property
-    def init_opts(self):
+    def init_opts(self) -> dict:
         return self._init_opts
 
     @property
-    def root_uri(self):
+    def root_uri(self) -> str:
         return self._root_uri
 
     @property
-    def process_id(self):
+    def process_id(self) -> int:
         return self._process_id
 
     @property
-    def capabilities(self):
+    def capabilities(self) -> dict:
         return self._capabilities
 
     @lru_cache(maxsize=32)
-    def settings(self, document_path=None):
+    def settings(self, document_path=None) -> Dict[str, List[str]]:
         """Settings are constructed from a few sources:
 
             1. User settings, found in user's home directory
@@ -132,21 +133,21 @@ class Config(object):
 
         return settings
 
-    def find_parents(self, path, names):
+    def find_parents(self, path, names) -> list:
         root_path = uris.to_fs_path(self._root_uri)
         return _utils.find_parents(root_path, path, names)
 
-    def plugin_settings(self, plugin, document_path=None):
+    def plugin_settings(self, plugin, document_path=None) -> dict:
         return self.settings(document_path=document_path).get('plugins', {}).get(plugin, {})
 
-    def update(self, settings):
+    def update(self, settings) -> None:
         """Recursively merge the given settings into the current settings."""
         self.settings.cache_clear()
         self._settings = settings
         log.info("Updated settings to %s", self._settings)
         self._update_disabled_plugins()
 
-    def _update_disabled_plugins(self):
+    def _update_disabled_plugins(self) -> None:
         # All plugins default to enabled
         self._disabled_plugins = [
             plugin for name, plugin in self.plugin_manager.list_name_plugin()
