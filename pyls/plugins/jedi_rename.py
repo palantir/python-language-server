@@ -14,7 +14,7 @@ def pyls_rename(config, workspace, document, position, new_name):  # pylint: dis
     try:
         refactoring = document.jedi_script().rename(**kwargs)
     except NotImplementedError:
-        raise Exception('No support for renaming in Python 2/3.5 with jedi. '
+        raise Exception('No support for renaming in Python 2/3.5 with Jedi. '
                         'Consider using the rope_rename plugin instead')
     log.debug('Finished rename: %s', refactoring.get_diff())
 
