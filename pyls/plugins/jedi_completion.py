@@ -63,9 +63,6 @@ def pyls_completions(config, document, position):
     if not completions:
         return None
 
-    if len(definitions) > 40:
-      definitions = definitions[:40]
-
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
@@ -139,14 +136,14 @@ def pyls_completion_detail(config, item):
       print('Completion missing')
       return None
 
-def _format_completion(d, i, include_params=True):
+def _format_completion(d, include_params=True):
     COMPLETION_CACHE[d.name] = d
     completion = {
-        'label': '', #_label(d),
-        'kind': '',
-        'detail': '', #_detail(d),
-        'documentation': _utils.format_docstring(d.docstring()) if i == 0 else '',
-        'sortText': '', #_sort_text(d),
+        'label': _label(d),
+        'kind': _TYPE_MAP.get(d.type),
+        'detail': _detail(d),
+        'documentation': _utils.format_docstring(d.docstring()),
+        'sortText': _sort_text(d),
         'insertText': d.name
     }
 
