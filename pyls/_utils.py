@@ -130,6 +130,7 @@ def format_docstring(contents: str) -> str:
     """
     contents = contents.replace('\t', '\u00A0' * 4)
     contents = contents.replace('  ', '\u00A0' * 2)
+
     if LooseVersion(JEDI_VERSION) < LooseVersion('0.15.0'):
         contents = contents.replace('*', '\\*')
     return contents
@@ -140,6 +141,21 @@ def clip_column(column: int, lines: list, line_number: int) -> int:
     # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
     max_column = len(lines[line_number].rstrip('\r\n')) if len(lines) > line_number else 0
     return min(column, max_column)
+
+
+def position_to_jedi_linecolumn(document, position):
+    """
+    Convert the LSP format 'line', 'character' to Jedi's 'line', 'column'
+
+    https://microsoft.github.io/language-server-protocol/specification#position
+    """
+    code_position = {}
+    if position:
+        code_position = {'line': position['line'] + 1,
+                         'column': clip_column(position['character'],
+                                               document.lines,
+                                               position['line'])}
+    return code_position
 
 
 if os.name == 'nt':
