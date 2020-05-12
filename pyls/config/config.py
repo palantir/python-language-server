@@ -29,17 +29,7 @@ class Config:
         self._settings = {}
         self._plugin_settings = {}
 
-        self._config_sources = {}
-        try:
-            from .flake8_conf import Flake8Config
-            self._config_sources['flake8'] = Flake8Config(self._root_path)
-        except ImportError:
-            pass
-        try:
-            from .pycodestyle_conf import PyCodeStyleConfig
-            self._config_sources['pycodestyle'] = PyCodeStyleConfig(self._root_path)
-        except ImportError:
-            pass
+        self._config_sources = self._import_config()
 
         self._pm = pluggy.PluginManager(PYLS)
         self._pm.trace.root.setwriter(log.debug)
@@ -62,11 +52,22 @@ class Config:
         for name, plugin in self._pm.list_name_plugin():
             if plugin is not None:
                 log.info("Loaded pyls plugin %s from %s", name, plugin)
+    def _import_config(self) -> dict:
+        config_sources = {}
 
-        for plugin_conf in self._pm.hook.pyls_settings(config=self):
-            self._plugin_settings = _utils.merge_dicts(self._plugin_settings, plugin_conf)
+        try:
+            from .flake8_conf import Flake8Config
+            config_sources['flake8'] = Flake8Config(self._root_path)
+        except ImportError:
+            pass
 
-        self._update_disabled_plugins()
+        try:
+            from .pycodestyle_conf import PyCodeStyleConfig
+            config_sources['pycodestyle'] = PyCodeStyleConfig(self._root_path)
+        except ImportError:
+            pass
+
+        return config_sources
 
     @property
     def disabled_plugins(self) -> List:
