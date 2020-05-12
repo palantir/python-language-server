@@ -35,7 +35,18 @@ class Config:
         self._pm.trace.root.setwriter(log.debug)
         self._pm.enable_tracing()
         self._pm.add_hookspecs(hookspecs)
+        self._setup_plugins()
 
+        for name, plugin in self._pm.list_name_plugin():
+            if plugin is not None:
+                log.info("Loaded pyls plugin %s from %s", name, plugin)
+
+        for plugin_conf in self._pm.hook.pyls_settings(config=self):
+            self._plugin_settings = _utils.merge_dicts(self._plugin_settings, plugin_conf)
+
+        self._update_disabled_plugins()
+
+    def _setup_plugins(self):
         # Pluggy will skip loading a plugin if it throws a DistributionNotFound exception.
         # However I don't want all plugins to have to catch ImportError and re-throw. So here we'll filter
         # out any entry points that throw ImportError assuming one or more of their dependencies isn't present.
@@ -49,9 +60,6 @@ class Config:
         # Load the entry points into pluggy, having blocked any failing ones
         self._pm.load_setuptools_entrypoints(PYLS)
 
-        for name, plugin in self._pm.list_name_plugin():
-            if plugin is not None:
-                log.info("Loaded pyls plugin %s from %s", name, plugin)
     def _import_config(self) -> dict:
         config_sources = {}
 
