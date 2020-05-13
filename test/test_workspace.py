@@ -156,21 +156,44 @@ def test_root_workspace_not_changed(pyls):
     assert test_uri_1 == pyls.root_uri
     # empty 'added' list
     test_uri_2 = 'Test123'
+    new_root_uri = workspace2['uri']
     pyls.root_uri = test_uri_2
     pyls.workspace._root_uri = test_uri_2
     workspace1 = {'uri': test_uri_2}
     event = {'added': [], 'removed': [workspace1]}
     pyls.m_workspace__did_change_workspace_folders(event)
-    assert test_uri_2 == pyls.workspace._root_uri
-    assert test_uri_2 == pyls.root_uri
+    assert new_root_uri == pyls.workspace._root_uri
+    assert new_root_uri == pyls.root_uri
     # empty 'removed' list
     event = {'added': [workspace1], 'removed': []}
     pyls.m_workspace__did_change_workspace_folders(event)
-    assert test_uri_2 == pyls.workspace._root_uri
-    assert test_uri_2 == pyls.root_uri
+    assert new_root_uri == pyls.workspace._root_uri
+    assert new_root_uri == pyls.root_uri
     # 'added' list has no 'uri'
     workspace2 = {'TESTuri': 'Test1234'}
     event = {'added': [workspace2], 'removed': [workspace1]}
     pyls.m_workspace__did_change_workspace_folders(event)
-    assert test_uri_2 == pyls.workspace._root_uri
-    assert test_uri_2 == pyls.root_uri
+    assert new_root_uri == pyls.workspace._root_uri
+    assert new_root_uri == pyls.root_uri
+
+
+def test_root_workspace_removed(tmpdir, pyls):
+    workspace1_dir = tmpdir.mkdir('workspace1')
+    workspace2_dir = tmpdir.mkdir('workspace2')
+    root_uri = pyls.root_uri
+
+    # Add workspaces to the pyls
+    added_workspaces = [{'uri': path_as_uri(str(x))}
+                        for x in (workspace1_dir, workspace2_dir)]
+    event = {'added': added_workspaces, 'removed': []}
+    pyls.m_workspace__did_change_workspace_folders(event)
+
+    # Remove the root workspace
+    removed_workspaces = [{'uri': root_uri}]
+    event = {'added': [], 'removed': removed_workspaces}
+    pyls.m_workspace__did_change_workspace_folders(event)
+
+    # Assert that the first of the workspaces (in alphabetical order) is now
+    # the root workspace
+    assert pyls.root_uri == path_as_uri(str(workspace1_dir))
+    assert pyls.workspace._root_uri == path_as_uri(str(workspace1_dir))

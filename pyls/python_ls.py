@@ -383,6 +383,15 @@ class PythonLanguageServer(MethodDispatcher):
             added_uri = added[0]['uri']
             self.root_uri = added_uri
             self.workspace = self.workspaces[added_uri]
+        elif root_workspace_removed:
+            # NOTE: Removing the root workspace can only happen when the server
+            # is closed, thus the else condition of this if can never happen.
+            if len(self.workspaces) > 0:
+                log.debug('Root workspace deleted!')
+                available_workspaces = sorted(self.workspaces)
+                first_workspace = available_workspaces[0]
+                self.root_uri = first_workspace
+                self.workspace = self.workspaces[first_workspace]
 
         # Migrate documents that are on the root workspace and have a better
         # match now
