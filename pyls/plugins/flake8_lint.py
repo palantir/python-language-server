@@ -1,5 +1,6 @@
 # Copyright 2019 Palantir Technologies, Inc.
 """Linter pluging for flake8"""
+from typing import List
 import logging
 from os import path
 import re
@@ -18,7 +19,7 @@ def pyls_settings():
 @hookimpl
 def pyls_lint(config, document):
     settings = config.plugin_settings('flake8')
-    log.debug("Got flake8 settings: %s", settings)
+    log.debug(f"Got flake8 settings: {settings}")
 
     opts = {
         'config': settings.get('config'),
@@ -36,7 +37,7 @@ def pyls_lint(config, document):
         opts['config'] = path.abspath(path.expanduser(path.expandvars(
             opts.get('config')
         )))
-        log.debug("using flake8 with config: %s", opts['config'])
+        log.debug(f"using flake8 with config: {opts['config']}")
 
     # Call the flake8 utility then parse diagnostics from stdout
     args = build_args(opts, document.path)
@@ -44,19 +45,17 @@ def pyls_lint(config, document):
     return parse_stdout(document, output)
 
 
-def run_flake8(args):
+def run_flake8(args: list) -> str:
     """Run flake8 with the provided arguments, logs errors
     from stderr if any.
     """
-    log.debug("Calling flake8 with args: '%s'", args)
+    log.debug(f"Calling flake8 with args: '{args}'")
     try:
-        cmd = ['flake8']
-        cmd.extend(args)
+        cmd = ['flake8'] + args
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     except IOError:
         log.debug("Can't execute flake8. Trying with 'python -m flake8'")
-        cmd = ['python', '-m', 'flake8']
-        cmd.extend(args)
+        cmd = ['python', '-m', 'flake8'] + args
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     (stdout, stderr) = p.communicate()
     if stderr:
@@ -64,7 +63,7 @@ def run_flake8(args):
     return stdout.decode()
 
 
-def build_args(options, doc_path):
+def build_args(options: dict, doc_path: str) -> list:
     """Build arguments for calling flake8.
 
     Args:
@@ -86,7 +85,7 @@ def build_args(options, doc_path):
     return args
 
 
-def parse_stdout(document, stdout):
+def parse_stdout(document, stdout: str) -> List[dict]:
     """
     Build a diagnostics from flake8's output, it should extract every result and format
     it into a dict that looks like this:
@@ -119,7 +118,7 @@ def parse_stdout(document, stdout):
     for raw_line in lines:
         parsed_line = re.match(r'(.*):(\d*):(\d*): (\w*) (.*)', raw_line).groups()
         if not parsed_line or len(parsed_line) != 5:
-            log.debug("Flake8 output parser can't parse line '%s'", raw_line)
+            log.debug(f"Flake8 output parser can't parse line '{raw_line}'")
             continue
         _, line, character, code, msg = parsed_line
         line = int(line) - 1
