@@ -35,7 +35,7 @@ def test_flake8_no_checked_file(config, workspace):
 
     doc = Document('', workspace, DOC)
     diags = flake8_lint.pyls_lint(config, doc)
-    assert diags == []
+    assert 'Error' in diags[0]['message']
 
 
 def test_flake8_lint(config):

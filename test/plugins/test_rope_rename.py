@@ -15,15 +15,8 @@ class Test2(Test1):
 
 
 @pytest.fixture
-def tmp_workspace(workspace):
-    def create_file(name, content):
-        fn = os.path.join(workspace.root_path, name)
-        with open(fn, "w") as f:
-            f.write(content)
-        workspace.put_document(uris.from_fs_path(fn), content)
-
-    create_file(DOC_NAME, DOC)
-    return workspace
+def tmp_workspace(temp_workspace_factory):
+    return temp_workspace_factory({DOC_NAME: DOC})
 
 
 def test_rope_rename(tmp_workspace, config):  # pylint: disable=redefined-outer-name
