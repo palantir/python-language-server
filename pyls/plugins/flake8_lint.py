@@ -75,14 +75,13 @@ def build_args(options, doc_path):
     for arg_name, arg_val in options.items():
         if arg_val is None:
             continue
-        arg = None
-        if isinstance(arg_val, list):
-            arg = '--{}={}'.format(arg_name, ','.join(arg_val))
-        elif isinstance(arg_val, bool):
-            if arg_val:
-                arg = '--{}'.format(arg_name)
+
+        arg = f"--{arg_name}={','.join(arg_val)}" if isinstance(arg_val, list) else None
+        if isinstance(arg_val, bool):
+            arg = f'--{arg_name}' if arg_val else arg
         else:
-            arg = '--{}={}'.format(arg_name, arg_val)
+            arg = f'--{arg_name}={arg_val}'
+
         args.append(arg)
     return args
 
