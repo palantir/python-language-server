@@ -7,7 +7,7 @@ import mock
 from pyls import _utils
 
 
-class MockWorkspace(object):
+class MockWorkspace:
     """Mock workspace used by tests that use jedi environment."""
 
     def __init__(self):

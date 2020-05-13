@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 DEFAULT_CONFIG_SOURCES = ['pycodestyle']
 
 
-class Config(object):
+class Config:
 
     def __init__(self, root_uri, init_opts, process_id, capabilities):
         self._root_path = uris.to_fs_path(root_uri)

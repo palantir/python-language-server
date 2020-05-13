@@ -7,7 +7,7 @@ import sys
 log = logging.getLogger(__name__)
 
 
-class ConfigSource(object):
+class ConfigSource:
     """Base class for implementing a config source."""
 
     def __init__(self, root_path):
