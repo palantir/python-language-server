@@ -361,7 +361,7 @@ class PythonLanguageServer(MethodDispatcher):
             for doc_uri in workspace.documents:
                 self.lint(doc_uri, is_saved=False)
 
-    def m_workspace__did_change_workspace_folders(self, event=None, **_kwargs):
+    def m_workspace__did_change_workspace_folders(self, event=None, **_kwargs):  # pylint: disable=too-many-locals
         if event is None:
             return
         added = event.get('added', [])
@@ -386,7 +386,7 @@ class PythonLanguageServer(MethodDispatcher):
         elif root_workspace_removed:
             # NOTE: Removing the root workspace can only happen when the server
             # is closed, thus the else condition of this if can never happen.
-            if len(self.workspaces) > 0:
+            if self.workspaces:
                 log.debug('Root workspace deleted!')
                 available_workspaces = sorted(self.workspaces)
                 first_workspace = available_workspaces[0]
