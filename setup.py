@@ -101,4 +101,5 @@ setup(
             'yapf = pyls.plugins.yapf_format'
         ]
     },
+    python_requires='>=3,<=3.7.0'
 )
