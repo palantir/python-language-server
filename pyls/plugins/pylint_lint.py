@@ -15,7 +15,7 @@ except Exception:  # pylint: disable=broad-except
 log = logging.getLogger(__name__)
 
 
-class PylintLinter(object):
+class PylintLinter:
     last_diags = collections.defaultdict(list)
 
     @classmethod

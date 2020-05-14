@@ -17,8 +17,9 @@ def start_client(client):
     client.start()
 
 
-class _ClientServer(object):
+class _ClientServer:
     """ A class to setup a client/server pair """
+
     def __init__(self, check_parent_process=False):
         # Client to Server pipe
         csr, csw = os.pipe()

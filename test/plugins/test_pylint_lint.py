@@ -2,12 +2,11 @@
 import contextlib
 import os
 import tempfile
-
-from test import py2_only, py3_only
 from test.test_utils import MockWorkspace
+
 from pyls import lsp, uris
-from pyls.workspace import Document
 from pyls.plugins import pylint_lint
+from pyls.workspace import Document
 
 DOC_URI = uris.from_fs_path(__file__)
 DOC = """import sys
@@ -51,25 +50,13 @@ def test_pylint(config):
         assert unused_import['severity'] == lsp.DiagnosticSeverity.Warning
 
 
-@py3_only
-def test_syntax_error_pylint_py3(config):
+def test_syntax_error_pylint(config):
     with temp_document(DOC_SYNTAX_ERR) as doc:
         diag = pylint_lint.pyls_lint(config, doc, True)[0]
 
         assert diag['message'].startswith('[syntax-error] invalid syntax')
         # Pylint doesn't give column numbers for invalid syntax.
         assert diag['range']['start'] == {'line': 0, 'character': 12}
-        assert diag['severity'] == lsp.DiagnosticSeverity.Error
-
-
-@py2_only
-def test_syntax_error_pylint_py2(config):
-    with temp_document(DOC_SYNTAX_ERR) as doc:
-        diag = pylint_lint.pyls_lint(config, doc, True)[0]
-
-        assert diag['message'].startswith('[syntax-error] invalid syntax')
-        # Pylint doesn't give column numbers for invalid syntax.
-        assert diag['range']['start'] == {'line': 0, 'character': 0}
         assert diag['severity'] == lsp.DiagnosticSeverity.Error
 
 

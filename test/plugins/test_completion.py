@@ -11,7 +11,6 @@ from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completio
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
 
-PY2 = sys.version[0] == '2'
 LINUX = sys.platform.startswith('linux')
 CI = os.environ.get('CI')
 LOCATION = os.path.realpath(
@@ -138,7 +137,7 @@ def test_jedi_method_completion(config, workspace):
     assert everyone_method['insertText'] == 'everyone'
 
 
-@pytest.mark.skipif(PY2 or (sys.platform.startswith('linux') and os.environ.get('CI') is not None),
+@pytest.mark.skipif((sys.platform.startswith('linux') and os.environ.get('CI') is not None),
                     reason="Test in Python 3 and not on CIs on Linux because wheels don't work on them.")
 def test_pyqt_completion(config, workspace):
     # Over 'QA' in 'from PyQt5.QtWidgets import QApplication'
@@ -288,7 +287,7 @@ foo.s"""
     assert completions[0]['label'] == 'spam()'
 
 
-@pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
+@pytest.mark.skipif(not LINUX or not CI, reason="tested on linux only")
 def test_jedi_completion_environment(config):
     # Content of doc to test completion
     doc_content = '''import logh

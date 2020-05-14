@@ -1,17 +1,15 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 import sys
-
 from test.test_utils import MockWorkspace
+
 import pytest
 
 from pyls import uris
-from pyls.plugins.symbols import pyls_document_symbols
 from pyls.lsp import SymbolKind
+from pyls.plugins.symbols import pyls_document_symbols
 from pyls.workspace import Document
 
-
-PY2 = sys.version[0] == '2'
 LINUX = sys.platform.startswith('linux')
 CI = os.environ.get('CI')
 DOC_URI = uris.from_fs_path(__file__)
@@ -79,7 +77,7 @@ def test_symbols_all_scopes(config, workspace):
     helper_check_symbols_all_scope(symbols)
 
 
-@pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
+@pytest.mark.skipif(not LINUX or not CI, reason="tested on linux and python 3 only")
 def test_symbols_all_scopes_with_jedi_environment(config):
     doc = Document(DOC_URI, MockWorkspace(), DOC)
 

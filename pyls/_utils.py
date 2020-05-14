@@ -3,19 +3,14 @@ import functools
 import inspect
 import logging
 import os
-import sys
+import pathlib
 import threading
+from distutils.version import LooseVersion
+from typing import Any, List, Union
 
 import jedi
 
-PY2 = sys.version_info.major == 2
 JEDI_VERSION = jedi.__version__
-
-if PY2:
-    import pathlib2 as pathlib
-else:
-    import pathlib
-
 log = logging.getLogger(__name__)
 
 
@@ -47,7 +42,7 @@ def debounce(interval_s, keyed_by=None):
     return wrapper
 
 
-def find_parents(root, path, names):
+def find_parents(root: str, path: str, names: List[str]) -> List:
     """Find files matching the given names relative to the given path.
 
     Args:
@@ -82,17 +77,13 @@ def find_parents(root, path, names):
     return []
 
 
-def match_uri_to_workspace(uri, workspaces):
+def match_uri_to_workspace(uri: str, workspaces: dict) -> Union[str, None]:
     if uri is None:
         return None
     max_len, chosen_workspace = -1, None
     path = pathlib.Path(uri).parts
     for workspace in workspaces:
-        try:
-            workspace_parts = pathlib.Path(workspace).parts
-        except TypeError:
-            # This can happen in Python2 if 'value' is a subclass of string
-            workspace_parts = pathlib.Path(unicode(workspace)).parts
+        workspace_parts = pathlib.Path(workspace).parts
         if len(workspace_parts) > len(path):
             continue
         match_len = 0
@@ -106,17 +97,17 @@ def match_uri_to_workspace(uri, workspaces):
     return chosen_workspace
 
 
-def list_to_string(value):
+def list_to_string(value: Any) -> Any:
     return ",".join(value) if isinstance(value, list) else value
 
 
-def merge_dicts(dict_a, dict_b):
+def merge_dicts(dict_a: dict, dict_b: dict) -> dict:
     """Recursively merge dictionary b into dictionary a.
 
     If override_nones is True, then
     """
     def _merge_dicts_(a, b):
-        for key in set(a.keys()).union(b.keys()):
+        for key in set(a).union(b):
             if key in a and key in b:
                 if isinstance(a[key], dict) and isinstance(b[key], dict):
                     yield (key, dict(_merge_dicts_(a[key], b[key])))
@@ -131,23 +122,23 @@ def merge_dicts(dict_a, dict_b):
     return dict(_merge_dicts_(dict_a, dict_b))
 
 
-def format_docstring(contents):
+def format_docstring(contents: str) -> str:
     """Python doc strings come in a number of formats, but LSP wants markdown.
 
     Until we can find a fast enough way of discovering and parsing each format,
     we can do a little better by at least preserving indentation.
     """
-    contents = contents.replace('\t', u'\u00A0' * 4)
-    contents = contents.replace('  ', u'\u00A0' * 2)
+    contents = contents.replace('\t', '\u00A0' * 4)
+    contents = contents.replace('  ', '\u00A0' * 2)
+
+    if LooseVersion(JEDI_VERSION) < LooseVersion('0.15.0'):
+        contents = contents.replace('*', '\\*')
     return contents
 
 
-def clip_column(column, lines, line_number):
-    """
-    Normalise the position as per the LSP that accepts character positions > line length
-
-    https://microsoft.github.io/language-server-protocol/specification#position
-    """
+def clip_column(column: int, lines: list, line_number: int) -> int:
+    # Normalise the position as per the LSP that accepts character positions > line length
+    # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#position
     max_column = len(lines[line_number].rstrip('\r\n')) if len(lines) > line_number else 0
     return min(column, max_column)
 
@@ -173,7 +164,7 @@ if os.name == 'nt':
     kernel32 = ctypes.windll.kernel32
     PROCESS_QUERY_INFROMATION = 0x1000
 
-    def is_process_alive(pid):
+    def is_process_alive(pid: int) -> bool:
         """Check whether the process with the given pid is still alive.
 
         Running `os.kill()` on Windows always exits the process, so it can't be used to check for an alive process.
@@ -196,7 +187,7 @@ if os.name == 'nt':
 else:
     import errno
 
-    def is_process_alive(pid):
+    def is_process_alive(pid: int) -> bool:
         """Check whether the process with the given pid is still alive.
 
         Args:

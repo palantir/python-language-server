@@ -4,10 +4,8 @@ import os
 import pytest
 
 from pyls import uris
-from pyls.workspace import Document
 from pyls.plugins.references import pyls_references
-from pyls._utils import PY2
-
+from pyls.workspace import Document
 
 DOC1_NAME = 'test1.py'
 DOC2_NAME = 'test2.py'
@@ -63,8 +61,6 @@ def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name
     assert doc2_usage_ref['range']['end'] == {'line': 3, 'character': 9}
 
 
-@pytest.mark.skipif(PY2, reason="Jedi sometimes fails while checking pylint "
-                                "example files in the modules path")
 def test_references_builtin(tmp_workspace):  # pylint: disable=redefined-outer-name
     # Over 'UnicodeError':
     position = {'line': 4, 'character': 7}

@@ -1,17 +1,10 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
-import sys
 
 import pytest
 
 from pyls import uris
-
-PY2 = sys.version_info.major == 2
-
-if PY2:
-    import pathlib2 as pathlib
-else:
-    import pathlib
+import pathlib
 
 
 DOC_URI = uris.from_fs_path(__file__)

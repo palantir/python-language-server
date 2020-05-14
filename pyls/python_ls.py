@@ -23,7 +23,7 @@ PYTHON_FILE_EXTENSIONS = ('.py', '.pyi')
 CONFIG_FILEs = ('pycodestyle.cfg', 'setup.cfg', 'tox.ini', '.flake8')
 
 
-class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
+class _StreamHandlerWrapper(socketserver.StreamRequestHandler):
     """A wrapper class that is used to construct a custom handler class."""
 
     delegate = None

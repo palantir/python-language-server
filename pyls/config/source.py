@@ -3,30 +3,29 @@ import configparser
 import logging
 import os
 import sys
-
 log = logging.getLogger(__name__)
 
 
-class ConfigSource(object):
+class ConfigSource:
     """Base class for implementing a config source."""
 
-    def __init__(self, root_path):
+    def __init__(self, root_path: str):
         self.root_path = root_path
         self.is_windows = sys.platform == 'win32'
         self.xdg_home = os.environ.get(
             'XDG_CONFIG_HOME', os.path.expanduser('~/.config')
         )
 
-    def user_config(self):
+    def user_config(self) -> dict:
         """Return user-level (i.e. home directory) configuration."""
         raise NotImplementedError()
 
-    def project_config(self, document_path):
+    def project_config(self, document_path) -> dict:
         """Return project-level (i.e. workspace directory) configuration."""
         raise NotImplementedError()
 
     @staticmethod
-    def read_config_from_files(files):
+    def read_config_from_files(files) -> configparser.RawConfigParser:
         config = configparser.RawConfigParser()
         for filename in files:
             if os.path.exists(filename) and not os.path.isdir(filename):
@@ -35,7 +34,7 @@ class ConfigSource(object):
         return config
 
     @staticmethod
-    def parse_config(config, key, options):
+    def parse_config(config: configparser.RawConfigParser, key: str, options: list) -> dict:
         """Parse the config with the given options."""
         conf = {}
         for source, destination, opt_type in options:

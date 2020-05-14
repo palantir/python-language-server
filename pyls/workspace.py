@@ -15,7 +15,7 @@ RE_START_WORD = re.compile('[A-Za-z_0-9]*$')
 RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 
-class Workspace(object):
+class Workspace:
 
     M_PUBLISH_DIAGNOSTICS = 'textDocument/publishDiagnostics'
     M_APPLY_EDIT = 'workspace/applyEdit'
@@ -110,7 +110,7 @@ class Workspace(object):
         )
 
 
-class Document(object):
+class Document:
 
     def __init__(self, uri, workspace, source=None, version=None, local=True, extra_sys_path=None,
                  rope_project_builder=None, config=None):
