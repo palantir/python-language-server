@@ -196,6 +196,26 @@ def test_snippets_completion(config, workspace):
     assert completions[0]['insertTextFormat'] == lsp.InsertTextFormat.Snippet
 
 
+def test_completion_with_class_objects(config, workspace):
+    doc_text = 'class FOOBAR(Object): pass\nFOOB'
+    com_position = {'line': 1, 'character': 4}
+    doc = Document(DOC_URI, workspace, doc_text)
+    config.capabilities['textDocument'] = {
+        'completion': {'completionItem': {'snippetSupport': True}}}
+    config.update({'plugins': {'jedi_completion': {
+        'include_params': True,
+        'include_class_objects': True,
+    }}})
+    completions = pyls_jedi_completions(config, doc, com_position)
+    assert len(completions) == 2
+
+    assert completions[0]['label'] == 'FOOBAR'
+    assert completions[0]['kind'] == lsp.CompletionItemKind.Class
+
+    assert completions[1]['label'] == 'FOOBAR object'
+    assert completions[1]['kind'] == lsp.CompletionItemKind.TypeParameter
+
+
 def test_snippet_parsing(config, workspace):
     doc = 'import numpy as np\nnp.logical_and'
     completion_position = {'line': 1, 'character': 14}
