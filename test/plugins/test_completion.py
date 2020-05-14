@@ -193,6 +193,7 @@ def test_snippets_completion(config, workspace):
     com_position = {'line': 1, 'character': len(doc_snippets)}
     completions = pyls_jedi_completions(config, doc, com_position)
     assert completions[0]['insertText'] == 'defaultdict($0)'
+    assert completions[0]['insertTextFormat'] == lsp.InsertTextFormat.Snippet
 
 
 def test_snippet_parsing(config, workspace):

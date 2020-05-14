@@ -153,6 +153,7 @@ def _format_completion(d, include_params=True):
             snippet += ')$0'
             completion['insertText'] = snippet
         elif len(positional_args) == 1:
+            completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
             completion['insertText'] = d.name + '($0)'
         else:
             completion['insertText'] = d.name + '()'
