@@ -5,7 +5,7 @@ from pyls import hookimpl, lsp
 
 try:
     from autopep8 import continued_indentation as autopep8_c_i
-except ModuleNotFoundError:
+except ImportError:
     pass
 else:
     # Check if autopep8's continued_indentation implementation
