@@ -66,8 +66,25 @@ def pyls_completions(config, document, position):
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
     should_include_params = settings.get('include_params')
+    should_include_class_objects = settings.get('include_class_objects', True)
+
     include_params = snippet_support and should_include_params and use_snippets(document, position)
-    return [_format_completion(c, include_params) for c in completions] or None
+    include_class_objects = snippet_support and should_include_class_objects and use_snippets(document, position)
+
+    ready_completions = [
+        _format_completion(c, include_params)
+        for c in completions
+    ]
+
+    if include_class_objects:
+        for c in completions:
+            if c.type == 'class':
+                completion_dict = _format_completion(c, False)
+                completion_dict['kind'] = lsp.CompletionItemKind.TypeParameter
+                completion_dict['label'] += ' object'
+                ready_completions.append(completion_dict)
+
+    return ready_completions or None
 
 
 def is_exception_class(name):
@@ -153,6 +170,7 @@ def _format_completion(d, include_params=True):
             snippet += ')$0'
             completion['insertText'] = snippet
         elif len(positional_args) == 1:
+            completion['insertTextFormat'] = lsp.InsertTextFormat.Snippet
             completion['insertText'] = d.name + '($0)'
         else:
             completion['insertText'] = d.name + '()'
