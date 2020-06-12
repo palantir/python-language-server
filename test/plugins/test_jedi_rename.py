@@ -62,11 +62,16 @@ def test_jedi_rename(tmp_workspace, config):  # pylint: disable=redefined-outer-
     # but that do need to be renamed in the project have a `null` version
     # number.
     assert changes[1]['textDocument']['version'] is None
+    expected = 'from test1 import ShouldBeRenamed\nx = ShouldBeRenamed()\n'
+    if os.name == 'nt':
+        # The .write method in the temp_workspace_factory functions writes
+        # Windows-style line-endings.
+        expected = expected.replace('\n', '\r\n')
     assert changes[1].get('edits') == [
         {
             'range': {
                 'start': {'line': 0, 'character': 0},
                 'end': {'line': 2, 'character': 0}},
-            'newText': 'from test1 import ShouldBeRenamed\nx = ShouldBeRenamed()\n'
+            'newText': expected
         }
     ]
