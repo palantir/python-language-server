@@ -55,8 +55,8 @@ def test_jedi_rename(tmp_workspace, config):  # pylint: disable=redefined-outer-
             'newText': 'class ShouldBeRenamed():\n    pass\n\nclass Test2(ShouldBeRenamed):\n    pass\n',
         }
     ]
-    uri_extra = uris.from_fs_path(os.path.join(tmp_workspace.root_path,
-                                  DOC_NAME_EXTRA))
+    path = os.path.join(tmp_workspace.root_path, DOC_NAME_EXTRA)
+    uri_extra = uris.from_fs_path(path)
     assert changes[1]['textDocument']['uri'] == uri_extra
     # This also checks whether documents not yet added via textDocument/didOpen
     # but that do need to be renamed in the project have a `null` version

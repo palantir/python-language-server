@@ -1,6 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
-import os
 
 from rope.base import libutils
 from rope.refactor.rename import Rename
@@ -34,7 +33,6 @@ def pyls_rename(config, workspace, document, position, new_name):
     for change in changeset.changes:
         uri = uris.from_fs_path(change.resource.path)
         doc = workspace.get_maybe_document(uri)
-        version = doc.version if doc else None
         changes.append({
             'textDocument': {
                 'uri': uri,
