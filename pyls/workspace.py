@@ -71,6 +71,9 @@ class Workspace(object):
         """
         return self._docs.get(doc_uri) or self._create_document(doc_uri)
 
+    def get_maybe_document(self, doc_uri):
+        return self._docs.get(doc_uri)
+
     def put_document(self, doc_uri, source, version=None):
         self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
 
