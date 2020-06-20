@@ -66,3 +66,18 @@ def test_flake8_config_param(config):
         call_args = popen_mock.call_args.args[0]
         assert 'flake8' in call_args
         assert '--config={}'.format(flake8_conf) in call_args
+
+
+def test_flake8_executable_param(config):
+    with patch('pyls.plugins.flake8_lint.Popen') as popen_mock:
+        mock_instance = popen_mock.return_value
+        mock_instance.communicate.return_value = [bytes(), bytes()]
+
+        flake8_executable = '/tmp/flake8'
+        config.update({'plugins': {'flake8': {'executable': flake8_executable}}})
+
+        _name, doc = temp_document(DOC)
+        flake8_lint.pyls_lint(config, doc)
+
+        call_args = popen_mock.call_args.args[0]
+        assert flake8_executable in call_args

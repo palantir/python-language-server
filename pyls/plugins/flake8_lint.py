@@ -39,22 +39,24 @@ def pyls_lint(config, document):
         log.debug("using flake8 with config: %s", opts['config'])
 
     # Call the flake8 utility then parse diagnostics from stdout
+    flake8_executable = settings.get('executable', 'flake8')
+
     args = build_args(opts, document.path)
-    output = run_flake8(args)
+    output = run_flake8(flake8_executable, args)
     return parse_stdout(document, output)
 
 
-def run_flake8(args):
+def run_flake8(flake8_executable, args):
     """Run flake8 with the provided arguments, logs errors
     from stderr if any.
     """
-    log.debug("Calling flake8 with args: '%s'", args)
+    log.debug("Calling %s with args: '%s'", flake8_executable, args)
     try:
-        cmd = ['flake8']
+        cmd = [flake8_executable]
         cmd.extend(args)
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     except IOError:
-        log.debug("Can't execute flake8. Trying with 'python -m flake8'")
+        log.debug("Can't execute %s. Trying with 'python -m flake8'", flake8_executable)
         cmd = ['python', '-m', 'flake8']
         cmd.extend(args)
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
