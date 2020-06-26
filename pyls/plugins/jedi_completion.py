@@ -1,6 +1,9 @@
 # Copyright 2017 Palantir Technologies, Inc.
+import os
 import logging
 import os.path as osp
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 import parso
 
@@ -49,10 +52,12 @@ _IMPORTS = ('import_name', 'import_from')
 # Types of parso node for errors
 _ERRORS = ('error_node', )
 
-
+profile_dump = open('/tmp/pyls_completions.prof', 'w')
 @hookimpl
 def pyls_completions(config, document, position):
     """Get formatted completions for current code position"""
+    global profile_dump
+    t1 = datetime.now()
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
     code_position = _utils.position_to_jedi_linecolumn(document, position)
 
@@ -62,6 +67,7 @@ def pyls_completions(config, document, position):
     if not completions:
         return None
 
+    # t15 = datetime.now()
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
 
@@ -71,8 +77,10 @@ def pyls_completions(config, document, position):
     include_params = snippet_support and should_include_params and use_snippets(document, position)
     include_class_objects = snippet_support and should_include_class_objects and use_snippets(document, position)
 
+    # t17 = datetime.now()
+    format_profile_ranges = defaultdict(timedelta)
     ready_completions = [
-        _format_completion(c, include_params)
+        _format_completion(c, include_params, format_profile_ranges)
         for c in completions
     ]
 
@@ -84,6 +92,17 @@ def pyls_completions(config, document, position):
                 completion_dict['label'] += ' object'
                 ready_completions.append(completion_dict)
 
+    t2 = datetime.now()
+    print(
+        # 'pid', os.getpid(),
+        'pyls_completions',
+        'total', t2 - t1,
+        'format_profile_ranges', format_profile_ranges,
+        # 'jedi', t15 - t1,
+        # 'before_format', t17 - t15,
+        # 'format', t2 - t17,
+        file=profile_dump)
+    profile_dump.flush()
     return ready_completions or None
 
 
@@ -137,15 +156,20 @@ def use_snippets(document, position):
             not (expr_type in _ERRORS and 'import' in code))
 
 
-def _format_completion(d, include_params=True):
+def _format_completion(d, include_params=True, profile_ranges=None):
+    t1 = datetime.now()
     completion = {
-        'label': _label(d),
-        'kind': _TYPE_MAP.get(d.type),
-        'detail': _detail(d),
-        'documentation': _utils.format_docstring(d.docstring()),
-        'sortText': _sort_text(d),
-        'insertText': d.name
+        #'documentation': _utils.format_docstring(d.docstring()),
     }
+    t2 = datetime.now()
+    completion.update({
+        'label': d.name,
+        'kind': _TYPE_MAP.get(d.type),
+        'sortText': _sort_text(d),
+        'insertText': d.name,
+        'detail': _detail(d),
+    })
+    t3 = datetime.now()
 
     if d.type == 'path':
         path = osp.normpath(d.name)
@@ -153,8 +177,12 @@ def _format_completion(d, include_params=True):
         path = path.replace('/', '\\/')
         completion['insertText'] = path
 
+    if not include_params:
+        return completion
+
     sig = d.get_signatures()
-    if (include_params and sig and not is_exception_class(d.name)):
+    if sig and not is_exception_class(d.name):
+        completion['label'] = _label(d, sig)
         positional_args = [param for param in sig[0].params
                            if '=' not in param.description and
                            param.name not in {'/', '*'}]
@@ -174,12 +202,19 @@ def _format_completion(d, include_params=True):
             completion['insertText'] = d.name + '($0)'
         else:
             completion['insertText'] = d.name + '()'
+    # t4 = datetime.now()
+
+    profile_ranges['documentation'] += (t2 - t1)
+    profile_ranges['update'] += (t3 - t2)
+    profile_ranges['total'] += (t3 - t1)
+    # profile_ranges['path'] += (t3 - t2)
+    # profile_ranges['forks'] += (t4 - t3)
 
     return completion
 
 
-def _label(definition):
-    sig = definition.get_signatures()
+def _label(definition, sig):
+    # sig = definition.get_signatures()
     if definition.type in ('function', 'method') and sig:
         params = ', '.join(param.name for param in sig[0].params)
         return '{}({})'.format(definition.name, params)

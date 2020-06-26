@@ -1,4 +1,5 @@
 # Copyright 2017 Palantir Technologies, Inc.
+from datetime import datetime
 from functools import partial
 import logging
 import os
@@ -16,6 +17,7 @@ from .workspace import Workspace
 log = logging.getLogger(__name__)
 
 
+profile_dump = open('/tmp/PythonLanguageServer.completions.prof', 'w')
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 PARENT_PROCESS_WATCH_INTERVAL = 10  # 10 s
 MAX_WORKERS = 64
@@ -153,7 +155,9 @@ class PythonLanguageServer(MethodDispatcher):
         workspace = self._match_uri_to_workspace(doc_uri)
         doc = workspace.get_document(doc_uri) if doc_uri else None
         hook_handlers = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook_handlers(config=self.config, workspace=workspace, document=doc, **kwargs)
+        ret = hook_handlers(config=self.config, workspace=workspace, document=doc, **kwargs)
+
+        return ret
 
     def capabilities(self):
         server_capabilities = {
@@ -237,7 +241,12 @@ class PythonLanguageServer(MethodDispatcher):
         return flatten(self._hook('pyls_code_lens', doc_uri))
 
     def completions(self, doc_uri, position):
+        global profile_dump
+        t1 = datetime.now()
         completions = self._hook('pyls_completions', doc_uri, position=position)
+        t2 = datetime.now()
+        print('completions', t2 - t1, file=profile_dump)
+        profile_dump.flush()
         return {
             'isIncomplete': False,
             'items': flatten(completions)
