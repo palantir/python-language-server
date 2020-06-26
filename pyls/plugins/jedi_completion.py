@@ -159,11 +159,12 @@ def use_snippets(document, position):
 def _format_completion(d, include_params=True, profile_ranges=None):
     t1 = datetime.now()
     completion = {
-        #'documentation': _utils.format_docstring(d.docstring()),
+        'documentation': _utils.format_docstring(d.docstring()),
     }
     t2 = datetime.now()
+    sig = d.get_signatures()
     completion.update({
-        'label': d.name,
+        'label': _label(d, sig),
         'kind': _TYPE_MAP.get(d.type),
         'sortText': _sort_text(d),
         'insertText': d.name,
@@ -177,10 +178,12 @@ def _format_completion(d, include_params=True, profile_ranges=None):
         path = path.replace('/', '\\/')
         completion['insertText'] = path
 
+    profile_ranges['documentation'] += (t2 - t1)
+    profile_ranges['update'] += (t3 - t2)
+    profile_ranges['total'] += (t3 - t1)
     if not include_params:
         return completion
 
-    sig = d.get_signatures()
     if sig and not is_exception_class(d.name):
         completion['label'] = _label(d, sig)
         positional_args = [param for param in sig[0].params
@@ -204,9 +207,6 @@ def _format_completion(d, include_params=True, profile_ranges=None):
             completion['insertText'] = d.name + '()'
     # t4 = datetime.now()
 
-    profile_ranges['documentation'] += (t2 - t1)
-    profile_ranges['update'] += (t3 - t2)
-    profile_ranges['total'] += (t3 - t1)
     # profile_ranges['path'] += (t3 - t2)
     # profile_ranges['forks'] += (t4 - t3)
 
