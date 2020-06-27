@@ -387,7 +387,9 @@ class PythonLanguageServer(MethodDispatcher):
         if root_workspace_removed and workspace_added:
             added_uri = added[0]['uri']
             self.root_uri = added_uri
-            self.workspace = self.workspaces[added_uri]
+            new_root_workspace = self.workspaces[added_uri]
+            self.config = new_root_workspace._config
+            self.workspace = new_root_workspace
         elif root_workspace_removed:
             # NOTE: Removing the root workspace can only happen when the server
             # is closed, thus the else condition of this if can never happen.
@@ -395,6 +397,7 @@ class PythonLanguageServer(MethodDispatcher):
                 log.debug('Root workspace deleted!')
                 available_workspaces = sorted(self.workspaces)
                 first_workspace = available_workspaces[0]
+                self.config = first_workspace._config
                 self.root_uri = first_workspace
                 self.workspace = self.workspaces[first_workspace]
 
