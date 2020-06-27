@@ -397,9 +397,10 @@ class PythonLanguageServer(MethodDispatcher):
                 log.debug('Root workspace deleted!')
                 available_workspaces = sorted(self.workspaces)
                 first_workspace = available_workspaces[0]
-                self.config = first_workspace._config
+                new_root_workspace = self.workspaces[first_workspace]
                 self.root_uri = first_workspace
-                self.workspace = self.workspaces[first_workspace]
+                self.config = new_root_workspace._config
+                self.workspace = new_root_workspace
 
         # Migrate documents that are on the root workspace and have a better
         # match now
