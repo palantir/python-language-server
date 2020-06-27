@@ -376,7 +376,11 @@ class PythonLanguageServer(MethodDispatcher):
         for added_info in added:
             if 'uri' in added_info:
                 added_uri = added_info['uri']
-                self.workspaces[added_uri] = Workspace(added_uri, self._endpoint, self.config)
+                workspace_config = config.Config(
+                    added_uri, self.config._init_opts,
+                    self.config._process_id, self.config._capabilities)
+                self.workspaces[added_uri] = Workspace(
+                    added_uri, self._endpoint, workspace_config)
 
         root_workspace_removed = any(removed_info['uri'] == self.root_uri for removed_info in removed)
         workspace_added = len(added) > 0 and 'uri' in added[0]
