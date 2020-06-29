@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 from pyls import lsp, uris
-from pyls.config.config import Config
 from pyls.workspace import Document
 from pyls.plugins import pycodestyle_lint
 
