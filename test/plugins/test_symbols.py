@@ -79,7 +79,7 @@ def test_symbols_all_scopes(config, workspace):
 
 
 @pytest.mark.skipif(PY2 or not LINUX or not CI, reason="tested on linux and python 3 only")
-def test_symbols_all_scopes_with_jedi_environment(config, workspace):
+def test_symbols_all_scopes_with_jedi_environment(workspace):
     doc = Document(DOC_URI, workspace, DOC)
 
     # Update config extra environment
