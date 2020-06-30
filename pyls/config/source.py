@@ -30,7 +30,6 @@ class ConfigSource(object):
         config = configparser.RawConfigParser()
         for filename in files:
             if os.path.exists(filename) and not os.path.isdir(filename):
-                log.debug("Reading config from %s", filename)
                 config.read(filename)
 
         return config
