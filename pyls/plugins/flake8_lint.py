@@ -7,8 +7,7 @@ from subprocess import Popen, PIPE
 from pyls import hookimpl, lsp
 
 log = logging.getLogger(__name__)
-# a quick temporary fix to deal with Atom
-_fix_ignores_re = re.compile(r'([^a-zA-Z0-9_,]*;.*(\W+||$))')
+FIX_IGNORES_RE = re.compile(r'([^a-zA-Z0-9_,]*;.*(\W+||$))')
 
 
 @hookimpl
@@ -50,7 +49,8 @@ def run_flake8(args):
     """Run flake8 with the provided arguments, logs errors
     from stderr if any.
     """
-    args = [(i if not i.startswith('--ignore=') else _fix_ignores_re.sub('', i))
+    # a quick temporary fix to deal with Atom
+    args = [(i if not i.startswith('--ignore=') else FIX_IGNORES_RE.sub('', i))
             for i in args if i is not None]
     log.debug("Calling flake8 with args: '%s'", args)
     try:
