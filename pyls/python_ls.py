@@ -358,7 +358,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.config.update((settings or {}).get('pyls', {}))
         for workspace_uri in self.workspaces:
             workspace = self.workspaces[workspace_uri]
-            workspace.update_config(self.config)
+            workspace.update_config(settings)
             for doc_uri in workspace.documents:
                 self.lint(doc_uri, is_saved=False)
 

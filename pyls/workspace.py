@@ -84,10 +84,10 @@ class Workspace(object):
         self._docs[doc_uri].apply_change(change)
         self._docs[doc_uri].version = version
 
-    def update_config(self, config):
-        self._config = config
+    def update_config(self, settings):
+        self._config.update((settings or {}).get('pyls', {}))
         for doc_uri in self.documents:
-            self.get_document(doc_uri).update_config(config)
+            self.get_document(doc_uri).update_config(settings)
 
     def apply_edit(self, edit):
         return self._endpoint.request(self.M_APPLY_EDIT, {'edit': edit})
@@ -147,8 +147,8 @@ class Document(object):
                 return f.read()
         return self._source
 
-    def update_config(self, config):
-        self._config = config
+    def update_config(self, settings):
+        self._config.update((settings or {}).get('pyls', {}))
 
     def apply_change(self, change):
         """Apply a change to the document."""
