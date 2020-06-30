@@ -300,8 +300,8 @@ foo.s"""
     assert completions is None
 
     # Update config extra paths
-    config.update({'plugins': {'jedi': {'extra_paths': extra_paths}}})
-    doc.update_config(config)
+    settings = {'pyls': {'plugins': {'jedi': {'extra_paths': extra_paths}}}}
+    doc.update_config(settings)
 
     # After 'foo.s' with extra paths
     com_position = {'line': 1, 'character': 5}
