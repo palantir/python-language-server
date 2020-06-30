@@ -13,6 +13,7 @@ class MockWorkspace(object):
     def __init__(self):
         """Mock workspace used by tests that use jedi environment."""
         self._environments = {}
+        self._config = None
 
         # This is to avoid pyling tests of the variable not being used
         sys.stdout.write(str(self._environments))
