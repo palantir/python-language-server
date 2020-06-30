@@ -7,21 +7,6 @@ import mock
 from pyls import _utils
 
 
-class MockWorkspace(object):
-    """Mock workspace used by tests that use jedi environment."""
-
-    def __init__(self):
-        """Mock workspace used by tests that use jedi environment."""
-        self._environments = {}
-        self._config = None
-
-        # This is to avoid pyling tests of the variable not being used
-        sys.stdout.write(str(self._environments))
-
-        # This necessary for the new Jedi 0.17+ API.
-        self.root_path = ''
-
-
 def test_debounce():
     interval = 0.1
     obj = mock.Mock()
