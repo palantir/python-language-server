@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 from setuptools import find_packages, setup
 import versioneer
 
@@ -53,7 +54,9 @@ setup(
             'pycodestyle>=2.6.0,<2.7.0',
             'pydocstyle>=2.0.0',
             'pyflakes>=2.2.0,<2.3.0',
-            'pylint',
+            # pylint >= 2.5.0 is required for working through stdin and only
+            # available with python3
+            'pylint>=2.5.0' if sys.version_info.major >= 3 else 'pylint',
             'rope>=0.10.5',
             'yapf',
         ],
@@ -63,12 +66,14 @@ setup(
         'pycodestyle': ['pycodestyle>=2.6.0,<2.7.0'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
         'pyflakes': ['pyflakes>=2.2.0,<2.3.0'],
-        'pylint': ['pylint'],
+        'pylint': [
+            'pylint>=2.5.0' if sys.version_info.major >= 3 else 'pylint'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
-        'test': ['versioneer', 'pylint', 'pytest', 'mock', 'pytest-cov',
-                 'coverage', 'numpy', 'pandas', 'matplotlib',
-                 'pyqt5;python_version>="3"', 'flaky'],
+        'test': ['versioneer',
+                 'pylint>=2.5.0' if sys.version_info.major >= 3 else 'pylint',
+                 'pytest', 'mock', 'pytest-cov', 'coverage', 'numpy', 'pandas',
+                 'matplotlib', 'pyqt5;python_version>="3"', 'flaky'],
     },
 
     # To provide executable scripts, use entry points in preference to the
