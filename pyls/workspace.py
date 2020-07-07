@@ -133,6 +133,7 @@ class Document(object):
 
         jedi.settings.cache_directory = '.cache/jedi/'
         jedi.settings.use_filesystem_cache = True
+        jedi.settings.auto_import_modules = ['numpy', 'pandas', 'scipy', 'matplotlib', 'scikit-learn', 'requests' ]
 
     def __str__(self):
         return str(self.uri)
@@ -237,19 +238,21 @@ class Document(object):
         environment = self.get_enviroment(environment_path) if environment_path else None
         sys_path = self.sys_path(environment_path) + extra_paths
         project_path = self._workspace.root_path
+        import __main__
 
         kwargs = {
             'code': self.source,
-            'path': self.path,
-            'environment': environment,
-            'project': jedi.Project(path=project_path, sys_path=sys_path),
+            #'path': self.path,
+            #'environment': environment,
+            #'project': jedi.Project(path=project_path, sys_path=sys_path),
+            'namespaces': [__main__.__dict__],
         }
 
         if position:
             # Deprecated by Jedi to use in Script() constructor
             kwargs += _utils.position_to_jedi_linecolumn(self, position)
 
-        return jedi.Script(**kwargs)
+        return jedi.Interpreter(**kwargs)
 
     def get_enviroment(self, environment_path=None):
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
