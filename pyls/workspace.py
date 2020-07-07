@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import re
+import pkg_resources
 
 import jedi
 
@@ -116,6 +117,7 @@ class Workspace(object):
 
 
 class Document(object):
+    DO_NOT_PRELOAD_MODULES = ['attrs', 'backcall', 'bleach', 'certifi', 'chardet', 'cycler', 'decorator', 'defusedxml', 'docopt', 'entrypoints', 'idna', 'importlib-metadata', 'ipykernel', 'ipython-genutils', 'ipython', 'ipywidgets', 'jedi', 'jinja2', 'joblib', 'jsonschema', 'jupyter-client', 'jupyter-core', 'markupsafe', 'mistune', 'nbconvert', 'nbformat', 'notebook', 'packaging', 'pandocfilters', 'parso', 'pexpect', 'pickleshare', 'pip', 'pipreqs', 'pluggy', 'prometheus-client', 'prompt-toolkit', 'ptyprocess', 'pygments', 'pyparsing', 'pyrsistent', 'python-dateutil', 'python-jsonrpc-server', 'python-language-server', 'pytz', 'pyzmq', 'send2trash', 'setuptools', 'six', 'terminado', 'testpath', 'threadpoolctl', 'tornado', 'traitlets', 'ujson', 'wcwidth', 'webencodings', 'wheel', 'widgetsnbextension', 'yarg', 'zipp']
 
     def __init__(self, uri, workspace, source=None, version=None, local=True, extra_sys_path=None,
                  rope_project_builder=None):
@@ -133,7 +135,14 @@ class Document(object):
 
         jedi.settings.cache_directory = '.cache/jedi/'
         jedi.settings.use_filesystem_cache = True
-        jedi.settings.auto_import_modules = ['numpy', 'pandas', 'scipy', 'matplotlib', 'scikit-learn', 'requests' ]
+        jedi.settings.auto_import_modules = self._get_auto_import_modules()
+
+    def _get_auto_import_modules(self):
+      installed_packages = pkg_resources.working_set
+      installed_packages_list = [i.key for i in installed_packages]
+
+      auto_import_modules = list(filter(lambda x: x not in self.DO_NOT_PRELOAD_MODULES, installed_packages_list))
+      return auto_import_modules
 
     def __str__(self):
         return str(self.uri)
