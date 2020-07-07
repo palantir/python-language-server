@@ -251,7 +251,7 @@ class Document(object):
 
         kwargs = {
             'code': self.source,
-            #'path': self.path,
+            'path': self.path,
             #'environment': environment,
             #'project': jedi.Project(path=project_path, sys_path=sys_path),
             'namespaces': [__main__.__dict__],
