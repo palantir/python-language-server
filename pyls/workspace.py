@@ -226,13 +226,13 @@ class Document(object):
     def jedi_script(self, position=None):
         extra_paths = []
         environment_path = None
-        env_vars = {}
+        env_vars = None
 
         if self._config:
             jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
             environment_path = jedi_settings.get('environment')
             extra_paths = jedi_settings.get('extra_paths') or []
-            env_vars = jedi_settings.get('env_vars') or {}
+            env_vars = jedi_settings.get('env_vars')
 
         environment = self.get_enviroment(environment_path, env_vars=env_vars) if environment_path else None
         sys_path = self.sys_path(environment_path, env_vars=env_vars) + extra_paths

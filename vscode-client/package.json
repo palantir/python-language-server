@@ -42,7 +42,7 @@
                 },
                 "pyls.plugins.jedi.env_vars": {
                     "type": "dictionary",
-                    "default": {},
+                    "default": null,
                     "description": "Define environment variables for jedi.Script and Jedi.names."
                 },
                 "pyls.plugins.jedi.environment": {
