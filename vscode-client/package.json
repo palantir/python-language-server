@@ -115,6 +115,16 @@
                     "default": 15,
                     "description": "The minimum threshold that triggers warnings about cyclomatic complexity."
                 },
+                "pyls.plugins.mypy.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable type linting."
+                },
+                "pyls.plugins.mypy.live_mode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable live mode type linting."
+                },
                 "pyls.plugins.preload.enabled": {
                     "type": "boolean",
                     "default": true,

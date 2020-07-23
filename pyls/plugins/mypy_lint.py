@@ -54,7 +54,7 @@ def parse_line(line, document=None):
 
 @hookimpl
 def pyls_lint(config, workspace, document, is_saved):
-    settings = config.plugin_settings('pyls_mypy')
+    settings = config.plugin_settings('mypy')
     live_mode = settings.get('live_mode', True)
     if live_mode:
         args = ['--incremental',

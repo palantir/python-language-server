@@ -1,7 +1,6 @@
 import pytest
-
+import pyls.plugins.mypy_lint as plugin
 from pyls.workspace import Document
-from pyls_mypy import plugin
 
 DOC_URI = __file__
 DOC_TYPE_ERR = """{}.append(3)

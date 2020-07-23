@@ -29,6 +29,7 @@ If the respective dependencies are found, the following optional providers will 
 * pydocstyle_ linter for docstring style checking (disabled by default)
 * autopep8_ for code formatting
 * YAPF_ for code formatting (preferred over autopep8)
+* mypy for type linting
 
 Optional providers can be installed using the `extras` syntax. To install YAPF_ formatting for example:
 
@@ -46,7 +47,6 @@ If you get an error similar to ``'install_requires' must be a string or list of 
 ~~~~~~~~~~~~~~~~~
 Installing these plugins will add extra functionality to the language server:
 
-* pyls-mypy_ Mypy type checking for Python 3
 * pyls-isort_ Isort import sort code formatting
 * pyls-black_ for code formatting using Black_
 
