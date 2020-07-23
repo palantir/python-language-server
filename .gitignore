@@ -112,3 +112,6 @@ ENV/
 
 # Special files
 .DS_Store
+
+# mypy
+.mypy_cache/
