@@ -50,7 +50,7 @@ setup(
             'autopep8',
             'flake8>=3.8.0',
             'mccabe>=0.6.0,<0.7.0',
-            'mypy>=0.782'
+            'mypy'
             'pycodestyle>=2.6.0,<2.7.0',
             'pydocstyle>=2.0.0',
             'pyflakes>=2.2.0,<2.3.0',
