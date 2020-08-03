@@ -16,7 +16,6 @@ def parse_line(line, document=None):
     result = re.match(line_pattern, line)
     if result:
         file_path, lineno, offset, severity, msg = result.groups()
-
         if file_path != "<string>":  # live mode
             # results from other files can be included, but we cannot return
             # them.
