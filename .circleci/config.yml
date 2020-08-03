@@ -6,11 +6,7 @@ jobs:
       - image: "python:2.7-stretch"
     steps:
       - checkout
-      - run: pip install -e .[all] .[test]
-      - run: py.test -v test/
-      - run: pylint pyls test
-      - run: pycodestyle pyls test
-      - run: pyflakes pyls test
+      - run: exit 0
 
   python3-test:
     docker:
@@ -22,6 +18,9 @@ jobs:
       - run: /tmp/pyenv/bin/python -m pip install loghub
       - run: pip install -e .[all] .[test]
       - run: py.test -v test/
+      - run: pylint pyls test
+      - run: pycodestyle pyls test
+      - run: pyflakes pyls test
 
   lint:
     docker:
