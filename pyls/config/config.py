@@ -49,6 +49,10 @@ class Config(object):
         # However I don't want all plugins to have to catch ImportError and re-throw. So here we'll filter
         # out any entry points that throw ImportError assuming one or more of their dependencies isn't present.
         for entry_point in pkg_resources.iter_entry_points(PYLS):
+            if str(entry_point) == 'pyls_mypy':
+                # Don't load the pyls mypy third party plugin for avoiding
+                # conflicts
+                continue
             try:
                 entry_point.load()
             except ImportError as e:
