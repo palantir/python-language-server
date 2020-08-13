@@ -77,7 +77,7 @@ class PyCodeStyleDiagnosticReport(pycodestyle.BaseReport):
             'range': err_range,
             'message': text,
             'code': code,
-            'severity': self._get_severity(code)
+            'severity': _get_severity(code)
         })
 
 
