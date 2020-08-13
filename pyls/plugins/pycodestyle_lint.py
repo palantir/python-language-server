@@ -73,4 +73,5 @@ def _get_severity(code):
     if code[0] == 'E' or code[0] == 'W':
         return lsp.DiagnosticSeverity.Warning
     else:
+    # If no severity is specified, why wouldn't this be informational only?
         return lsp.DiagnosticSeverity.Info
