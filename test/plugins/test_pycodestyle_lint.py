@@ -1,7 +1,6 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import os
 from pyls import lsp, uris
-from pyls.config.config import Config
 from pyls.workspace import Document
 from pyls.plugins import pycodestyle_lint
 
@@ -10,6 +9,9 @@ DOC = """import sys
 
 def hello( ):
 \tpass
+print("hello"
+ ,"world"
+)
 
 import json
 
@@ -17,9 +19,9 @@ import json
 """
 
 
-def test_pycodestyle(config):
-    doc = Document(DOC_URI, DOC)
-    diags = pycodestyle_lint.pyls_lint(config, doc)
+def test_pycodestyle(workspace):
+    doc = Document(DOC_URI, workspace, DOC)
+    diags = pycodestyle_lint.pyls_lint(workspace, doc)
 
     assert all([d['source'] == 'pycodestyle' for d in diags])
 
@@ -37,8 +39,8 @@ def test_pycodestyle(config):
 
     assert mod_import['code'] == 'W391'
     assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
-    assert mod_import['range']['start'] == {'line': 7, 'character': 0}
-    assert mod_import['range']['end'] == {'line': 7, 'character': 1}
+    assert mod_import['range']['start'] == {'line': 10, 'character': 0}
+    assert mod_import['range']['end'] == {'line': 10, 'character': 1}
 
     msg = "E201 whitespace after '('"
     mod_import = [d for d in diags if d['message'] == msg][0]
@@ -47,6 +49,14 @@ def test_pycodestyle(config):
     assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
     assert mod_import['range']['start'] == {'line': 2, 'character': 10}
     assert mod_import['range']['end'] == {'line': 2, 'character': 14}
+
+    msg = "E128 continuation line under-indented for visual indent"
+    mod_import = [d for d in diags if d['message'] == msg][0]
+
+    assert mod_import['code'] == 'E128'
+    assert mod_import['severity'] == lsp.DiagnosticSeverity.Warning
+    assert mod_import['range']['start'] == {'line': 5, 'character': 1}
+    assert mod_import['range']['end'] == {'line': 5, 'character': 10}
 
 
 def test_pycodestyle_config(workspace):
@@ -67,14 +77,13 @@ def test_pycodestyle_config(workspace):
     doc_uri = uris.from_fs_path(os.path.join(workspace.root_path, 'test.py'))
     workspace.put_document(doc_uri, DOC)
     doc = workspace.get_document(doc_uri)
-    config = Config(workspace.root_uri, {}, 1234, {})
 
     # Make sure we get a warning for 'indentation contains tabs'
-    diags = pycodestyle_lint.pyls_lint(config, doc)
+    diags = pycodestyle_lint.pyls_lint(workspace, doc)
     assert [d for d in diags if d['code'] == 'W191']
 
     content = {
-        'setup.cfg': ('[pycodestyle]\nignore = W191, E201', True),
+        'setup.cfg': ('[pycodestyle]\nignore = W191, E201, E128', True),
         'tox.ini': ('', False)
     }
 
@@ -82,10 +91,10 @@ def test_pycodestyle_config(workspace):
         # Now we'll add config file to ignore it
         with open(os.path.join(workspace.root_path, conf_file), 'w+') as f:
             f.write(content)
-        config.settings.cache_clear()
+        workspace._config.settings.cache_clear()
 
         # And make sure we don't get any warnings
-        diags = pycodestyle_lint.pyls_lint(config, doc)
+        diags = pycodestyle_lint.pyls_lint(workspace, doc)
         assert len([d for d in diags if d['code'] == 'W191']) == (0 if working else 1)
         assert len([d for d in diags if d['code'] == 'E201']) == (0 if working else 1)
         assert [d for d in diags if d['code'] == 'W391']
@@ -93,9 +102,9 @@ def test_pycodestyle_config(workspace):
         os.unlink(os.path.join(workspace.root_path, conf_file))
 
     # Make sure we can ignore via the PYLS config as well
-    config.update({'plugins': {'pycodestyle': {'ignore': ['W191', 'E201']}}})
+    workspace._config.update({'plugins': {'pycodestyle': {'ignore': ['W191', 'E201']}}})
     # And make sure we only get one warning
-    diags = pycodestyle_lint.pyls_lint(config, doc)
+    diags = pycodestyle_lint.pyls_lint(workspace, doc)
     assert not [d for d in diags if d['code'] == 'W191']
     assert not [d for d in diags if d['code'] == 'E201']
     assert [d for d in diags if d['code'] == 'W391']

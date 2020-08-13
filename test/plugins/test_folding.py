@@ -74,6 +74,9 @@ with open('doc', 'r') as f:
         pass
     finally:
         raise SomeException()
+
+def testC():
+    pass
 """)
 
 SYNTAX_ERR = dedent("""
@@ -108,8 +111,8 @@ for i in range(0, 3)
 """)
 
 
-def test_folding():
-    doc = Document(DOC_URI, DOC)
+def test_folding(workspace):
+    doc = Document(DOC_URI, workspace, DOC)
     ranges = pyls_folding_range(doc)
     expected = [{'startLine': 1, 'endLine': 6},
                 {'startLine': 2, 'endLine': 3},
@@ -141,12 +144,13 @@ def test_folding():
                 {'startLine': 59, 'endLine': 65},
                 {'startLine': 60, 'endLine': 61},
                 {'startLine': 62, 'endLine': 63},
-                {'startLine': 64, 'endLine': 65}]
+                {'startLine': 64, 'endLine': 65},
+                {'startLine': 67, 'endLine': 68}]
     assert ranges == expected
 
 
-def test_folding_syntax_error():
-    doc = Document(DOC_URI, SYNTAX_ERR)
+def test_folding_syntax_error(workspace):
+    doc = Document(DOC_URI, workspace, SYNTAX_ERR)
     ranges = pyls_folding_range(doc)
     expected = [{'startLine': 1, 'endLine': 6},
                 {'startLine': 2, 'endLine': 3},
