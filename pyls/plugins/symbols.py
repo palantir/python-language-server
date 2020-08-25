@@ -22,7 +22,6 @@ def pyls_document_symbols(config, document):
 
             kind = redefinitions.get(tuple_range, None)
             if kind is not None:
-                log.debug(kind)
                 exclude |= {tuple_range}
 
             if d.type == 'statement':
@@ -41,7 +40,6 @@ def pyls_document_symbols(config, document):
             symbols.append(symbol)
 
             if d.type == 'class':
-                log.debug(f'Class names: {d.defined_names()}')
                 for method in d.defined_names():
                     redefinitions[_tuple_range(method)] = 'method'
                 definitions = list(d.defined_names()) + definitions
@@ -134,5 +132,4 @@ _SYMBOL_KIND_MAP = {
 
 def _kind(d):
     """ Return the VSCode Symbol Type """
-    log.debug(f'Symbol {d.name} type: {d.type}, description: {d.description}')
     return _SYMBOL_KIND_MAP.get(d.type)
