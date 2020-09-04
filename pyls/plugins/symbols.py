@@ -8,6 +8,8 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_document_symbols(config, document):
+    # pylint: disable=broad-except
+    # pylint: disable=too-many-nested-blocks
     all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
     definitions = document.jedi_names(all_scopes=all_scopes)
     symbols = []
