@@ -55,6 +55,11 @@
                     "default": true,
                     "description": "Auto-completes methods and classes with tabstops for each parameter."
                 },
+                "pyls.plugins.jedi_completion.include_class_objects": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Adds class objects as a separate completion item."
+                },
                 "pyls.plugins.jedi_completion.fuzzy": {
                     "type": "boolean",
                     "default": false,

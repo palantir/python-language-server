@@ -26,17 +26,11 @@ except UnicodeError:
 
 
 @pytest.fixture
-def tmp_workspace(workspace):
-    def create_file(name, content):
-        fn = os.path.join(workspace.root_path, name)
-        with open(fn, 'w') as f:
-            f.write(content)
-        workspace.put_document(uris.from_fs_path(fn), content)
-
-    create_file(DOC1_NAME, DOC1)
-    create_file(DOC2_NAME, DOC2)
-
-    return workspace
+def tmp_workspace(temp_workspace_factory):
+    return temp_workspace_factory({
+        DOC1_NAME: DOC1,
+        DOC2_NAME: DOC2,
+    })
 
 
 def test_references(tmp_workspace):  # pylint: disable=redefined-outer-name

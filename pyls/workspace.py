@@ -71,6 +71,9 @@ class Workspace(object):
         """
         return self._docs.get(doc_uri) or self._create_document(doc_uri)
 
+    def get_maybe_document(self, doc_uri):
+        return self._docs.get(doc_uri)
+
     def put_document(self, doc_uri, source, version=None):
         self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
 
@@ -81,10 +84,10 @@ class Workspace(object):
         self._docs[doc_uri].apply_change(change)
         self._docs[doc_uri].version = version
 
-    def update_config(self, config):
-        self._config = config
+    def update_config(self, settings):
+        self._config.update((settings or {}).get('pyls', {}))
         for doc_uri in self.documents:
-            self.get_document(doc_uri).update_config(config)
+            self.get_document(doc_uri).update_config(settings)
 
     def apply_edit(self, edit):
         return self._endpoint.request(self.M_APPLY_EDIT, {'edit': edit})
@@ -98,28 +101,30 @@ class Workspace(object):
     def source_roots(self, document_path):
         """Return the source roots for the given document."""
         files = _utils.find_parents(self._root_path, document_path, ['setup.py', 'pyproject.toml']) or []
-        return list(set((os.path.dirname(project_file) for project_file in files))) or [self._root_path]
+        return list({os.path.dirname(project_file) for project_file in files}) or [self._root_path]
 
     def _create_document(self, doc_uri, source=None, version=None):
         path = uris.to_fs_path(doc_uri)
         return Document(
-            doc_uri, source=source, version=version,
+            doc_uri,
+            self,
+            source=source,
+            version=version,
             extra_sys_path=self.source_roots(path),
             rope_project_builder=self._rope_project_builder,
-            config=self._config, workspace=self,
         )
 
 
 class Document(object):
 
     def __init__(self, uri, workspace, source=None, version=None, local=True, extra_sys_path=None,
-                 rope_project_builder=None, config=None):
+                 rope_project_builder=None):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
         self.filename = os.path.basename(self.path)
 
-        self._config = config
+        self._config = workspace._config
         self._workspace = workspace
         self._local = local
         self._source = source
@@ -144,8 +149,8 @@ class Document(object):
                 return f.read()
         return self._source
 
-    def update_config(self, config):
-        self._config = config
+    def update_config(self, settings):
+        self._config.update((settings or {}).get('pyls', {}))
 
     def apply_change(self, change):
         """Apply a change to the document."""
