@@ -10,7 +10,7 @@ install_requires = [
         'future>=0.14.0; python_version<"3"',
         'backports.functools_lru_cache; python_version<"3.2"',
         'jedi>=0.17.0,<0.18.0',
-        'python-jsonrpc-server>=0.3.2',
+        'python-jsonrpc-server>=0.4.0',
         'pluggy']
 
 if sys.version_info[0] == 2:
