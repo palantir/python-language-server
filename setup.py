@@ -2,8 +2,22 @@
 import sys
 from setuptools import find_packages, setup
 import versioneer
+import sys
 
 README = open('README.rst', 'r').read()
+
+install_requires = [
+        'configparser; python_version<"3.0"',
+        'future>=0.14.0; python_version<"3"',
+        'backports.functools_lru_cache; python_version<"3.2"',
+        'jedi>=0.17.0,<0.18.0',
+        'python-jsonrpc-server>=0.4.0',
+        'pluggy']
+
+if sys.version_info[0] == 2:
+    install_requires.append('ujson<=2.0.3; platform_system!="Windows"')
+else:
+    install_requires.append('ujson>=3.0.0')
 
 
 setup(
@@ -32,15 +46,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[
-        'configparser; python_version<"3.0"',
-        'future>=0.14.0; python_version<"3"',
-        'backports.functools_lru_cache; python_version<"3.2"',
-        'jedi>=0.17.0,<0.18.0',
-        'python-jsonrpc-server>=0.3.2',
-        'pluggy',
-        'ujson<=1.35; platform_system!="Windows"'
-    ],
+    install_requires=install_requires,
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
