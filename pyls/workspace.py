@@ -18,6 +18,7 @@ RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
 
 
 def lock(method):
+    """Define an atomic region over a method."""
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
         with self._lock:
@@ -238,6 +239,7 @@ class Document(object):
         return script.get_names(all_scopes=all_scopes, definitions=definitions,
                                 references=references)
 
+    @lock
     def jedi_script(self, position=None):
         extra_paths = []
         environment_path = None
