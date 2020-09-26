@@ -234,6 +234,12 @@ class Document(object):
             extra_paths = jedi_settings.get('extra_paths') or []
             env_vars = jedi_settings.get('env_vars')
 
+        # Drop PYTHONPATH from env_vars before creating the environment because that makes
+        # Jedi throw an error.
+        if env_vars is None:
+            env_vars = os.environ.copy()
+        env_vars.pop('PYTHONPATH', None)
+
         environment = self.get_enviroment(environment_path, env_vars=env_vars) if environment_path else None
         sys_path = self.sys_path(environment_path, env_vars=env_vars) + extra_paths
         project_path = self._workspace.root_path
