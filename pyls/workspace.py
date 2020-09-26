@@ -257,8 +257,7 @@ class Document(object):
 
         return jedi.Script(**kwargs)
 
-    def get_enviroment(self, environment_path=None, **kwargs):
-        # TODO: when safe to break API, use env_vars explicitly to pass to create_environment
+    def get_enviroment(self, environment_path=None, env_vars=None):
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
         if environment_path is None:
             environment = jedi.api.environment.get_cached_default_environment()
@@ -267,15 +266,16 @@ class Document(object):
                 environment = self._workspace._environments[environment_path]
             else:
                 environment = jedi.api.environment.create_environment(path=environment_path,
-                                                                      safe=False, **kwargs)
+                                                                      safe=False,
+                                                                      env_vars=env_vars)
                 self._workspace._environments[environment_path] = environment
 
         return environment
 
-    def sys_path(self, environment_path=None, **kwargs):
+    def sys_path(self, environment_path=None, env_vars=None):
         # Copy our extra sys path
         # TODO: when safe to break API, use env_vars explicitly to pass to create_environment
         path = list(self._extra_sys_path)
-        environment = self.get_enviroment(environment_path=environment_path, **kwargs)
+        environment = self.get_enviroment(environment_path=environment_path, env_vars=env_vars)
         path.extend(environment.get_sys_path())
         return path
