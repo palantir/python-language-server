@@ -57,7 +57,7 @@ def run_flake8(flake8_executable, args, document):
             for i in args if i is not None]
 
     # if executable looks like a path resolve it
-    if os.sep in flake8_executable:
+    if not os.path.isfile(flake8_executable) and os.sep in flake8_executable:
         flake8_executable = os.path.abspath(
             os.path.expanduser(os.path.expandvars(flake8_executable))
         )
