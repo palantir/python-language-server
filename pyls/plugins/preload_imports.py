@@ -30,5 +30,7 @@ def pyls_initialize(config):
         try:
             __import__(mod_name)
             log.debug("Preloaded module %s", mod_name)
-        except ImportError:
+        except (ImportError, ValueError):
+            # Catch ValueError since old versions of Numpy can cause it
+            # See spyder-ide/spyder#13985
             pass
