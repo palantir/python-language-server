@@ -1,17 +1,17 @@
 from pyls import hookimpl, lsp
 
+
 @hookimpl
-def pyls_lint(config, document):
+def pyls_lint(document):
     errors = document.jedi_script().get_syntax_errors()
     diagnostics = []
 
     for error in errors:
         err_range = {
             'start': {
-              'line': error.line - 1,
-               # Index columns start from 0
-               'character': error.column,
-            },
+                'line': error.line - 1,
+                'character': error.column,
+                },
             'end': {
                 'line': error.until_line - 1,
                 # It's possible that we're linting an empty file. Even an empty
