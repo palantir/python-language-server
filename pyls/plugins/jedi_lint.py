@@ -20,9 +20,9 @@ def pyls_lint(document):
                 },
             }
         diagnostics.append({
-                'source': 'jedi',
-                'range': err_range,
-                'message': error.get_message(),
-                'severity': lsp.DiagnosticSeverity.Error,
-            })
+            'source': 'jedi',
+            'range': err_range,
+            'message': error.get_message(),
+            'severity': lsp.DiagnosticSeverity.Error,
+        })
     return diagnostics

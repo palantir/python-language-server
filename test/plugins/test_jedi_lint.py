@@ -29,7 +29,7 @@ def test_jedi_lint(workspace):
     doc = Document(DOC_URI, workspace, DOC)
     diags = jedi_lint.pyls_lint(doc)
 
-    assert len(diags) == 0
+    assert not diags
 
 
 def test_syntax_error_jedi(workspace):
@@ -57,4 +57,4 @@ def test_encoding_jedi(workspace):
     doc = Document(DOC_URI, workspace, DOC_ENCODING)
     diags = jedi_lint.pyls_lint(doc)
 
-    assert len(diags) == 0
+    assert not diags
