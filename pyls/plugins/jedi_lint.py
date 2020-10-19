@@ -14,8 +14,6 @@ def pyls_lint(document):
             },
             'end': {
                 'line': error.until_line - 1,
-                # It's possible that we're linting an empty file. Even an empty
-                # file might fail linting if it isn't named properly.
                 'character': error.until_column,
             },
         }
