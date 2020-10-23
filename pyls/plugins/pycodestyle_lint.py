@@ -88,4 +88,3 @@ def _get_severity(code):
         return lsp.DiagnosticSeverity.Warning
     # If no severity is specified, why wouldn't this be informational only?
     return lsp.DiagnosticSeverity.Information
-
