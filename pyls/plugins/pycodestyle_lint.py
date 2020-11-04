@@ -19,6 +19,14 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
+def pyls_settings():
+    # Default pycodestyle to disabled
+    return {'plugins': {'pycodestyle': {
+        'enabled': False,
+    }}}
+
+
+@hookimpl
 def pyls_lint(workspace, document):
     config = workspace._config
     settings = config.plugin_settings('pycodestyle', document_path=document.path)
