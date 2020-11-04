@@ -4,6 +4,8 @@ import logging
 import os
 import re
 import pkg_resources
+import functools
+from threading import RLock
 
 import jedi
 
@@ -14,6 +16,15 @@ log = logging.getLogger(__name__)
 # TODO: this is not the best e.g. we capture numbers
 RE_START_WORD = re.compile('[A-Za-z_0-9]*$')
 RE_END_WORD = re.compile('^[A-Za-z_0-9]*')
+
+
+def lock(method):
+    """Define an atomic region over a method."""
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Workspace(object):
@@ -124,6 +135,7 @@ class Document(object):
         self.uri = uri
         self.version = version
         self.path = uris.to_fs_path(uri)
+        self.dot_path = _utils.path_to_dot_name(self.path)
         self.filename = os.path.basename(self.path)
 
         self._config = workspace._config
@@ -132,6 +144,7 @@ class Document(object):
         self._source = source
         self._extra_sys_path = extra_sys_path or []
         self._rope_project_builder = rope_project_builder
+        self._lock = RLock()
 
         jedi.settings.cache_directory = '.cache/jedi/'
         jedi.settings.use_filesystem_cache = True
@@ -152,10 +165,12 @@ class Document(object):
         return libutils.path_to_resource(self._rope_project_builder(rope_config), self.path)
 
     @property
+    @lock
     def lines(self):
         return self.source.splitlines(True)
 
     @property
+    @lock
     def source(self):
         if self._source is None:
             with io.open(self.path, 'r', encoding='utf-8') as f:
@@ -165,6 +180,7 @@ class Document(object):
     def update_config(self, settings):
         self._config.update((settings or {}).get('pyls', {}))
 
+    @lock
     def apply_change(self, change):
         """Apply a change to the document."""
         text = change['text']
@@ -230,24 +246,38 @@ class Document(object):
 
         return m_start[0] + m_end[-1]
 
-    def jedi_names(self, all_scopes=False, definitions=True, references=False):
-        script = self.jedi_script()
+    @lock
+    def jedi_names(self, use_document_path, all_scopes=False, definitions=True, references=False):
+        script = self.jedi_script(use_document_path=use_document_path)
         return script.get_names(all_scopes=all_scopes, definitions=definitions,
                                 references=references)
 
-    def jedi_script(self, position=None):
+    @lock
+    def jedi_script(self, position=None, use_document_path=False):
         extra_paths = []
         environment_path = None
+        env_vars = None
 
         if self._config:
             jedi_settings = self._config.plugin_settings('jedi', document_path=self.path)
             environment_path = jedi_settings.get('environment')
             extra_paths = jedi_settings.get('extra_paths') or []
+            env_vars = jedi_settings.get('env_vars')
 
-        environment = self.get_enviroment(environment_path) if environment_path else None
-        sys_path = self.sys_path(environment_path) + extra_paths
+        # Drop PYTHONPATH from env_vars before creating the environment because that makes
+        # Jedi throw an error.
+        if env_vars is None:
+            env_vars = os.environ.copy()
+        env_vars.pop('PYTHONPATH', None)
+
+        environment = self.get_enviroment(environment_path, env_vars=env_vars) if environment_path else None
+        sys_path = self.sys_path(environment_path, env_vars=env_vars) + extra_paths
         project_path = self._workspace.root_path
         import __main__
+
+        # Extend sys_path with document's path if requested
+        if use_document_path:
+            sys_path += [os.path.normpath(os.path.dirname(self.path))]
 
         kwargs = {
             'code': self.source,
@@ -263,7 +293,7 @@ class Document(object):
 
         return jedi.Interpreter(**kwargs)
 
-    def get_enviroment(self, environment_path=None):
+    def get_enviroment(self, environment_path=None, env_vars=None):
         # TODO(gatesn): #339 - make better use of jedi environments, they seem pretty powerful
         if environment_path is None:
             environment = jedi.api.environment.get_cached_default_environment()
@@ -271,14 +301,17 @@ class Document(object):
             if environment_path in self._workspace._environments:
                 environment = self._workspace._environments[environment_path]
             else:
-                environment = jedi.api.environment.create_environment(path=environment_path, safe=False)
+                environment = jedi.api.environment.create_environment(path=environment_path,
+                                                                      safe=False,
+                                                                      env_vars=env_vars)
                 self._workspace._environments[environment_path] = environment
 
         return environment
 
-    def sys_path(self, environment_path=None):
+    def sys_path(self, environment_path=None, env_vars=None):
         # Copy our extra sys path
+        # TODO: when safe to break API, use env_vars explicitly to pass to create_environment
         path = list(self._extra_sys_path)
-        environment = self.get_enviroment(environment_path=environment_path)
+        environment = self.get_enviroment(environment_path=environment_path, env_vars=env_vars)
         path.extend(environment.get_sys_path())
         return path

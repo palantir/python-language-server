@@ -1,5 +1,7 @@
 # Copyright 2017 Palantir Technologies, Inc.
 import logging
+import os
+
 from pyls import hookimpl
 from pyls.lsp import SymbolKind
 
@@ -8,17 +10,71 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_document_symbols(config, document):
-    all_scopes = config.plugin_settings('jedi_symbols').get('all_scopes', True)
-    definitions = document.jedi_names(all_scopes=all_scopes)
-    return [{
-        'name': d.name,
-        'containerName': _container(d),
-        'location': {
-            'uri': document.uri,
-            'range': _range(d),
-        },
-        'kind': _kind(d),
-    } for d in definitions if _include_def(d)]
+    # pylint: disable=broad-except
+    # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-branches
+    symbols_settings = config.plugin_settings('jedi_symbols')
+    all_scopes = symbols_settings.get('all_scopes', True)
+    add_import_symbols = symbols_settings.get('include_import_symbols', True)
+
+    use_document_path = False
+    document_dir = os.path.normpath(os.path.dirname(document.path))
+    if not os.path.isfile(os.path.join(document_dir, '__init__.py')):
+        use_document_path = True
+
+    definitions = document.jedi_names(use_document_path, all_scopes=all_scopes)
+    module_name = document.dot_path
+    symbols = []
+    exclude = set({})
+    redefinitions = {}
+    while definitions != []:
+        d = definitions.pop(0)
+        if not add_import_symbols:
+            sym_full_name = d.full_name
+            if sym_full_name is not None:
+                if (not sym_full_name.startswith(module_name) and
+                        not sym_full_name.startswith('__main__')):
+                    continue
+
+        if _include_def(d) and document.path == d.module_path:
+            tuple_range = _tuple_range(d)
+            if tuple_range in exclude:
+                continue
+
+            kind = redefinitions.get(tuple_range, None)
+            if kind is not None:
+                exclude |= {tuple_range}
+
+            if d.type == 'statement':
+                if d.description.startswith('self'):
+                    kind = 'field'
+
+            symbol = {
+                'name': d.name,
+                'containerName': _container(d),
+                'location': {
+                    'uri': document.uri,
+                    'range': _range(d),
+                },
+                'kind': _kind(d) if kind is None else _SYMBOL_KIND_MAP[kind],
+            }
+            symbols.append(symbol)
+
+            if d.type == 'class':
+                try:
+                    defined_names = list(d.defined_names())
+                    for method in defined_names:
+                        if method.type == 'function':
+                            redefinitions[_tuple_range(method)] = 'method'
+                        elif method.type == 'statement':
+                            redefinitions[_tuple_range(method)] = 'field'
+                        else:
+                            redefinitions[_tuple_range(method)] = method.type
+                    definitions = list(defined_names) + definitions
+                except Exception:
+                    pass
+    return symbols
 
 
 def _include_def(definition):
@@ -54,6 +110,11 @@ def _range(definition):
         'start': {'line': start_line - 1, 'character': start_column},
         'end': {'line': end_line - 1, 'character': end_column}
     }
+
+
+def _tuple_range(definition):
+    definition = definition._name.tree_name.get_definition()
+    return (definition.start_pos, definition.end_pos)
 
 
 _SYMBOL_KIND_MAP = {
@@ -95,6 +156,7 @@ _SYMBOL_KIND_MAP = {
     'string': SymbolKind.String,
     'unicode': SymbolKind.String,
     'list': SymbolKind.Array,
+    'field': SymbolKind.Field
 }
 
 
