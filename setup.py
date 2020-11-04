@@ -97,6 +97,7 @@ setup(
             'jedi_rename = pyls.plugins.jedi_rename',
             'jedi_signature_help = pyls.plugins.signature',
             'jedi_symbols = pyls.plugins.symbols',
+            'jedi_lint = pyls.plugins.jedi_lint',
             'mccabe = pyls.plugins.mccabe_lint',
             'preload = pyls.plugins.preload_imports',
             'pycodestyle = pyls.plugins.pycodestyle_lint',
