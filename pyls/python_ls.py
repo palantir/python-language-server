@@ -291,10 +291,12 @@ class PythonLanguageServer(MethodDispatcher):
     def lint(self, doc_uri, is_saved):
         # Since we're debounced, the document may no longer be open
         workspace = self._match_uri_to_workspace(doc_uri)
+        textDocument = workspace.get_maybe_document(doc_uri)
         if doc_uri in workspace.documents:
             workspace.publish_diagnostics(
                 doc_uri,
-                flatten(self._hook('pyls_lint', doc_uri, is_saved=is_saved))
+                flatten(self._hook('pyls_lint', doc_uri, is_saved=is_saved)),
+                textDocument.version if textDocument else None
             )
 
     def references(self, doc_uri, position, exclude_declaration):

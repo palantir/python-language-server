@@ -104,8 +104,12 @@ class Workspace(object):
     def apply_edit(self, edit):
         return self._endpoint.request(self.M_APPLY_EDIT, {'edit': edit})
 
-    def publish_diagnostics(self, doc_uri, diagnostics):
-        self._endpoint.notify(self.M_PUBLISH_DIAGNOSTICS, params={'uri': doc_uri, 'diagnostics': diagnostics})
+    def publish_diagnostics(self, doc_uri, diagnostics, version):
+        self._endpoint.notify(self.M_PUBLISH_DIAGNOSTICS, params={
+          'uri': doc_uri,
+          'diagnostics': diagnostics,
+          'version': version
+        })
 
     def show_message(self, message, msg_type=lsp.MessageType.Info):
         self._endpoint.notify(self.M_SHOW_MESSAGE, params={'type': msg_type, 'message': message})
