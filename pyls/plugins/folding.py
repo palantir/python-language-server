@@ -179,7 +179,7 @@ def __compute_folding_ranges(tree, lines):
             # Skip newline nodes
             continue
         elif isinstance(node, tree_nodes.PythonErrorNode):
-            # Fallback to identation-based (best-effort) folding
+            # Fallback to indentation-based (best-effort) folding
             start_line, _ = node.start_pos
             start_line -= 1
             padding = [''] * start_line
