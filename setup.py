@@ -104,6 +104,7 @@ setup(
             'pyflakes = pyls.plugins.pyflakes_lint',
             'pylint = pyls.plugins.pylint_lint',
             'rope_completion = pyls.plugins.rope_completion',
+            'rope_organize_imports = pyls.plugins.rope_organize_imports',
             'rope_rename = pyls.plugins.rope_rename',
             'yapf = pyls.plugins.yapf_format'
         ]
