@@ -37,7 +37,7 @@ def pyls_document_symbols(config, document):
                         not sym_full_name.startswith('__main__')):
                     continue
 
-        if _include_def(d) and document.path == d.module_path:
+        if _include_def(d) and os.path.samefile(document.path, d.module_path):
             tuple_range = _tuple_range(d)
             if tuple_range in exclude:
                 continue
