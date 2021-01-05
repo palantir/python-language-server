@@ -36,8 +36,14 @@ def pyls_document_symbols(config, document):
                 if (not sym_full_name.startswith(module_name) and
                         not sym_full_name.startswith('__main__')):
                     continue
+        try:
+            docismodule = os.path.samefile(document.path, d.module_path)
+        except AttributeError:
+            # Python 2 on Windows has no .samefile, but then these are
+            # strings for sure
+            docismodule = document.path == d.module_path
 
-        if _include_def(d) and os.path.samefile(document.path, d.module_path):
+        if _include_def(d) and docismodule:
             tuple_range = _tuple_range(d)
             if tuple_range in exclude:
                 continue
