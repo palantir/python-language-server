@@ -9,6 +9,7 @@ README = open('README.rst', 'r').read()
 install_requires = [
         'configparser; python_version<"3.0"',
         'future>=0.14.0; python_version<"3"',
+        'pathlib2>=2.3.5; python_version<"3"',
         'backports.functools_lru_cache; python_version<"3.2"',
         'jedi>=0.17.2,<0.18.0',
         'python-jsonrpc-server>=0.4.0',

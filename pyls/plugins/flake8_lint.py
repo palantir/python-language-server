@@ -6,6 +6,13 @@ import re
 from subprocess import Popen, PIPE
 from pyls import hookimpl, lsp
 
+try:
+
+    from pathlib import PurePath
+except ImportError:
+    from pathlib2 import PurePath
+
+
 log = logging.getLogger(__name__)
 FIX_IGNORES_RE = re.compile(r'([^a-zA-Z0-9_,]*;.*(\W+||$))')
 
@@ -22,12 +29,21 @@ def pyls_lint(workspace, document):
     settings = config.plugin_settings('flake8', document_path=document.path)
     log.debug("Got flake8 settings: %s", settings)
 
+    ignores = settings.get("ignore", [])
+    per_file_ignores = settings.get("perFileIgnores")
+
+    if per_file_ignores:
+        for path in per_file_ignores:
+            file_pat, errors = path.split(":")
+            if PurePath(document.path).match(file_pat):
+                ignores.extend(errors.split(","))
+
     opts = {
         'config': settings.get('config'),
         'exclude': settings.get('exclude'),
         'filename': settings.get('filename'),
         'hang-closing': settings.get('hangClosing'),
-        'ignore': settings.get('ignore'),
+        'ignore': ignores or None,
         'max-line-length': settings.get('maxLineLength'),
         'select': settings.get('select'),
     }

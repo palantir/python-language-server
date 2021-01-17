@@ -67,6 +67,8 @@ def _get_opt(config, key, option, opt_type):
 
 
 def _parse_list_opt(string):
+    if string.startswith("\n"):
+        return [s.strip().rstrip(",") for s in string.split("\n") if s.strip()]
     return [s.strip() for s in string.split(",") if s.strip()]
 
 
