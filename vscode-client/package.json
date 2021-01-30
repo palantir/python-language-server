@@ -70,6 +70,11 @@
                     "default": false,
                     "description": "Enable fuzzy when requesting autocomplete."
                 },
+                "pyls.plugins.jedi_completion.eager": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Resolve documentation and detail eagerly."
+                },
                 "pyls.plugins.jedi_definition.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -273,6 +278,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.rope_completion.eager": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Resolve documentation and detail eagerly."
                 },
                 "pyls.plugins.yapf.enabled": {
                     "type": "boolean",
