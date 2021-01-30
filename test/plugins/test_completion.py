@@ -7,6 +7,7 @@ import pytest
 from pyls import uris, lsp
 from pyls.workspace import Document
 from pyls.plugins.jedi_completion import pyls_completions as pyls_jedi_completions
+from pyls.plugins.jedi_completion import pyls_completion_item_resolve as pyls_jedi_completion_item_resolve
 from pyls.plugins.rope_completion import pyls_completions as pyls_rope_completions
 
 
@@ -38,6 +39,10 @@ class Hello():
 print Hello().world
 
 print Hello().every
+
+def documented_hello():
+    \"\"\"Sends a polite greeting\"\"\"
+    pass
 """
 
 
@@ -60,6 +65,26 @@ def test_jedi_completion(config, workspace):
 
     # Test we don't throw with big character
     pyls_jedi_completions(config, doc, {'line': 1, 'character': 1000})
+
+
+def test_jedi_completion_item_resolve(config, workspace):
+    # Over the blank line
+    com_position = {'line': 8, 'character': 0}
+    doc = Document(DOC_URI, workspace, DOC)
+    completions = pyls_jedi_completions(config, doc, com_position)
+
+    items = {c['label']: c for c in completions}
+
+    documented_hello_item = items['documented_hello()']
+
+    assert 'documentation' not in documented_hello_item
+    assert 'detail' not in documented_hello_item
+
+    resolved_documented_hello = pyls_jedi_completion_item_resolve(
+        config,
+        completion_item=documented_hello_item
+    )
+    assert 'Sends a polite greeting' in resolved_documented_hello['documentation']
 
 
 def test_jedi_completion_with_fuzzy_enabled(config, workspace):
@@ -333,7 +358,9 @@ def test_jedi_completion_environment(workspace):
     # After 'import logh' with new environment
     completions = pyls_jedi_completions(doc._config, doc, com_position)
     assert completions[0]['label'] == 'loghub'
-    assert 'changelog generator' in completions[0]['documentation'].lower()
+
+    resolved = pyls_jedi_completion_item_resolve(completions[0]['documentation'])
+    assert 'changelog generator' in resolved['documentation'].lower()
 
 
 def test_document_path_completions(tmpdir, workspace_other_root_path):

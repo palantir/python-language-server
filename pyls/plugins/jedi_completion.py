@@ -49,11 +49,17 @@ _IMPORTS = ('import_name', 'import_from')
 # Types of parso node for errors
 _ERRORS = ('error_node', )
 
+# most recently retrieved completion items, used for resolution
+_LAST_COMPLETIONS = {}
+
 
 @hookimpl
 def pyls_completions(config, document, position):
     """Get formatted completions for current code position"""
+    global _LAST_COMPLETIONS
+
     settings = config.plugin_settings('jedi_completion', document_path=document.path)
+    resolve_eagerly = settings.get('eager', False)
     code_position = _utils.position_to_jedi_linecolumn(document, position)
 
     code_position["fuzzy"] = settings.get("fuzzy", False)
@@ -79,12 +85,25 @@ def pyls_completions(config, document, position):
     if include_class_objects:
         for c in completions:
             if c.type == 'class':
-                completion_dict = _format_completion(c, False)
+                completion_dict = _format_completion(c, False, resolve=resolve_eagerly)
                 completion_dict['kind'] = lsp.CompletionItemKind.TypeParameter
                 completion_dict['label'] += ' object'
                 ready_completions.append(completion_dict)
 
+    _LAST_COMPLETIONS = {
+        # label is the only required property; here it is assumed to be unique
+        completion['label']: (completion, data)
+        for completion, data in zip(ready_completions, completions)
+    }
+
     return ready_completions or None
+
+
+@hookimpl
+def pyls_completion_item_resolve(config, completion_item):
+    """Resolve formatted completion for given non-resolved completion"""
+    completion, data = _LAST_COMPLETIONS.get(completion_item['label'])
+    return _resolve_completion(completion, data)
 
 
 def is_exception_class(name):
@@ -137,15 +156,22 @@ def use_snippets(document, position):
             not (expr_type in _ERRORS and 'import' in code))
 
 
-def _format_completion(d, include_params=True):
+def _resolve_completion(completion, d):
+    completion['detail'] = _detail(d)
+    completion['documentation'] = _utils.format_docstring(d.docstring())
+    return completion
+
+
+def _format_completion(d, include_params=True, resolve=False):
     completion = {
         'label': _label(d),
         'kind': _TYPE_MAP.get(d.type),
-        'detail': _detail(d),
-        'documentation': _utils.format_docstring(d.docstring()),
         'sortText': _sort_text(d),
         'insertText': d.name
     }
+
+    if resolve:
+        completion = _resolve_completion(completion, d)
 
     if d.type == 'path':
         path = osp.normpath(d.name)

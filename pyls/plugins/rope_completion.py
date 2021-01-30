@@ -7,15 +7,32 @@ from pyls import hookimpl, lsp
 
 log = logging.getLogger(__name__)
 
+# most recently retrieved completion items, used for resolution
+_LAST_COMPLETIONS = {}
 
 @hookimpl
 def pyls_settings():
     # Default rope_completion to disabled
-    return {'plugins': {'rope_completion': {'enabled': False}}}
+    return {'plugins': {'rope_completion': {'enabled': False, 'eager': False}}}
+
+
+def _resolve_completion(completion, data):
+    try:
+        doc = data.get_doc()
+    except AttributeError:
+        doc = ""
+    completion['detail'] = '{0} {1}'.format(data.scope or "", data.name)
+    completion['documentation'] = doc
+    return completion
 
 
 @hookimpl
 def pyls_completions(config, workspace, document, position):
+    global _LAST_COMPLETIONS
+
+    settings = config.plugin_settings('rope_completion', document_path=document.path)
+    resolve_eagerly = settings.get('eager', False)
+
     # Rope is a bit rubbish at completing module imports, so we'll return None
     word = document.word_at_position({
         # The -1 should really be trying to look at the previous word, but that might be quite expensive
@@ -39,20 +56,31 @@ def pyls_completions(config, workspace, document, position):
     definitions = sorted_proposals(definitions)
     new_definitions = []
     for d in definitions:
-        try:
-            doc = d.get_doc()
-        except AttributeError:
-            doc = None
-        new_definitions.append({
+        item = {
             'label': d.name,
             'kind': _kind(d),
-            'detail': '{0} {1}'.format(d.scope or "", d.name),
-            'documentation': doc or "",
             'sortText': _sort_text(d)
-        })
+        }
+        if resolve_eagerly:
+            item = _resolve_completion(item, d)
+        new_definitions.append(item)
+
+    _LAST_COMPLETIONS = {
+        # label is the only required property; here it is assumed to be unique
+        completion['label']: (completion, data)
+        for completion, data in zip(new_definitions, definitions)
+    }
+
     definitions = new_definitions
 
     return definitions or None
+
+
+@hookimpl
+def pyls_completion_item_resolve(config, completion_item):
+    """Resolve formatted completion for given non-resolved completion"""
+    completion, data = _LAST_COMPLETIONS.get(completion_item['label'])
+    return _resolve_completion(completion, data)
 
 
 def _sort_text(definition):
@@ -70,7 +98,7 @@ def _sort_text(definition):
 
 
 def _kind(d):
-    """ Return the VSCode type """
+    """ Return the LSP type """
     MAP = {
         'none': lsp.CompletionItemKind.Value,
         'type': lsp.CompletionItemKind.Class,

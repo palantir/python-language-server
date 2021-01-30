@@ -28,6 +28,11 @@ def pyls_completions(config, workspace, document, position):
 
 
 @hookspec
+def pyls_completion_item_resolve(config, workspace, completion_item):
+    pass
+
+
+@hookspec
 def pyls_definitions(config, workspace, document, position):
     pass
 
