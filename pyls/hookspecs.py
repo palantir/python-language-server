@@ -27,7 +27,7 @@ def pyls_completions(config, workspace, document, position):
     pass
 
 
-@hookspec
+@hookspec(firstresult=True)
 def pyls_completion_item_resolve(config, workspace, completion_item):
     pass
 
