@@ -258,7 +258,7 @@ class Document(object):
         env_vars.pop('PYTHONPATH', None)
 
         environment = self.get_enviroment(environment_path, env_vars=env_vars) if environment_path else None
-        sys_path = self.sys_path(environment_path, env_vars=env_vars) + extra_paths
+        sys_path = self.sys_path(environment_path, env_vars=env_vars)
         project_path = self._workspace.root_path
 
         # Extend sys_path with document's path if requested
@@ -269,7 +269,7 @@ class Document(object):
             'code': self.source,
             'path': self.path,
             'environment': environment,
-            'project': jedi.Project(path=project_path, sys_path=sys_path),
+            'project': jedi.Project(path=project_path, sys_path=sys_path, added_sys_path=extra_paths),
         }
 
         if position:
