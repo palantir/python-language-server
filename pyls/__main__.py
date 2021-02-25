@@ -120,7 +120,7 @@ def _configure_logger(verbose=0, log_config=None, log_file=None):
     elif verbose == 1:
         level = logging.INFO
     elif verbose >= 2:
-        level = logging.DEBUG
+        level = logging.INFO
 
     root_logger.setLevel(level)
 

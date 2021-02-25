@@ -2,12 +2,17 @@
 from functools import partial
 import logging
 import os
+import sys
 import socketserver
 import threading
 
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
 from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
+from kedro.framework.startup import _get_project_metadata
+from kedro.framework.project.settings import _get_project_settings
+from kedro.framework.session import KedroSession
+from kedro.framework.context.context import KedroContext
 
 from . import lsp, _utils, uris
 from .config import config
@@ -260,26 +265,10 @@ class PythonLanguageServer(MethodDispatcher):
         return {"capabilities": self.capabilities()}
 
     def get_kedro_context(self, rootPath):
-
-        from kedro.framework.startup import _get_project_metadata
-        from kedro.framework.project.settings import _get_project_settings
-        from kedro.framework.cli.utils import _add_src_to_path
-        from kedro.framework.context.context import KedroContext
-
-        try:
-            metadata = _get_project_metadata(rootPath)
-            _add_src_to_path(metadata.source_dir, rootPath)
-            context_class = _get_project_settings(
-                metadata.package_name, "CONTEXT_CLASS", KedroContext
-            )
-            context = context_class(
-                package_name=metadata.package_name, project_path=rootPath,
-            )
-            self._kedro_context = context
-            log.info(">>>>>>>>>>>>>> SUCCESS")
-            log.info(">>>>>>>>>>>>>> CONTEXT: ", {context})
-        except Exception as e:
-            log.info(str(e))
+        metadata = _get_project_metadata(rootPath)
+        sys.path.insert(0, str(metadata.source_dir))
+        with KedroSession.create(metadata.package_name, rootPath) as session:
+            self._kedro_context = session.load_context()
 
     def m_initialized(self, **_kwargs):
         self._hook("pyls_initialized")
@@ -299,13 +288,12 @@ class PythonLanguageServer(MethodDispatcher):
     def definitions(self, doc_uri, position):
         # log.info(">>>>>>>>>>>>>>>>>>> GETTING DEFINITIONS")
         # log.info(self._kedro_context)
-        breakpoint()
         return flatten(
             self._hook(
                 "pyls_definitions",
                 doc_uri,
                 position=position,
-                # kedro_context=self._kedro_context,
+                kedro_context=self._kedro_context,
             )
         )
 

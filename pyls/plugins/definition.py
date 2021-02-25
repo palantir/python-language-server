@@ -6,33 +6,46 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_definitions(config, document, position):
+def pyls_definitions(config, document, position, kedro_context):
     settings = config.plugin_settings("jedi_definition")
     code_position = _utils.position_to_jedi_linecolumn(document, position)
     # TODO: make sure we are in a node definition and it's a catalog name
-    # dataset_name = document.word_at_position(position)
-    # log.info(f">>>>>>>>>>>>> GETTING DEFINITION FOR: {dataset_name}")
-    # log.info(f">>>>>>>>>>>>> KEDRO CONTEXT: {kedro_context}")
-    # log.info(f">>>>>>>>>>>>> KEDRO CATALOG: {kedro_context.catalog}")
-    # dataset = kedro_context.catalog._get_dataset(dataset_name)
-    log.info(f">>>>>>>>>>>>> KEDRO DATASET")
+    try:
+        dataset_name = document.word_at_position(position)
+        config_loader = kedro_context.config_loader
+        config_loader.get("catalog*", "catalog*/**", "**/catalog*")
+        line_number, config_file = config_loader.line_numbers.get(dataset_name)
+    except Exception as e:
+        log.info(str(e))
+        line_number, config_file = None, None
 
-    definitions = document.jedi_script().goto(
-        follow_imports=settings.get("follow_imports", True),
-        follow_builtin_imports=settings.get("follow_builtin_imports", True),
-        **code_position,
-    )
+    if not line_number or not config_file:
+        definitions = document.jedi_script().goto(
+            follow_imports=settings.get("follow_imports", True),
+            follow_builtin_imports=settings.get("follow_builtin_imports", True),
+            **code_position,
+        )
+
+        return [
+            {
+                "uri": uris.uri_with(document.uri, path=str(d.module_path)),
+                "range": {
+                    "start": {"line": d.line - 1, "character": d.column},
+                    "end": {"line": d.line - 1, "character": d.column + len(d.name)},
+                },
+            }
+            for d in definitions
+            if d.is_definition() and _not_internal_definition(d)
+        ]
 
     return [
         {
-            "uri": uris.uri_with(document.uri, path=str(d.module_path)),
+            "uri": uris.uri_with(document.uri, path=str(config_file)),
             "range": {
-                "start": {"line": d.line - 1, "character": d.column},
-                "end": {"line": d.line - 1, "character": d.column + len(d.name)},
+                "start": {"line": line_number, "character": 0},
+                "end": {"line": line_number, "character": 1},
             },
         }
-        for d in definitions
-        if d.is_definition() and _not_internal_definition(d)
     ]
 
 
