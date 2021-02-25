@@ -7,29 +7,39 @@ log = logging.getLogger(__name__)
 
 @hookimpl
 def pyls_definitions(config, document, position):
-    settings = config.plugin_settings('jedi_definition')
+    settings = config.plugin_settings("jedi_definition")
     code_position = _utils.position_to_jedi_linecolumn(document, position)
+    # TODO: make sure we are in a node definition and it's a catalog name
+    # dataset_name = document.word_at_position(position)
+    # log.info(f">>>>>>>>>>>>> GETTING DEFINITION FOR: {dataset_name}")
+    # log.info(f">>>>>>>>>>>>> KEDRO CONTEXT: {kedro_context}")
+    # log.info(f">>>>>>>>>>>>> KEDRO CATALOG: {kedro_context.catalog}")
+    # dataset = kedro_context.catalog._get_dataset(dataset_name)
+    log.info(f">>>>>>>>>>>>> KEDRO DATASET")
+
     definitions = document.jedi_script().goto(
-        follow_imports=settings.get('follow_imports', True),
-        follow_builtin_imports=settings.get('follow_builtin_imports', True),
-        **code_position)
+        follow_imports=settings.get("follow_imports", True),
+        follow_builtin_imports=settings.get("follow_builtin_imports", True),
+        **code_position,
+    )
 
     return [
         {
-            'uri': uris.uri_with(document.uri, path=str(d.module_path)),
-            'range': {
-                'start': {'line': d.line - 1, 'character': d.column},
-                'end': {'line': d.line - 1, 'character': d.column + len(d.name)},
-            }
+            "uri": uris.uri_with(document.uri, path=str(d.module_path)),
+            "range": {
+                "start": {"line": d.line - 1, "character": d.column},
+                "end": {"line": d.line - 1, "character": d.column + len(d.name)},
+            },
         }
-        for d in definitions if d.is_definition() and _not_internal_definition(d)
+        for d in definitions
+        if d.is_definition() and _not_internal_definition(d)
     ]
 
 
 def _not_internal_definition(definition):
     return (
-        definition.line is not None and
-        definition.column is not None and
-        definition.module_path is not None and
-        not definition.in_builtin_module()
+        definition.line is not None
+        and definition.column is not None
+        and definition.module_path is not None
+        and not definition.in_builtin_module()
     )

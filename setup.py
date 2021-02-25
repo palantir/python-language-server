@@ -17,7 +17,7 @@ install_requires = [
         'ujson>=3.0.0 ; python_version>"3"']
 
 setup(
-    name='python-language-server',
+    name='kedro-language-server',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -25,7 +25,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
 
-    description='Python Language Server for the Language Server Protocol',
+    description='Kedro Language Server for the Language Server Protocol',
 
     long_description=README,
 
