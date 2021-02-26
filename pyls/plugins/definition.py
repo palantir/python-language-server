@@ -14,9 +14,9 @@ def pyls_definitions(config, document, position, kedro_context):
         dataset_name = document.word_at_position(position)
         config_loader = kedro_context.config_loader
         config_loader.get("catalog*", "catalog*/**", "**/catalog*")
-        line_number, config_file = config_loader.line_numbers.get(dataset_name)
+        line_number, config_file = config_loader.line_numbers.get(dataset_name, [0, 0])
     except Exception as e:
-        log.info(str(e))
+        log.info(f"😭 {e}")
         line_number, config_file = None, None
 
     if not line_number or not config_file:
@@ -25,7 +25,6 @@ def pyls_definitions(config, document, position, kedro_context):
             follow_builtin_imports=settings.get("follow_builtin_imports", True),
             **code_position,
         )
-
         return [
             {
                 "uri": uris.uri_with(document.uri, path=str(d.module_path)),
