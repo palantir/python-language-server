@@ -1,25 +1,26 @@
 # Copyright 2017 Palantir Technologies, Inc.
-from functools import partial
 import logging
 import os
-import sys
 import socketserver
+import sys
 import threading
+from copy import deepcopy
+from functools import partial
+from unittest.mock import Mock
 
+from kedro.framework import session
+from kedro.config.config import _check_duplicate_keys, ConfigLoader
+from kedro.framework.context import KedroContext
+from kedro.framework.startup import _get_project_metadata
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
 from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
-from kedro.framework.startup import _get_project_metadata
-from kedro.framework.project.settings import _get_project_settings
-from kedro.framework.session import KedroSession
-from kedro.framework.context.context import KedroContext
 
 from . import lsp, _utils, uris
 from .config import config
 from .workspace import Workspace
 
 log = logging.getLogger(__name__)
-
 
 LINT_DEBOUNCE_S = 0.5  # 500 ms
 PARENT_PROCESS_WATCH_INTERVAL = 10  # 10 s
@@ -100,6 +101,11 @@ def start_io_lang_server(rfile, wfile, check_parent_process, handler_class):
     server.start()
 
 
+def _patch_kedro_logging():
+    log.info("🚫 Disabling default Kedro logging")
+    session.KedroSession._setup_logging = Mock()
+
+
 class PythonLanguageServer(MethodDispatcher):
     """ Implementation of the Microsoft VSCode Language Server Protocol
     https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
@@ -123,6 +129,41 @@ class PythonLanguageServer(MethodDispatcher):
         )
         self._dispatchers = []
         self._shutdown = False
+        self._kedro_context = None
+
+    def _patch_kedro_context(self):
+
+        context = self._kedro_context
+        if isinstance(context, KedroContext):
+            loader: ConfigLoader = context._get_config_loader()
+            loader.line_numbers = {}
+
+            def get_line_numbers(self, config_file):
+                with open(config_file) as f:
+                    for line_no, line in enumerate(f.readlines()):
+                        key = line.split(":")[0]
+                        match = (line_no, config_file)
+                        self.line_numbers[key] = match
+
+            loader.get_line_numbers = get_line_numbers
+
+            def _load_configs(config_filepaths):
+                aggregate_config = {}
+                seen_file_to_keys = {}
+
+                for config_filepath in config_filepaths:
+                    single_config = loader._load_config_file(config_filepath)
+                    loader.get_line_numbers(loader, config_filepath)
+                    _check_duplicate_keys(seen_file_to_keys, config_filepath,
+                                          single_config)
+                    seen_file_to_keys[config_filepath] = single_config.keys()
+                    aggregate_config.update(single_config)
+
+                return aggregate_config
+
+            loader._load_configs = _load_configs
+            context._get_config_loader = lambda: loader
+            log.info('🎸 Patched Kedro Context!')
 
     def start(self):
         """Entry point for the server."""
@@ -196,7 +237,7 @@ class PythonLanguageServer(MethodDispatcher):
             "signatureHelpProvider": {"triggerCharacters": ["(", ",", "="]},
             "textDocumentSync": {
                 "change": lsp.TextDocumentSyncKind.INCREMENTAL,
-                "save": {"includeText": True,},
+                "save": {"includeText": True, },
                 "openClose": True,
             },
             "workspace": {
@@ -208,12 +249,12 @@ class PythonLanguageServer(MethodDispatcher):
         return server_capabilities
 
     def m_initialize(
-        self,
-        processId=None,
-        rootUri=None,
-        rootPath=None,
-        initializationOptions=None,
-        **_kwargs,
+            self,
+            processId=None,
+            rootUri=None,
+            rootPath=None,
+            initializationOptions=None,
+            **_kwargs,
     ):
         log.debug(
             "Language server initialized with %s %s %s %s",
@@ -237,12 +278,14 @@ class PythonLanguageServer(MethodDispatcher):
         self.workspaces[rootUri] = self.workspace
         self._dispatchers = self._hook("pyls_dispatchers")
         self._hook("pyls_initialize")
+
+        # Apply Kedro utilities
         self.get_kedro_context(rootPath)
 
         if (
-            self._check_parent_process
-            and processId is not None
-            and self.watching_thread is None
+                self._check_parent_process
+                and processId is not None
+                and self.watching_thread is None
         ):
 
             def watch_parent_process(pid):
@@ -265,10 +308,18 @@ class PythonLanguageServer(MethodDispatcher):
         return {"capabilities": self.capabilities()}
 
     def get_kedro_context(self, rootPath):
+        _patch_kedro_logging()
+
         metadata = _get_project_metadata(rootPath)
         sys.path.insert(0, str(metadata.source_dir))
-        with KedroSession.create(metadata.package_name, rootPath) as session:
-            self._kedro_context = session.load_context()
+
+        with (
+                session.KedroSession.create(
+                    metadata.package_name,
+                    rootPath)
+        ) as sesh:
+            self._kedro_context = sesh.load_context()
+            self._patch_kedro_context()
 
     def m_initialized(self, **_kwargs):
         self._hook("pyls_initialized")
@@ -286,8 +337,6 @@ class PythonLanguageServer(MethodDispatcher):
         return {"isIncomplete": False, "items": flatten(completions)}
 
     def definitions(self, doc_uri, position):
-        # log.info(">>>>>>>>>>>>>>>>>>> GETTING DEFINITIONS")
-        # log.info(self._kedro_context)
         return flatten(
             self._hook(
                 "pyls_definitions",
@@ -311,8 +360,9 @@ class PythonLanguageServer(MethodDispatcher):
 
     def highlight(self, doc_uri, position):
         return (
-            flatten(self._hook("pyls_document_highlight", doc_uri, position=position))
-            or None
+                flatten(
+                    self._hook("pyls_document_highlight", doc_uri, position=position))
+                or None
         )
 
     def hover(self, doc_uri, position):
@@ -361,7 +411,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.lint(textDocument["uri"], is_saved=True)
 
     def m_text_document__did_change(
-        self, contentChanges=None, textDocument=None, **_kwargs
+            self, contentChanges=None, textDocument=None, **_kwargs
     ):
         workspace = self._match_uri_to_workspace(textDocument["uri"])
         for change in contentChanges:
@@ -374,7 +424,7 @@ class PythonLanguageServer(MethodDispatcher):
         self.lint(textDocument["uri"], is_saved=True)
 
     def m_text_document__code_action(
-        self, textDocument=None, range=None, context=None, **_kwargs
+            self, textDocument=None, range=None, context=None, **_kwargs
     ):
         return self.code_actions(textDocument["uri"], range, context)
 
@@ -388,7 +438,7 @@ class PythonLanguageServer(MethodDispatcher):
         return self.definitions(textDocument["uri"], position)
 
     def m_text_document__document_highlight(
-        self, textDocument=None, position=None, **_kwargs
+            self, textDocument=None, position=None, **_kwargs
     ):
         return self.highlight(textDocument["uri"], position)
 
@@ -403,7 +453,7 @@ class PythonLanguageServer(MethodDispatcher):
         return self.format_document(textDocument["uri"])
 
     def m_text_document__rename(
-        self, textDocument=None, position=None, newName=None, **_kwargs
+            self, textDocument=None, position=None, newName=None, **_kwargs
     ):
         return self.rename(textDocument["uri"], position, newName)
 
@@ -411,19 +461,19 @@ class PythonLanguageServer(MethodDispatcher):
         return self.folding(textDocument["uri"])
 
     def m_text_document__range_formatting(
-        self, textDocument=None, range=None, _options=None, **_kwargs
+            self, textDocument=None, range=None, _options=None, **_kwargs
     ):
         # Again, we'll ignore formatting options for now.
         return self.format_range(textDocument["uri"], range)
 
     def m_text_document__references(
-        self, textDocument=None, position=None, context=None, **_kwargs
+            self, textDocument=None, position=None, context=None, **_kwargs
     ):
         exclude_declaration = not context["includeDeclaration"]
         return self.references(textDocument["uri"], position, exclude_declaration)
 
     def m_text_document__signature_help(
-        self, textDocument=None, position=None, **_kwargs
+            self, textDocument=None, position=None, **_kwargs
     ):
         return self.signature_help(textDocument["uri"], position)
 
@@ -436,7 +486,7 @@ class PythonLanguageServer(MethodDispatcher):
                 self.lint(doc_uri, is_saved=False)
 
     def m_workspace__did_change_workspace_folders(
-        self, event=None, **_kwargs
+            self, event=None, **_kwargs
     ):  # pylint: disable=too-many-locals
         if event is None:
             return
