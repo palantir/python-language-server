@@ -59,8 +59,17 @@ def pyls_completions(config, document, position):
     code_position["fuzzy"] = settings.get("fuzzy", False)
     completions = document.jedi_script(use_document_path=True).complete(**code_position)
 
+    result_limit = settings.get("result_limit", 30)
+    truncated = False
+    if len(completions) > result_limit:
+        prefix = document.word_at_position(position)
+        if prefix:  # prefer items that start with the prefix
+            completions.sort(key=lambda c: not c.name.startswith(prefix))
+        completions = completions[:result_limit]
+        truncated = True
+
     if not completions:
-        return None
+        return None, truncated
 
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
@@ -84,7 +93,7 @@ def pyls_completions(config, document, position):
                 completion_dict['label'] += ' object'
                 ready_completions.append(completion_dict)
 
-    return ready_completions or None
+    return ready_completions or None, truncated
 
 
 def is_exception_class(name):
