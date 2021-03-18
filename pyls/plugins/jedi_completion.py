@@ -69,7 +69,7 @@ def pyls_completions(config, document, position):
         truncated = True
 
     if not completions:
-        return None, truncated
+        return [], truncated
 
     completion_capabilities = config.capabilities.get('textDocument', {}).get('completion', {})
     snippet_support = completion_capabilities.get('completionItem', {}).get('snippetSupport')
@@ -93,7 +93,7 @@ def pyls_completions(config, document, position):
                 completion_dict['label'] += ' object'
                 ready_completions.append(completion_dict)
 
-    return ready_completions or None, truncated
+    return ready_completions, truncated
 
 
 def is_exception_class(name):
