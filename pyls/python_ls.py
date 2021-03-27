@@ -157,10 +157,8 @@ class PythonLanguageServer(MethodDispatcher):
 
     def capabilities(self):
         server_capabilities = {
-            'codeActionProvider': True,
-            'codeLensProvider': {
-                'resolveProvider': False,  # We may need to make this configurable
-            },
+            'codeActionProvider': False,  # OFF
+            'codeLensProvider': None,  # OFF
             'completionProvider': {
                 'resolveProvider': False,  # We know everything ahead of time
                 'triggerCharacters': ['.']
