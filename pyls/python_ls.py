@@ -159,10 +159,7 @@ class PythonLanguageServer(MethodDispatcher):
         server_capabilities = {
             'codeActionProvider': False,  # OFF
             'codeLensProvider': None,  # OFF
-            'completionProvider': {
-                'resolveProvider': False,  # We know everything ahead of time
-                'triggerCharacters': ['.']
-            },
+            'completionProvider': None,  # OFF
             'documentFormattingProvider': True,
             'documentHighlightProvider': True,
             'documentRangeFormattingProvider': True,
