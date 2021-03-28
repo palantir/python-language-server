@@ -160,7 +160,8 @@ class PythonLanguageServer(MethodDispatcher):
             'codeActionProvider': False,  # OFF
             'codeLensProvider': None,  # OFF
             'completionProvider': None,  # OFF
-            'documentFormattingProvider': True,
+            # 'documentFormattingProvider': True,
+            'documentFormattingProvider': False,
             'documentHighlightProvider': True,
             'documentRangeFormattingProvider': True,
             'documentSymbolProvider': True,
