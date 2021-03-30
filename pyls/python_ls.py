@@ -164,18 +164,20 @@ class PythonLanguageServer(MethodDispatcher):
             'documentFormattingProvider': False,
             'documentHighlightProvider': True,
             'documentRangeFormattingProvider': True,
-            'documentSymbolProvider': True,
+            'documentSymbolProvider': False,
             'definitionProvider': True,
-            'executeCommandProvider': {
-                'commands': flatten(self._hook('pyls_commands'))
-            },
+            'executeCommandProvider': None,
+            # 'executeCommandProvider': {
+            #     'commands': flatten(self._hook('pyls_commands'))
+            # },
             'hoverProvider': True,
             'referencesProvider': True,
-            'renameProvider': True,
-            'foldingRangeProvider': True,
-            'signatureHelpProvider': {
-                'triggerCharacters': ['(', ',', '=']
-            },
+            'renameProvider': False,
+            'foldingRangeProvider': False,
+            # 'signatureHelpProvider': {
+            #     'triggerCharacters': ['(', ',', '=']
+            # },
+            'signatureHelpProvider': None,
             'textDocumentSync': {
                 'change': lsp.TextDocumentSyncKind.INCREMENTAL,
                 'save': {
@@ -185,7 +187,7 @@ class PythonLanguageServer(MethodDispatcher):
             },
             'workspace': {
                 'workspaceFolders': {
-                    'supported': True,
+                    'supported': False,
                     'changeNotifications': True
                 }
             },
