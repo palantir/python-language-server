@@ -6,7 +6,7 @@ on:
     branches:
       - develop
 
-environment: pyls
+
 
 env:
   AWS_REGION: us-east-2
@@ -22,9 +22,11 @@ defaults:
     shell: bash
 
 jobs:
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    environment: pyls
 
     steps:
       - name: Checkout
