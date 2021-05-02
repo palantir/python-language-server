@@ -3,6 +3,7 @@ FROM python:3.6.13-buster
 RUN pip install tornado pyflakes jedi requests beautifulsoup4
 RUN pip install -U python-jsonrpc-server
 RUN pip install git+https://github.com/NapkinHQ/python-language-server.git
+RUN pip install git+https://github.com/NapkinHQ/pynapkin.git
 
 RUN apt-get update && apt-get install -y nginx lsof
 

@@ -6,8 +6,6 @@ on:
     branches:
       - develop
 
-
-
 env:
   AWS_REGION: us-east-2
   ECR_REPOSITORY: py-lang-server
@@ -15,7 +13,6 @@ env:
   ECS_CLUSTER: dev
   ECS_TASK_DEFINITION: aws/ecr/pyls-dev.task.json
   CONTAINER_NAME: py-lang-server
-  FIREBASE_SECRET: ${{ secrets.FIREBASE_ADMIN_STAGING }}
 
 defaults:
   run:
@@ -48,13 +45,11 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
-          FBA: ${{ env.FIREBASE_SECRET }}
         run: |
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          echo ${{ secrets.FIREBASE_ADMIN_STAGING }}
-          docker build --build-arg firebase_admin_secret=$FBA . -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build . -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
