@@ -177,11 +177,11 @@ class PythonLanguageServer(MethodDispatcher):
             'hoverProvider': True,
             'referencesProvider': True,
             'renameProvider': False,
-            'foldingRangeProvider': False,
-            'signatureHelpProvider': {
-                'triggerCharacters': ['(', ',', '=']
-            },
-            # 'signatureHelpProvider': None,
+            'foldingRangeProvider': True,
+            # 'signatureHelpProvider': {
+            #     'triggerCharacters': ['(', ',', '=']
+            # },
+            'signatureHelpProvider': None,
             'textDocumentSync': {
                 'change': lsp.TextDocumentSyncKind.INCREMENTAL,
                 'save': {
