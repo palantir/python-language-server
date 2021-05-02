@@ -159,11 +159,11 @@ class PythonLanguageServer(MethodDispatcher):
         server_capabilities = {
             'codeActionProvider': False,  # OFF
             'codeLensProvider': None,  # OFF
-            # 'completionProvider': None,  # OFF
-            'completionProvider': {
-                'resolveProvider': False,  # We know everything ahead of time
-                'triggerCharacters': ['.']
-            },
+            'completionProvider': None,  # OFF
+            # 'completionProvider': {
+            #     'resolveProvider': False,  # We know everything ahead of time
+            #     'triggerCharacters': ['.']
+            # },
             # 'documentFormattingProvider': True,
             'documentFormattingProvider': False,
             'documentHighlightProvider': True,
@@ -178,10 +178,10 @@ class PythonLanguageServer(MethodDispatcher):
             'referencesProvider': True,
             'renameProvider': False,
             'foldingRangeProvider': False,
-            # 'signatureHelpProvider': {
-            #     'triggerCharacters': ['(', ',', '=']
-            # },
-            'signatureHelpProvider': None,
+            'signatureHelpProvider': {
+                'triggerCharacters': ['(', ',', '=']
+            },
+            # 'signatureHelpProvider': None,
             'textDocumentSync': {
                 'change': lsp.TextDocumentSyncKind.INCREMENTAL,
                 'save': {
