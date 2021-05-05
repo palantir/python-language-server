@@ -46,7 +46,6 @@ class LanguageServerWebSocketHandler(websocket.WebSocketHandler):
         self.endpoint.consume(json.loads(message))
 
 
-
     def check_origin(self, origin):
         return True
 
