@@ -5,6 +5,7 @@ import os
 import socketserver
 from .plugins.jedi_completion import pyls_completions
 
+import napkin
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
 from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter

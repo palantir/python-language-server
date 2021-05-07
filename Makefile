@@ -1,5 +1,6 @@
 ENV ?= dev
 REGISTRY := 937976602373.dkr.ecr.us-east-2.amazonaws.com
+GITHUB_TOKEN ?= "stub"
 
 build:
 	docker build --file Dockerfile.local --build-arg github_token=${GITHUB_TOKEN} -t ${REGISTRY}/py-lang-server .
