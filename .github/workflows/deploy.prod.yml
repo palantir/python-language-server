@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: us-east-2
   ECR_REPOSITORY: py-lang-server
-  ECS_SERVICE: pyls-svc
+  ECS_SERVICE: py-lang-server-prod
   ECS_CLUSTER: prod
   ECS_TASK_DEFINITION: aws/ecr/pyls-prod.task.json
   CONTAINER_NAME: py-lang-server
