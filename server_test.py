@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-
+from typing import Optional
 from tornado import web, ioloop, websocket, process
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
@@ -45,6 +45,9 @@ class LanguageServerWebSocketHandler(websocket.WebSocketHandler):
         """Forward client->server messages to the endpoint."""
         self.endpoint.consume(json.loads(message))
 
+    @property
+    def ping_interval(self) -> Optional[float]:
+        return 5
 
     def check_origin(self, origin):
         return True
