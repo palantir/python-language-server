@@ -88,8 +88,8 @@ class Workspace(object):
     def put_document(self, doc_uri, source, version=None):
         self._docs[doc_uri] = self._create_document(doc_uri, source=source, version=version)
 
-    def rm_document(self, doc_uri):
-        self._docs.pop(doc_uri)
+    def rm_maybe_document(self, doc_uri):
+        self._docs.pop(doc_uri, None)
 
     def update_document(self, doc_uri, change, version=None):
         self._docs[doc_uri].apply_change(change)
