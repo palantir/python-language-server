@@ -9,8 +9,8 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl
-def pyls_format_document(document):
-    return _format(document)
+def pyls_format_document(document, options=None):
+    return _format(document, options=options)
 
 
 
