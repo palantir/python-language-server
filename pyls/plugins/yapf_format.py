@@ -33,30 +33,36 @@ def pyls_format_range(document, range, options=None):  # pylint: disable=redefin
 
 
 def _format(document, lines=None, options=None):
-    # Get the default styles
+    # Get the default styles as a string
+    # for a preset configuration, i.e. "pep8"
     style_config = file_resources.GetDefaultStyleForDir(
-            os.path.dirname(document.path)
-        )
+        os.path.dirname(document.path)
+    )
     if options is not None:
-        # If we have options, let's set them
-        # First we want to get a dictionary of the styles
+        # We have options passed from LSP format request
+        # let's pass them to the formatter.
+        # First we want to get a dictionary of the preset style
+        # to pass instead of a string so that we can modify it
         style_config = style.CreateStyleFromConfig(style_config)
 
-        if options.get('insertSpaces') is not None:
-            style_config['USE_TABS'] = not (options.get('insertSpaces') in [True, 'true', 'True'])
+        use_tabs = style_config['USE_TABS']
+        indent_width = style_config['INDENT_WIDTH']
 
-            if style_config['USE_TABS']:
+        if options.get('tabSize') is not None:
+            indent_width = max(int(options.get('tabSize')), 1)
+
+        if options.get('insertSpaces') is not None:
+            # TODO is it guaranteed to be a boolean, or can it be a string
+            use_tabs = not options.get('insertSpaces')
+
+            if use_tabs:
                 # indent width doesn't make sense when using tabs
                 # the specifications state: "Size of a tab in spaces"
-                style_config['INDENT_WIDTH'] = 1
-                style_config['CONTINUATION_INDENT_WIDTH'] = style_config['INDENT_WIDTH']
+                indent_width = 1
 
-        print(style_config['USE_TABS'])
-
-        if options.get('tabSize') is not None and not style_config['USE_TABS']:
-            style_config['INDENT_WIDTH'] = max(int(options.get('tabSize')), 1)
-            style_config['CONTINUATION_INDENT_WIDTH'] = style_config['INDENT_WIDTH']
-        
+        style_config['USE_TABS'] = use_tabs
+        style_config['INDENT_WIDTH'] = indent_width
+        style_config['CONTINUATION_INDENT_WIDTH'] = indent_width
 
     new_source, changed = FormatCode(
         document.source,
