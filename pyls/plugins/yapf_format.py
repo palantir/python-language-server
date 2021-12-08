@@ -56,13 +56,21 @@ def _format(document, lines=None, options=None):
             use_tabs = not options.get('insertSpaces')
 
             if use_tabs:
-                # indent width doesn't make sense when using tabs
+                # Indent width doesn't make sense when using tabs
                 # the specifications state: "Size of a tab in spaces"
                 indent_width = 1
 
         style_config['USE_TABS'] = use_tabs
         style_config['INDENT_WIDTH'] = indent_width
         style_config['CONTINUATION_INDENT_WIDTH'] = indent_width
+
+        for style_option, value in options.items():
+            # Apply arbitrary options passed as formatter options
+            if style_option not in style_config:
+                # ignore if it's not a known yapf config
+                continue
+
+            style_config[style_option] = value
 
     new_source, changed = FormatCode(
         document.source,
