@@ -26,6 +26,25 @@ def test_format(workspace):
     assert len(res) == 1
     assert res[0]['newText'] == "A = ['h', 'w', 'a']\n\nB = ['h', 'w']\n"
 
+FOUR_SPACE_DOC = """def hello():
+    pass
+"""
+
+def test_format_with_tab_size_option(workspace):
+    doc = Document(DOC_URI, workspace, FOUR_SPACE_DOC)
+    res = pyls_format_document(doc, { "tabSize": "8" })
+
+    assert len(res) == 1
+    assert res[0]['newText'] == FOUR_SPACE_DOC.replace("    ", "        ")
+
+
+def test_format_with_insert_spaces_option(workspace):
+    doc = Document(DOC_URI, workspace, FOUR_SPACE_DOC)
+    res = pyls_format_document(doc, { "insertSpaces": False })
+
+    assert len(res) == 1
+    assert res[0]['newText'] == FOUR_SPACE_DOC.replace("    ", "\t")
+
 
 def test_range_format(workspace):
     doc = Document(DOC_URI, workspace, DOC)

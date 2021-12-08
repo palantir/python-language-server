@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 @hookimpl(tryfirst=True)  # Prefer autopep8 over YAPF
-def pyls_format_document(config, document):
+def pyls_format_document(config, document, _options=None):
     log.info("Formatting document %s with autopep8", document)
     return _format(config, document)
 
