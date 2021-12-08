@@ -13,7 +13,6 @@ def pyls_format_document(document, options=None):
     return _format(document, options=options)
 
 
-
 @hookimpl
 def pyls_format_range(document, range, options=None):  # pylint: disable=redefined-builtin
     # First we 'round' the range up/down to full lines only

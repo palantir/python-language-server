@@ -45,6 +45,15 @@ def test_format_with_insert_spaces_option(workspace):
     assert len(res) == 1
     assert res[0]['newText'] == FOUR_SPACE_DOC.replace("    ", "\t")
 
+DOC_WITH_COMMENT = "x = 1# hello"
+
+def test_format_with_arbitrary_option(workspace):
+    doc = Document(DOC_URI, workspace, FOUR_SPACE_DOC)
+    res = pyls_format_document(doc, { "SPACES_BEFORE_COMMENT": 2 })
+
+    assert len(res) == 1
+    assert res[0]['newText'] == FOUR_SPACE_DOC.replace("# hello", "  # hello")
+
 
 def test_range_format(workspace):
     doc = Document(DOC_URI, workspace, DOC)
