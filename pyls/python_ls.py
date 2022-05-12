@@ -385,11 +385,13 @@ class PythonLanguageServer(MethodDispatcher):
 
         root_workspace_removed = any(removed_info['uri'] == self.root_uri for removed_info in removed)
         workspace_added = len(added) > 0 and 'uri' in added[0]
+        prev_root_workspace =　{}
         if root_workspace_removed and workspace_added:
             added_uri = added[0]['uri']
             self.root_uri = added_uri
             new_root_workspace = self.workspaces[added_uri]
             self.config = new_root_workspace._config
+            prev_root_workspace = self.workspace
             self.workspace = new_root_workspace
         elif root_workspace_removed:
             # NOTE: Removing the root workspace can only happen when the server
@@ -405,7 +407,7 @@ class PythonLanguageServer(MethodDispatcher):
 
         # Migrate documents that are on the root workspace and have a better
         # match now
-        doc_uris = list(self.workspace._docs.keys())
+        doc_uris = list(prev_root_workspace._docs.keys())
         for uri in doc_uris:
             doc = self.workspace._docs.pop(uri)
             new_workspace = self._match_uri_to_workspace(uri)
