@@ -33,6 +33,7 @@ setup(
     url='https://github.com/palantir/python-language-server',
 
     author='Palantir Technologies, Inc.',
+    license='MIT',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
