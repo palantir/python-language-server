@@ -1,6 +1,6 @@
 {
   "ipcMode": null,
-  "executionRoleArn": "arn:aws:iam::937976602373:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::937976602373:role/ecs-task-execution-role-prod",
   "containerDefinitions": [
     {
       "dnsSearchDomains": null,
@@ -37,7 +37,7 @@
       "memoryReservation": 512,
       "volumesFrom": [],
       "stopTimeout": null,
-      "image": "937976602373.dkr.ecr.us-east-2.amazonaws.com/py-lang-server",
+      "image": "937976602373.dkr.ecr.us-east-2.amazonaws.com/py-lang-server-prod",
       "startTimeout": null,
       "firelensConfiguration": null,
       "dependsOn": null,
@@ -68,7 +68,7 @@
   ],
   "placementConstraints": [],
   "memory": "4096",
-  "taskRoleArn": "arn:aws:iam::937976602373:role/napkin-ecs-task-role-dev",
+  "taskRoleArn": "arn:aws:iam::937976602373:role/ecs-task-role-prod",
   "family": "py-lang-server-prod",
   "pidMode": null,
   "requiresCompatibilities": [

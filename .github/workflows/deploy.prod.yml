@@ -1,5 +1,5 @@
 # based on https://docs.github.com/en/actions/guides/deploying-to-amazon-elastic-container-service
-name: dev-deploy
+name: prod-deploy
 
 on:
   release:
@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: us-east-2
-  ECR_REPOSITORY: py-lang-server
+  ECR_REPOSITORY: py-lang-server-prod
   ECS_SERVICE: py-lang-server-prod
   ECS_CLUSTER: prod
   ECS_TASK_DEFINITION: aws/ecr/pyls-prod.task.json
