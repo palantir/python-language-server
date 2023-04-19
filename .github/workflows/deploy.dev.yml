@@ -9,7 +9,7 @@ on:
 env:
   AWS_REGION: us-east-2
   ECR_REPOSITORY: py-lang-server-dev
-  ECS_SERVICE: pyls-svc
+  ECS_SERVICE: py-lang-server-dev
   ECS_CLUSTER: dev
   ECS_TASK_DEFINITION: aws/ecr/pyls-dev.task.json
   CONTAINER_NAME: py-lang-server
