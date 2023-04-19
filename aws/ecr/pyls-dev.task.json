@@ -1,6 +1,6 @@
 {
   "ipcMode": null,
-  "executionRoleArn": "arn:aws:iam::937976602373:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::937976602373:role/ecs-task-execution-role-dev",
   "containerDefinitions": [
     {
       "dnsSearchDomains": null,
@@ -9,7 +9,7 @@
         "logDriver": "awslogs",
         "secretOptions": null,
         "options": {
-          "awslogs-group": "/ecs/py-lang-server",
+          "awslogs-group": "/ecs/py-lang-server-dev",
           "awslogs-region": "us-east-2",
           "awslogs-stream-prefix": "ecs"
         }
@@ -37,7 +37,7 @@
       "memoryReservation": 512,
       "volumesFrom": [],
       "stopTimeout": null,
-      "image": "937976602373.dkr.ecr.us-east-2.amazonaws.com/py-lang-server",
+      "image": "937976602373.dkr.ecr.us-east-2.amazonaws.com/py-lang-server-dev",
       "startTimeout": null,
       "firelensConfiguration": null,
       "dependsOn": null,
@@ -68,8 +68,8 @@
   ],
   "placementConstraints": [],
   "memory": "4096",
-  "taskRoleArn": "arn:aws:iam::937976602373:role/napkin-ecs-task-role-dev",
-  "family": "py-lang-server",
+  "taskRoleArn": "arn:aws:iam::937976602373:role/ecs-task-role-dev",
+  "family": "py-lang-server-dev",
   "pidMode": null,
   "requiresCompatibilities": [
     "FARGATE"
