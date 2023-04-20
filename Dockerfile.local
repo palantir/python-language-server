@@ -4,9 +4,11 @@ RUN apt-get update
 RUN apt-get install -y nginx
 RUN apt-get install -y lsof
 
-ARG github_token
 RUN pip install tornado pyflakes jedi requests beautifulsoup4
 RUN pip install -U python-jsonrpc-server
+
+ARG github_token
+
 RUN pip install git+https://${github_token}@github.com/NapkinHQ/pynapkin.git
 
 ADD . ./
