@@ -6,4 +6,4 @@ build-local:
 run-local:
 	docker run -it -p 3001:80 py-lang-server-local:latest
 
-local: build run
+local: build-local run-local
