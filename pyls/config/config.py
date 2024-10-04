@@ -91,7 +91,8 @@ class Config(object):
     def capabilities(self):
         return self._capabilities
 
-    @lru_cache(maxsize=32)
+    #@lru_cache(maxsize=32)
+    @lru_cache(maxsize=4)
     def settings(self, document_path=None):
         """Settings are constructed from a few sources:
 
