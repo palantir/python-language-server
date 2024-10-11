@@ -39,6 +39,13 @@ jobs:
     steps:
       - checkout
       - run: ./scripts/circle/pypi.sh
+  circle-all:
+    docker:
+    - image: busybox:1.34.1
+    resource_class: small
+    steps:
+    - run:
+        command: echo "All required jobs finished successfully"
 
 
 workflows:
@@ -58,3 +65,10 @@ workflows:
           requires:
             - python2-test
             - python3-test
+      - circle-all:
+          requires:
+          - python3-test
+          - python2-test
+          filters:
+            tags:
+              only: /.*/
