@@ -27,7 +27,7 @@
                 },
                 "pyls.configurationSources": {
                     "type": "array",
-                    "default": ["pycodestyle"],
+                    "default": ["pycodestyle", "pylint"],
                     "description": "List of configuration sources to use.",
                     "items": {
                         "type": "string",

@@ -16,6 +16,12 @@ except Exception:  # pylint: disable=broad-except
 
 log = logging.getLogger(__name__)
 
+ARGS = {  # 'argument_name': 'name_under_plugin_conf'
+    'disable': 'disable',
+    'ignore': 'ignore',
+    'max-line-length': 'maxLineLength',
+}
+
 
 class PylintLinter(object):
     last_diags = collections.defaultdict(list)
@@ -145,10 +151,24 @@ class PylintLinter(object):
 
 
 def _build_pylint_flags(settings):
-    """Build arguments for calling pylint."""
+    """Build arguments for calling pylint.
+    If args is found then it's the arguments used, otherwise,
+    we build arguments from the plugin config.
+    """
     pylint_args = settings.get('args')
     if pylint_args is None:
-        return ''
+        # Build args from plugin config
+        pylint_args = list()
+        for arg_name in ARGS:
+            arg_val = settings.get(ARGS[arg_name])
+            arg = None
+            if isinstance(arg_val, list):
+                arg = '--{}={}'.format(arg_name, ','.join(arg_val))
+            elif isinstance(arg_val, int):
+                arg = '--{}={}'.format(arg_name, arg_val)
+            if arg:
+                pylint_args.append(arg)
+
     return ' '.join(pylint_args)
 
 
