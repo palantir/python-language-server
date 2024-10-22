@@ -13,6 +13,7 @@ install_requires = [
         'jedi>=0.17.2,<0.18.0',
         'python-jsonrpc-server>=0.4.0',
         'pluggy',
+        'setuptools',
         'ujson<=2.0.3 ; platform_system!="Windows" and python_version<"3.0"',
         'ujson>=3.0.0 ; python_version>"3"']
 
