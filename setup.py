@@ -7,14 +7,12 @@ import sys
 README = open('README.rst', 'r').read()
 
 install_requires = [
-        'configparser; python_version<"3.0"',
-        'future>=0.14.0; python_version<"3"',
-        'backports.functools_lru_cache; python_version<"3.2"',
-        'jedi>=0.17.2,<0.18.0',
-        'python-jsonrpc-server>=0.4.0',
-        'pluggy',
-        'ujson<=2.0.3 ; platform_system!="Windows" and python_version<"3.0"',
-        'ujson>=3.0.0 ; python_version>"3"']
+    'configparser; python_version<"3.0"', 'future>=0.14.0; python_version<"3"',
+    'backports.functools_lru_cache; python_version<"3.2"',
+    'jedi>=0.17.2,<0.18.0', 'python-jsonrpc-server>=0.4.0', 'pluggy',
+    'ujson<=2.0.3 ; platform_system!="Windows" and python_version<"3.0"',
+    'ujson>=3.0.0 ; python_version>"3"'
+]
 
 setup(
     name='python-language-server',
@@ -24,14 +22,11 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-
     description='Python Language Server for the Language Server Protocol',
-
     long_description=README,
 
     # The project's main homepage.
     url='https://github.com/palantir/python-language-server',
-
     author='Palantir Technologies, Inc.',
 
     # You can just specify the packages manually here if your project is
@@ -68,14 +63,16 @@ setup(
         'pycodestyle': ['pycodestyle>=2.6.0,<2.7.0'],
         'pydocstyle': ['pydocstyle>=2.0.0'],
         'pyflakes': ['pyflakes>=2.2.0,<2.3.0'],
-        'pylint': [
-            'pylint>=2.5.0' if sys.version_info.major >= 3 else 'pylint'],
+        'pylint':
+        ['pylint>=2.5.0' if sys.version_info.major >= 3 else 'pylint'],
         'rope': ['rope>0.10.5'],
         'yapf': ['yapf'],
-        'test': ['versioneer',
-                 'pylint>=2.5.0' if sys.version_info.major >= 3 else 'pylint',
-                 'pytest', 'mock', 'pytest-cov', 'coverage', 'numpy', 'pandas',
-                 'matplotlib', 'pyqt5;python_version>="3"', 'flaky'],
+        'test': [
+            'versioneer',
+            'pylint>=2.5.0' if sys.version_info.major >= 3 else 'pylint',
+            'pytest', 'mock', 'pytest-cov', 'coverage', 'numpy', 'pandas',
+            'matplotlib', 'pyqt5;python_version>="3"', 'flaky'
+        ],
     },
 
     # To provide executable scripts, use entry points in preference to the
