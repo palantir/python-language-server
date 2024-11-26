@@ -64,16 +64,14 @@ Configuration is loaded from zero or more configuration sources. Currently imple
 * pycodestyle: discovered in ~/.config/pycodestyle, setup.cfg, tox.ini and pycodestyle.cfg.
 * flake8: discovered in ~/.config/flake8, setup.cfg, tox.ini and flake8.cfg
 
-The default configuration source is pycodestyle. Change the `pyls.configurationSources` setting to `['flake8']` in
-order to respect flake8 configuration instead.
+The default configuration source is pycodestyle. Use ``"pyls.configurationSources": ['flake8']`` in your LSP configuration to respect flake8 configuration instead.
 
 Overall configuration is computed first from user configuration (in home directory), overridden by configuration
 passed in by the language client, and then overriden by configuration discovered in the workspace.
 
 To enable pydocstyle for linting docstrings add the following setting in your LSP configuration:
-```
-"pyls.plugins.pydocstyle.enabled": true
-```
+
+``"pyls.plugins.pydocstyle.enabled": true``
 
 See `vscode-client/package.json`_ for the full set of supported configuration options.
 

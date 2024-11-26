@@ -31,7 +31,7 @@
                     "description": "List of configuration sources to use.",
                     "items": {
                         "type": "string",
-                        "enum": ["pycodestyle", "pyflakes"]
+                        "enum": ["pycodestyle", "flake8"]
                     },
                     "uniqueItems": true
                 },
