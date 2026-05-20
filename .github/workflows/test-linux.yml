@@ -23,13 +23,13 @@ jobs:
         PYTHON_VERSION: ['3.8', '3.7', '3.6', '2.7']
     timeout-minutes: 10
     steps:
-      - uses: actions/cache@v1
+      - uses: actions/cache@f5ce41475b483ad7581884324a6eca9f48f8dcc7 # v1
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ matrix.PYTHON_VERSION }}-pip-${{ hashFiles('setup.py') }}
           restore-keys: ${{ runner.os }}-${{ matrix.PYTHON_VERSION }}-pip-
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
+      - uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2
         with:
           python-version: ${{ matrix.PYTHON_VERSION }}
           architecture: 'x64'
