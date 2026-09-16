@@ -56,6 +56,52 @@ Installing these plugins will add extra functionality to the language server:
 Please see the above repositories for examples on how to write plugins for the Python Language Server. Please file an
 issue if you require assistance writing a plugin.
 
+Using the server with an editor
+===============================
+
+``pyls`` is a language server, not an editor plugin. It does nothing on its own: an LSP
+client running inside your editor starts it and talks to it. Installing the package puts a
+``pyls`` executable on your ``PATH``, and clients normally launch that and communicate over
+stdin and stdout::
+
+    pyls
+
+It can also listen on a socket, which is useful when a client cannot spawn the process
+itself, or to attach to a server running elsewhere::
+
+    pyls --tcp --host 127.0.0.1 --port 2087
+
+Run ``pyls --help`` for the full set of options. ``pyls -v`` logs what the server is doing,
+which is the first thing to reach for when an editor reports no results.
+
+Any editor with a generic LSP client can drive the server. Clients commonly used with it:
+
+* **Vim and Neovim** — ``nvim-lspconfig``, ``coc.nvim``, ``vim-lsp`` or ``ALE``
+* **Emacs** — ``lsp-mode`` or ``eglot``
+* **Sublime Text** — the ``LSP`` package
+* **Kate** — the built-in LSP client
+
+Each client needs to be told to run ``pyls`` for Python files; see that client's own
+documentation for where the setting lives. Server settings such as
+``pyls.plugins.pydocstyle.enabled`` are sent by the client, so they go in the client's
+configuration rather than anywhere in this repository. See Configuration_ below.
+
+Visual Studio Code
+------------------
+
+**There is no official extension for this server on the VS Code Marketplace, and there are
+no plans to publish one.** The maintainers' answer, in `issue #194`_, is that most
+contributors use the server with other editors.
+
+The ``vscode-client`` directory in this repository is not that extension. It exists to
+develop and debug the language server itself: it is unpublished, and it deliberately
+launches a separate instance of VS Code because it conflicts with other Python extensions.
+If developing the server is what you want, see `Develop against VS Code`_.
+
+To use this server from a normal VS Code setup you need a third-party extension capable of
+launching an arbitrary LSP server, configured to run ``pyls``. Note that VS Code's own
+Python extension bundles a different language server, so the two will overlap.
+
 Configuration
 -------------
 
@@ -70,10 +116,9 @@ order to respect flake8 configuration instead.
 Overall configuration is computed first from user configuration (in home directory), overridden by configuration
 passed in by the language client, and then overriden by configuration discovered in the workspace.
 
-To enable pydocstyle for linting docstrings add the following setting in your LSP configuration:
-```
-"pyls.plugins.pydocstyle.enabled": true
-```
+To enable pydocstyle for linting docstrings add the following setting in your LSP configuration::
+
+    "pyls.plugins.pydocstyle.enabled": true
 
 See `vscode-client/package.json`_ for the full set of supported configuration options.
 
@@ -153,6 +198,7 @@ License
 
 This project is made available under the MIT License.
 
+.. _issue #194: https://github.com/palantir/python-language-server/issues/194
 .. _Language Server Protocol: https://github.com/Microsoft/language-server-protocol
 .. _Jedi: https://github.com/davidhalter/jedi
 .. _Rope: https://github.com/python-rope/rope
