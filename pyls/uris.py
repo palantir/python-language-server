@@ -43,12 +43,26 @@ def urlunparse(parts):
     ))
 
 
+def is_file_uri(uri):
+    """Return whether the URI refers to a path on the local filesystem.
+
+    A URI with no scheme is treated as a file URI, matching how editors send bare
+    paths. Everything else (inmemory:, untitled:, vscode-notebook-cell:, http:, ...)
+    has no file behind it, so its contents only exist in memory.
+    """
+    return urlparse(uri)[0] in ('file', '')
+
+
 def to_fs_path(uri):
     """Returns the filesystem path of the given URI.
 
     Will handle UNC paths and normalize windows drive letters to lower-case. Also
     uses the platform specific path separator. Will *not* validate the path for
     invalid characters and semantics. Will *not* look at the scheme of this URI.
+
+    For a non-file URI the result is a path-shaped identifier rather than a real
+    location on disk, and callers must not assume it can be opened. Use is_file_uri
+    to tell the two apart.
     """
     # scheme://netloc/path;parameters?query#fragment
     scheme, netloc, path, _params, _query, _fragment = urlparse(uri)
@@ -56,6 +70,14 @@ def to_fs_path(uri):
     if netloc and path and scheme == 'file':
         # unc path: file://shares/c$/far/boo
         value = "//{}{}".format(netloc, path)
+
+    elif netloc and scheme not in ('file', ''):
+        # Non-file URI with an authority, such as Monaco's inmemory://dummy.py or
+        # vscode-notebook-cell://notebook/cell.py. vscode-uri drops the authority here
+        # and returns just the path, which is empty for inmemory://dummy.py. That left
+        # the document with no name at all, so the authority is kept instead: the
+        # document still needs a stable identity for module naming and diagnostics.
+        value = "/{}{}".format(netloc, path)
 
     elif RE_DRIVE_LETTER_PATH.match(path):
         # windows drive letter: file:///C:/far/boo

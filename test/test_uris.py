@@ -14,6 +14,31 @@ def test_to_fs_path(uri, path):
     assert uris.to_fs_path(uri) == path
 
 
+@unix_only
+@pytest.mark.parametrize('uri,path', [
+    # Monaco sends inmemory://name.py, where the name lands in the authority rather than
+    # the path. Dropping the authority left these documents with no name at all.
+    ('inmemory://dummy.py', '/dummy.py'),
+    ('inmemory:///dummy.py', '/dummy.py'),
+    ('vscode-notebook-cell://notebook/cell.py', '/notebook/cell.py'),
+    ('untitled:Untitled-1', 'Untitled-1'),
+])
+def test_non_file_uri_to_fs_path(uri, path):
+    assert uris.to_fs_path(uri) == path
+
+
+@pytest.mark.parametrize('uri,is_file', [
+    ('file:///foo/bar', True),
+    ('/foo/bar', True),
+    ('inmemory://dummy.py', False),
+    ('untitled:Untitled-1', False),
+    ('vscode-notebook-cell://notebook/cell.py', False),
+    ('http://example.com/foo.py', False),
+])
+def test_is_file_uri(uri, is_file):
+    assert uris.is_file_uri(uri) is is_file
+
+
 @windows_only
 @pytest.mark.parametrize('uri,path', [
     ('file:///c:/far/boo', 'c:\\far\\boo'),

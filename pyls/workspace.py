@@ -135,6 +135,10 @@ class Document(object):
         self.path = uris.to_fs_path(uri)
         self.dot_path = _utils.path_to_dot_name(self.path)
         self.filename = os.path.basename(self.path)
+        # Documents opened under a scheme such as inmemory: or untitled: have no file
+        # behind them. self.path is a stable identifier for those, not a location that
+        # can be opened or walked.
+        self.is_file_backed = uris.is_file_uri(uri)
 
         self._config = workspace._config
         self._workspace = workspace
@@ -160,6 +164,15 @@ class Document(object):
     @lock
     def source(self):
         if self._source is None:
+            if not self.is_file_backed:
+                # Nothing to fall back to: the contents only ever arrive over
+                # textDocument/didOpen and didChange. Opening self.path would either
+                # raise a confusing error about a path the client never mentioned, or
+                # read an unrelated file that happens to share the name.
+                raise ValueError(
+                    'no source available for {}: a document with a non-file URI must be '
+                    'opened before it can be read'.format(self.uri)
+                )
             with io.open(self.path, 'r', encoding='utf-8') as f:
                 return f.read()
         return self._source
@@ -262,12 +275,15 @@ class Document(object):
         project_path = self._workspace.root_path
 
         # Extend sys_path with document's path if requested
-        if use_document_path:
+        if use_document_path and self.is_file_backed:
+            # Skipped for non-file documents: os.path.dirname of their identifier is not
+            # a real directory. It used to normalize to '.', which silently put the
+            # server's working directory on the module search path.
             sys_path += [os.path.normpath(os.path.dirname(self.path))]
 
         kwargs = {
             'code': self.source,
-            'path': self.path,
+            'path': self.path or None,
             'environment': environment,
             'project': jedi.Project(path=project_path, sys_path=sys_path),
         }
