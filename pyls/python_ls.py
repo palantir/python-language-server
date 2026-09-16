@@ -4,6 +4,7 @@ import logging
 import os
 import socketserver
 import threading
+from timeit import default_timer
 
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
@@ -17,10 +18,44 @@ log = logging.getLogger(__name__)
 
 
 LINT_DEBOUNCE_S = 0.5  # 500 ms
+# A hook taking longer than this is reported at WARNING so a slow request shows up in a
+# user's log without them having to enable debug logging first. Requests are expected to
+# complete in milliseconds, so anything at this scale is already user-visible.
+SLOW_HOOK_S = 1.0
 PARENT_PROCESS_WATCH_INTERVAL = 10  # 10 s
 MAX_WORKERS = 64
 PYTHON_FILE_EXTENSIONS = ('.py', '.pyi')
 CONFIG_FILEs = ('pycodestyle.cfg', 'setup.cfg', 'tox.ini', '.flake8')
+
+
+def _hook_plugin_names(hook_handlers):
+    """Return the plugins registered for a hook, for attributing a slow call.
+
+    Only called when a hook was slow, so the cost does not land on every request.
+    """
+    try:
+        return sorted(impl.plugin_name for impl in hook_handlers.get_hookimpls())
+    except Exception:  # pylint: disable=broad-except
+        # Attribution is a nicety. Never let it turn a slow request into a failed one.
+        return []
+
+
+def _log_hook_duration(hook_name, doc_uri, hook_handlers, duration):
+    """Record how long a hook took, loudly if it was slow.
+
+    Requests are dispatched to every plugin registered for a hook, so a single slow
+    plugin stalls the whole request. Without this there is no way for a user reporting
+    a hang to say which hook or plugin was responsible.
+    """
+    if duration < SLOW_HOOK_S:
+        log.debug("Hook %s took %.3fs (%s)", hook_name, duration, doc_uri)
+        return
+
+    log.warning(
+        "Hook %s took %.2fs for %s. Plugins registered for this hook: %s. "
+        "Requests are handled one at a time, so a slow plugin delays everything behind it.",
+        hook_name, duration, doc_uri, ', '.join(_hook_plugin_names(hook_handlers)) or 'unknown',
+    )
 
 
 class _StreamHandlerWrapper(socketserver.StreamRequestHandler, object):
@@ -153,7 +188,15 @@ class PythonLanguageServer(MethodDispatcher):
         workspace = self._match_uri_to_workspace(doc_uri)
         doc = workspace.get_document(doc_uri) if doc_uri else None
         hook_handlers = self.config.plugin_manager.subset_hook_caller(hook_name, self.config.disabled_plugins)
-        return hook_handlers(config=self.config, workspace=workspace, document=doc, **kwargs)
+        # default_timer is the best clock available on both Python 2 and 3;
+        # time.perf_counter does not exist on 2.7, which this package still supports.
+        start = default_timer()
+        try:
+            return hook_handlers(config=self.config, workspace=workspace, document=doc, **kwargs)
+        finally:
+            # In a finally block so a hook that raises is still accounted for; an
+            # exception after a long wait is exactly the case worth seeing in a log.
+            _log_hook_duration(hook_name, doc_uri, hook_handlers, default_timer() - start)
 
     def capabilities(self):
         server_capabilities = {

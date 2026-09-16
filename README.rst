@@ -148,6 +148,28 @@ Install `VSCode <https://code.visualstudio.com/download>`_
 Then to debug, click View -> Output and in the dropdown will be pyls.
 To refresh VSCode, press `Cmd + r`
 
+Diagnosing slow requests
+------------------------
+
+Requests are handled one at a time, so a single slow plugin delays everything queued
+behind it and the editor can appear to hang. When a hook takes longer than a second the
+server logs a warning naming the hook, the document and the plugins registered for that
+hook, for example::
+
+    Hook pyls_lint took 118.62s for file:///home/me/project/big.py. Plugins registered
+    for this hook: mccabe, pycodestyle, pyflakes. Requests are handled one at a time, so
+    a slow plugin delays everything behind it.
+
+That narrows a hang to one hook and a small set of plugins. To confirm which plugin is
+responsible, disable them one at a time with the ``pyls.plugins.<name>.enabled`` setting.
+
+Every hook call is also timed at debug level, so running the server with ``-v`` shows
+timings for requests that completed normally.
+
+When reporting a slow request, please include these lines along with the output of
+``pip list``: how long a request takes depends heavily on the size of the environment
+Jedi has to search.
+
 License
 -------
 
