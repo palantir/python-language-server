@@ -31,9 +31,66 @@
                     "description": "List of configuration sources to use.",
                     "items": {
                         "type": "string",
-                        "enum": ["pycodestyle", "pyflakes"]
+                        "enum": ["flake8", "pycodestyle"]
                     },
                     "uniqueItems": true
+                },
+                "pyls.plugins.flake8.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable or disable the plugin."
+                },
+                "pyls.plugins.flake8.config": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Path to the config file that will be the authoritative config source."
+                },
+                "pyls.plugins.flake8.exclude": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "List of files or directories to exclude."
+                },
+                "pyls.plugins.flake8.executable": {
+                    "type": "string",
+                    "default": "flake8",
+                    "description": "Path to the flake8 executable."
+                },
+                "pyls.plugins.flake8.filename": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Only check for filenames matching the patterns in this list."
+                },
+                "pyls.plugins.flake8.hangClosing": {
+                    "type": "boolean",
+                    "default": null,
+                    "description": "Hang closing bracket instead of matching indentation of opening bracket's line."
+                },
+                "pyls.plugins.flake8.ignore": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "List of errors and warnings to ignore (or skip)."
+                },
+                "pyls.plugins.flake8.maxLineLength": {
+                    "type": "number",
+                    "default": null,
+                    "description": "Maximum allowed line length for the entirety of this run."
+                },
+                "pyls.plugins.flake8.select": {
+                    "type": "array",
+                    "default": null,
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "description": "List of errors and warnings to enable."
                 },
                 "pyls.plugins.jedi.extra_paths": {
                     "type": "array",

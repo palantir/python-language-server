@@ -3,6 +3,7 @@
 import logging
 import os.path
 import re
+import sys
 from subprocess import Popen, PIPE
 from pyls import hookimpl, lsp
 
@@ -30,6 +31,12 @@ def pyls_lint(workspace, document):
         'ignore': settings.get('ignore'),
         'max-line-length': settings.get('maxLineLength'),
         'select': settings.get('select'),
+        # The document is piped over stdin so that unsaved changes are linted, but that
+        # leaves flake8 believing the file is called "stdin". Any setting it resolves per
+        # filename then cannot match, which silently disables per-file-ignores and
+        # exclude. Telling it the real name costs nothing and makes those work.
+        # Skipped when there is no path, such as an unsaved or non-file document.
+        'stdin-display-name': document.path or None,
     }
 
     # flake takes only absolute path to the config. So we should check and
@@ -68,10 +75,24 @@ def run_flake8(flake8_executable, args, document):
         cmd.extend(args)
         p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     except IOError:
-        log.debug("Can't execute %s. Trying with 'python -m flake8'", flake8_executable)
-        cmd = ['python', '-m', 'flake8']
+        # Fall back to the interpreter running this server, which is where
+        # `pip install python-language-server[flake8]` installs flake8. Bare "python" was
+        # not a safe fallback: it does not exist on a Python 3 only system, so the second
+        # call raised as well and the user saw a FileNotFoundError naming flake8 rather
+        # than anything they could act on.
+        log.debug("Can't execute %s. Trying with '%s -m flake8'", flake8_executable, sys.executable)
+        cmd = [sys.executable, '-m', 'flake8']
         cmd.extend(args)
-        p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        try:
+            p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        except IOError:
+            log.error(
+                "Could not run flake8: neither %s nor '%s -m flake8' could be executed. "
+                "Install flake8 in the environment running this server, or set "
+                "pyls.plugins.flake8.executable to its path.",
+                flake8_executable, sys.executable,
+            )
+            return ''
     (stdout, stderr) = p.communicate(document.source.encode())
     if stderr:
         log.error("Error while running flake8 '%s'", stderr.decode())
